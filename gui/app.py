@@ -42,13 +42,14 @@ def page_classes():
     from gui.pages.residents import ResidentsPage
     from gui.pages.moves import MovesPage
     from gui.pages.wardrobe import WardrobePage
+    from gui.pages.collection import CollectionPage
     from gui.pages.map import MapPage
     from gui.pages.photos import PhotosPage
     from gui.pages.backups import BackupsPage
     from gui.pages.advanced import AdvancedPage
     from gui.pages.mods import ModsPage
     return [('Save', [OverviewPage]),
-            ('Edit', [BagPage, CatalogPage, ResidentsPage, MovesPage, WardrobePage]),
+            ('Edit', [BagPage, CatalogPage, ResidentsPage, MovesPage, WardrobePage, CollectionPage]),
             ('Explore', [MapPage, PhotosPage]),
             ('Tools', [BackupsPage, ModsPage, AdvancedPage])]
 

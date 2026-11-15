@@ -4,7 +4,7 @@
 
 # Pokopia Editor
 
-**Edit your Pokopia save: bag, residents, moves, emotes and wardrobe. View your islands and photos. Install game mods.**
+**Edit your Pokopia save: bag, residents, moves, emotes, wardrobe and collection. View your islands and photos. Install game mods.**
 
 [![Download](https://img.shields.io/github/v/release/cycalo/Pokopia-Editor?label=Download&style=for-the-badge&color=2ecc71)](https://github.com/cycalo/Pokopia-Editor/releases/latest)
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
@@ -42,6 +42,7 @@ If your save isn't found, click **Open → Browse for a folder**.
 | 💛 | **Residents** | Set friendship, see when you met each resident, and find their home on the map |
 | ✨ | **Moves & Emotes** | Learn or unlearn with a click, then set up your move and emote wheels |
 | 👕 | **Wardrobe** | Unlock any outfit or hairstyle, or all of them at once, including the Expansion Pass ones |
+| ⭐ | **Collection** | Complete the Pokédex, the Habitat Dex, crafting recipes, cooking recipes, the item list, Human Records, Ancient Artifacts, the Highlight Reel, and photo frames and filters, one entry at a time or all at once. Switch on bag, PP, Jump, painting and Poké Center PC features, and set your Life Coins |
 | 🗺️ | **Island Map** | See each island from above with everything you've placed. Export it as a PNG |
 | 📷 | **Photos** | Browse your in-game album and export full-size photos |
 | 🛟 | **Backups** | Make, compare, restore and delete backups |
@@ -76,10 +77,10 @@ If your save isn't found, click **Open → Browse for a folder**.
 
 Turn into Ditto or any other Pokémon and walk around as it. It doesn't have to live in your town.
 
-| Hold | Does |
+| Press | Does |
 |---|---|
-| **ZL + D-pad Left** | Turn into the chosen Pokémon and stay that way |
-| **ZL + D-pad Right** | Turn back into your character |
+| **ZL + L3** (left stick click) | Turn into the chosen Pokémon; press again to turn back |
+| **ZL + D-pad Left / Right** | Pick the previous / next Pokémon (A to Z). While transformed you change as soon as you stop flicking through |
 | **ZR** as a flying Pokémon | Take off, hold to rise |
 | **ZL** while flying | Descend; keep holding it on the ground to land |
 | **ZL + ZR** while flying | Drop out of the air |
@@ -88,7 +89,7 @@ Turn into Ditto or any other Pokémon and walk around as it. It doesn't have to 
 2. Restart the game and tick **Play as Pokemon** under its Properties → Add-Ons.
 3. With the game running, pick a Pokémon under **Change Pokémon while playing** and press **Transform**. No restart is needed.
 
-The button combo uses the Pokémon you picked last, or Ditto until you pick one. Changing Pokémon while playing needs the emulator and the editor on the same Windows PC. On a console, choose one Pokémon in the list before you install instead.
+ZL + L3 uses the Pokémon you picked last, or Ditto until you pick one. Changing Pokémon while playing needs the emulator and the editor on the same Windows PC. On a console, choose one Pokémon in the list before you install instead.
 
 **Only for Pokopia 2.0.0, update 655360.** On other versions the patch is not applied.
 
@@ -103,9 +104,11 @@ Want the mod without the editor? Download it on its own:
 - [**`PlayAsPokemon-emulator.zip`**](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-emulator.zip): unzip into your emulator's `load` folder, then tick **Play as Pokemon** under the game's Properties → Add-Ons
 - [**`PlayAsPokemon-SD-card.zip`**](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-SD-card.zip): unzip onto the SD card for Atmosphère-style custom firmware (untested)
 
-Without the editor you turn into Ditto. To pick another Pokémon, change one number in the cheat file: [how to, with every Pokémon's code](mods/play-as-pokemon/README-standalone.md#change-the-pokémon).
+Without the editor you start as Ditto and pick others with ZL + D-pad Left / Right. To start as another Pokémon, change one number in the cheat file: [how to, with every Pokémon's code](mods/play-as-pokemon/README-standalone.md#change-the-pokémon).
 
 Details are in [mods/play-as-pokemon](mods/play-as-pokemon/).
+
+Recompia cannot load the IPS and cheat files. Its package is `play_as_pokemon-1.2.0.pkmod`: copy it into Recompia's `mods` folder. It has the same buttons, and F3 or ZL + R3 opens a list of every Pokémon. Install steps are in [recompia/play-as-pokemon](recompia/play-as-pokemon/README.md).
 
 ---
 
@@ -156,7 +159,7 @@ The exe stores its settings in `%APPDATA%\Pokopia Editor`.
 </details>
 
 <div align="center">
-<sub>Built with data from <a href="https://github.com/berichan/PokoHex">PokoHex</a> by berichan: the item, resident, move and emote icons, the name lists, the icon, portrait and map-part tables, and the island file layout used by the map.</sub>
+<sub>Built with data from <a href="https://github.com/berichan/PokoHex">PokoHex</a> by berichan: the item, resident, move and emote icons, the name lists, the icon, portrait and map-part tables, the island file layout used by the map, and the save layout of the Pokédex, habitat, recipe, cooking, photo style, Life Coin and upgrade records.</sub>
 </div>
 <div align="center">
 <sub>Released under the <a href="LICENSE">GNU General Public License v3.0</a>. Pokémon names, icons and other game assets belong to Nintendo, Game Freak and The Pokémon Company. Fan-made tool, not affiliated with them.</sub>

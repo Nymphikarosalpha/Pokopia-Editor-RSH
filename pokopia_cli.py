@@ -20,6 +20,9 @@ Examples:
   py pokopia_cli.py edit SAVE --out OUTDIR --add-item 3994 50 --learn-emote all --unlock dive --unlock boost4
   py pokopia_cli.py wardrobe SAVE                             (outfits and hairstyles with their IDs)
   py pokopia_cli.py edit SAVE --out OUTDIR --unlock-outfits   (all outfits and hairstyles)
+  py pokopia_cli.py edit SAVE --out OUTDIR --unlock-all dex --unlock-all recipe   (dex, habitat, recipe, cooking, frame, filter, all)
+  py pokopia_cli.py edit SAVE --out OUTDIR --unlock-everything --upgrade all --coins 999999
+  py pokopia_cli.py collection SAVE [dex|habitat|recipe|cooking|frame|filter]
   py pokopia_cli.py edit SAVE --out OUTDIR --unlock-wardrobe Ranger --unlock-wardrobe "hair:Side tails"
   py pokopia_cli.py edit SAVE --in-place --set-item 0 3994 99   (auto backup first)
   py pokopia_cli.py selftest SAVE
@@ -41,6 +44,10 @@ def cmd_info(a):
     print('Extras :', ', '.join(v[0] for k, v in ps.EXTRAS.items() if c.extra(k)) or '-')
     print('Emotes :', len([i for i in c.reactions_learned() if i in ps.PUBLIC_REACTIONS]), 'of', len(ps.PUBLIC_REACTIONS))
     print('Wardrobe:', len(c.wardrobe_unlocked()), 'of', len(ps.WARDROBE_IDS), 'outfit/hairstyle entries')
+    for k, entries in ps.COLLECTION.items():
+        print(f'{ps.COLLECTION_INFO[k][0]}: {c.collection_count(k)} of {len(entries)} {ps.COLLECTION_INFO[k][2]}')
+    print('Life Coins:', f'{c.coins:,}')
+    print('Upgrades on:', ', '.join(k for k in ps.UPGRADES if c.upgrade(k)) or '-')
     print('Islands:', ', '.join(f'{n:02} {ps.name_of(ps.AREA_NAMES, n, "Area")}' for n in s.stage_files()))
 
 
@@ -82,6 +89,17 @@ def cmd_wardrobe(a):
             tag = ps.TAG_LABEL.get(ps.item_tag(i), '')
             print(f'  {i or "":>4} {name:<18} {state:<9} {tag:<4} {note}'.rstrip())
     print('Entries set in the save:', len(c.wardrobe_unlocked()), 'of', len(ps.WARDROBE_IDS))
+
+
+def cmd_collection(a):
+    c = _common(a.save)
+    for k in ([a.kind] if a.kind else ps.COLLECTION):
+        title, part, full = ps.COLLECTION_INFO[k]
+        print(f'{title}: {c.collection_count(k)} of {len(ps.COLLECTION[k])} {full}')
+        if a.kind:
+            for i, name in ps.COLLECTION[k]:
+                st = c.collection_state(k, i)
+                print(f'{i:5} {("-", part or "-", full)[st]:<12} {name}')
 
 
 def cmd_flags(a):
@@ -182,6 +200,20 @@ def apply_edits(c, a):
         c.set_extra(key.replace(':', ''), True)
     if a.unlock_outfits:
         c.unlock_wardrobe()
+    kinds = list(ps.COLLECTION) if a.unlock_everything else []
+    for k in a.unlock_all or []:
+        kinds += list(ps.COLLECTION) if k == 'all' else [k]
+    for k in dict.fromkeys(kinds):
+        c.unlock_collection(k)
+    for key in a.upgrade or []:
+        for k in (ps.UPGRADES if key == 'all' else [key]):
+            c.set_upgrade(k, True)
+    if a.unlock_everything:
+        c.unlock_wardrobe()
+        for i in ps.PUBLIC_REACTIONS:
+            c.learn_reaction(i)
+    if a.coins is not None:
+        c.coins = a.coins
     if a.unlock_wardrobe:
         c.unlock_wardrobe([ps.wardrobe_lookup(t) for t in a.unlock_wardrobe])
     if a.remove_wardrobe:
@@ -259,15 +291,25 @@ def cmd_selftest(a):
         old_move = next((m for m in (5, 4, 2, 1) if c.skill(m)[1]), None)
         if old_move:
             steps.append(('unlearn move', lambda: c.forget_skill(old_move)))
+        for k in ps.COLLECTION:
+            if c.collection_count(k) < len(ps.COLLECTION[k]):
+                steps.append((f'complete {k}', lambda k=k: c.unlock_collection(k)))
+        if not all(c.upgrade(k) for k in ps.UPGRADES):
+            steps.append(('upgrades', lambda: [c.set_upgrade(k) for k in ps.UPGRADES]))
+        steps.append(('coins', lambda: setattr(c, 'coins', 4321 if c.coins != 4321 else 4322)))
         for label, fn in steps:
             fn()
             if not c.commit(label):
                 check(f'{label} changed the data', False)
         expect = dict(name=c.player_name, fr=c.get_villager(vil)['friendship'], bag=c.export_bag(), wheel=c.wheel(),
                       rwheel=c.reaction_wheel(), emote=c.reaction_learned(emote), flag=c.get_flag(flag),
-                      extras={k: c.extra(k) for k in ps.EXTRAS}, surf=c.skill(10)[1], wardrobe=c.wardrobe_unlocked())
+                      extras={k: c.extra(k) for k in ps.EXTRAS}, surf=c.skill(10)[1], wardrobe=c.wardrobe_unlocked(),
+                      coll={k: c.collection_count(k) for k in ps.COLLECTION}, coins=c.coins,
+                      upg=[c.upgrade(k) for k in ps.UPGRADES])
         check('Edits applied', expect['name'] == 'TestName' and expect['fr'] == 99 and expect['emote'] and expect['flag']
               and expect['wardrobe'] == [i for i in ps.WARDROBE_IDS if i != 2414]
+              and expect['coll'] == {k: len(v) for k, v in ps.COLLECTION.items()} and all(expect['upg'])
+              and expect['coins'] in (4321, 4322)
               and not c.reaction_learned(old_emote) and old_emote not in c.reaction_wheel()
               and (old_move is None or (not c.skill(old_move)[1] and old_move not in c.wheel()
                                         and not any(c.extra(k) for k, v in ps.EXTRAS.items() if v[2] == old_move)))
@@ -286,7 +328,9 @@ def cmd_selftest(a):
         r = ps.SaveFolder(out2).common
         got = dict(name=r.player_name, fr=r.get_villager(vil)['friendship'], bag=r.export_bag(), wheel=r.wheel(),
                    rwheel=r.reaction_wheel(), emote=r.reaction_learned(emote), flag=r.get_flag(flag),
-                   extras={k: r.extra(k) for k in ps.EXTRAS}, surf=r.skill(10)[1], wardrobe=r.wardrobe_unlocked())
+                   extras={k: r.extra(k) for k in ps.EXTRAS}, surf=r.skill(10)[1], wardrobe=r.wardrobe_unlocked(),
+                   coll={k: r.collection_count(k) for k in ps.COLLECTION}, coins=r.coins,
+                   upg=[r.upgrade(k) for k in ps.UPGRADES])
         diff = sum(1 for x, y in zip(r.data, orig) if x != y)
         check('Edited save parses back identically after writing', got == expect, f'{diff} bytes differ from the original')
         other = [f for dp, _, fs in os.walk(s.folder) for f in fs
@@ -328,6 +372,8 @@ def main():
         q = sp.add_parser(n); q.add_argument('save'); q.set_defaults(f=f)
         if n == 'inventory': q.add_argument('--all', action='store_true')
         if n in ('photos', 'map'): q.add_argument('--export', metavar='DIR')
+    q = sp.add_parser('collection'); q.add_argument('save'); q.set_defaults(f=cmd_collection)
+    q.add_argument('kind', nargs='?', choices=list(ps.COLLECTION))
     q = sp.add_parser('find-item'); q.add_argument('text'); q.set_defaults(f=cmd_find)
     q = sp.add_parser('diff'); q.add_argument('a'); q.add_argument('b', nargs='?'); q.set_defaults(f=cmd_diff)
     q.add_argument('--game-backup', action='store_true', help="compare the save's B00 slot with its G00 slot")
@@ -345,6 +391,13 @@ def main():
     q.add_argument('--learn-emote', action='append', metavar='EMOTE|all')
     q.add_argument('--unlock', action='append', metavar='|'.join(ps.EXTRAS))
     q.add_argument('--unlock-outfits', action='store_true', help='unlock every outfit and hairstyle')
+    q.add_argument('--unlock-all', action='append', choices=list(ps.COLLECTION) + ['all'], metavar='|'.join(ps.COLLECTION) + '|all',
+                   help='complete a collection list: Pokédex, habitats, crafting recipes, cooking, photo frames, photo filters')
+    q.add_argument('--unlock-everything', action='store_true',
+                   help='all collection lists, all outfits and hairstyles, all emotes (not upgrades or moves)')
+    q.add_argument('--upgrade', action='append', choices=list(ps.UPGRADES) + ['all'], metavar='|'.join(ps.UPGRADES) + '|all',
+                   help='switch on a bag/PP upgrade or feature flag')
+    q.add_argument('--coins', type=int, metavar='N', help='set Life Coins')
     q.add_argument('--unlock-wardrobe', action='append', metavar='NAME|ID',
                    help='unlock one outfit or hairstyle, e.g. Ranger, "outfit:Mermaid", "hair:Side tails", 2403')
     q.add_argument('--remove-wardrobe', action='append', metavar='NAME|ID', help='take an outfit or hairstyle away again')

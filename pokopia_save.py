@@ -99,6 +99,54 @@ KNOWN_FLAGS = {
     125: 'Rock Smash extra food effect',
     148: 'Dive (Surf)',
     153: 'Surf food boost',
+    # labels below come from PokoHex (FunctionFlagInfo); not re-checked in game here
+    3: 'Workbench unlocked',
+    7: 'Poké Center PC unlocked',
+    18: 'Wake at home on load',
+    27: 'PC challenges unlocked',
+    28: 'PC Link Play unlocked',
+    30: 'PC shop unlocked',
+    63: 'Inventory upgrade 1',
+    64: 'Inventory upgrade 2',
+    65: 'Inventory upgrade 3',
+    66: 'Inventory upgrade 4',
+    76: 'Pause menu unlocked',
+    77: 'Patterns unlocked (needs Painting)',
+    78: 'Multiple paint areas unlocked (needs Painting)',
+    79: 'Painting unlocked',
+    82: 'Jump unlocked',
+    102: 'PP upgrade 1',
+    103: 'PP upgrade 2',
+    104: 'PP upgrade 3',
+    105: 'PP upgrade 4',
+    107: 'Secondary bar unlocked',
+    108: 'PC stamps unlocked',
+    114: 'PC appraisal unlocked',
+    133: 'PC environment level unlocked',
+    135: 'Workbench Craft option',
+}
+# key -> (label, flags it sets, key that must be on first). Flag meanings from PokoHex.
+UPGRADES = {
+    'bag1': ('Bag upgrade 1', (63,), None),
+    'bag2': ('Bag upgrade 2', (64,), 'bag1'),
+    'bag3': ('Bag upgrade 3', (65,), 'bag2'),
+    'bag4': ('Bag upgrade 4', (66,), 'bag3'),
+    'pp1': ('PP upgrade 1', (102,), None),
+    'pp2': ('PP upgrade 2', (103,), 'pp1'),
+    'pp3': ('PP upgrade 3', (104,), 'pp2'),
+    'pp4': ('PP upgrade 4', (105,), 'pp3'),
+    'jump': ('Jump', (82,), None),
+    'paint': ('Painting', (79,), None),
+    'patterns': ('Paint patterns', (77,), 'paint'),
+    'paintareas': ('Multiple paint areas', (78,), 'paint'),
+    'workbench': ('Workbench + Craft option', (3, 135), None),
+    'pc': ('Poké Center PC', (7,), None),
+    'pcshop': ('PC shop', (30,), 'pc'),
+    'pcchallenges': ('PC challenges', (27,), 'pc'),
+    'pcstamps': ('PC stamps', (108,), 'pc'),
+    'pcappraisal': ('PC appraisal', (114,), 'pc'),
+    'pcenv': ('PC environment level', (133,), 'pc'),
+    'pclink': ('PC Link Play', (28,), 'pc'),
 }
 # key -> (label, flags to set, required learned move, required other extra)
 EXTRAS = {
@@ -128,6 +176,11 @@ VILLAGER_NAMES = _names('villager')
 SKILL_NAMES = _names('skill')
 AREA_NAMES = _names('area')
 REACTION_NAMES = _names('reaction')
+DEX_NAMES = _names('dex')
+HABITAT_NAMES = _names('habitat')
+FRAME_NAMES = _names('photoframe')
+FILTER_NAMES = _names('photofilter')
+PHOTOOP_NAMES = _names('photoop')
 PUBLIC_REACTIONS = [i for i in range(1, min(REACT_PUBLIC_MAX + 1, len(REACTION_NAMES))) if REACTION_NAMES[i].strip()]
 
 
@@ -145,6 +198,108 @@ except OSError:
     ITEM_TAGS = b''
 WARDROBE_DLC = {2420, 2421, 2422, 2423, 2424,     # Mermaid, Preschooler, Rad, Cheerful, Triathlete outfits
                 2468, 2469, 2470, 2471, 2472}     # Long, Crested, Ponytail, Messy short, Side tails hairstyles
+
+
+def _u16_table(name):
+    try:
+        with open(os.path.join(HERE, 'data', name), 'rb') as f:
+            b = f.read()
+        return struct.unpack(f'<{len(b) // 2}H', b)
+    except OSError:
+        return ()
+
+
+# Collection records (Pokédex, habitat dex, crafting recipes, cooking, photo frames/filters). The save offsets were
+# first published by PokoHex (SaveLayout / Catalogue) and checked against a real 2.0.x save: every non-public index
+# is zero and the states match the in-game progress. Pokédex, habitats and crafting recipes confirmed in game
+# 2026-11-15. The index tables in data/ are built from the game files by tools/extract_catalog_tables.py.
+DEX_OFS, DEX_COUNT = 0x426EFF, 1024               # 1 byte per dex slot: bit 3 seen, bits 0+1 registered
+HABITAT_OFS, HABITAT_COUNT, HABITAT_SIZE = 0x4256FF, 512, 12   # byte 0: bit 0 discovered, bit 1 built
+RECIPE_OFS, RECIPE_COUNT, RECIPE_SIZE = 0x3FCB4C, 1500, 6      # u16 +2 learned order, byte +4 bit 1 learned
+COOK_OFS, COOK_COUNT = 0x3FEE74, 101              # 1 byte per cooking-table row, bit 0 known
+PHOTO_STYLE_OFS, FRAME_COUNT, FILTER_COUNT = 0x467E5E + 128, 64, 16   # 1 byte each, bit 0 unlocked; index 0 = none
+COINS_OFS, COINS_MAX = 0x46D080, 999999           # i32 Life Coins
+# Own findings (2026-11-15, from a save the user made right after finding two artifacts in game): Human Records and
+# Ancient Artifacts are two byte arrays side by side, 300 entries each. Records are indexed by record number (the item
+# table's sub-index of a record item), artifacts by the row of the game's artifact table. 1 = found; the game adds
+# bit 1 (value 3) while the entry still carries its 'new' mark.
+# The state/date arrays at 0x2208DF / 0x21A0B6 are something else (not records): never write them.
+RECORD_OFS, RECORD_COUNT = 0x4670BC, 182
+ARTIFACT_OFS, ARTIFACT_ROWS = 0x4671E8, 300
+PHOTOOP_OFS, PHOTOOP_COUNT = 0x467E5E, 128        # Highlight Reel: 1 byte per photo op, bit 0 completed
+CATALOG_OBTAINED = 0x43                           # catalog byte the game writes for a normal item
+RECORD_ITEM = _u16_table('catalog_records.bin')   # record number -> item ID with its name (0 = no item)
+_ART = _u16_table('catalog_artifacts.bin')        # pairs: item ID, section | group << 8
+ARTIFACT_SECTION = {1: 'Lost Relics (L)', 2: 'Lost Relics (S)', 3: 'Fossils', 8: 'Treasure Maps'}
+ARTIFACTS = {}                                    # artifact table row -> (item ID, section)
+for _k in range(0, min(len(_ART), ARTIFACT_ROWS * 2) - 1, 2):
+    if _ART[_k]:
+        ARTIFACTS[_k // 2] = (_ART[_k], _ART[_k + 1] & 0xFF)
+try:
+    with open(os.path.join(HERE, 'data', 'item_group.bin'), 'rb') as _f:
+        ITEM_GROUP = _f.read()     # per item ID: 0 not in the item list, 1 main, 2 event, 3 Bubbly Basin, 6 building parts
+except OSError:
+    ITEM_GROUP = b''
+_DEX_ROWS = _u16_table('catalog_dex.bin')
+DEX_RESIDENT = _u16_table('catalog_residents.bin')     # dex slot -> resident index (for the name and portrait)
+RECIPE_ITEM = _u16_table('catalog_recipes.bin')        # recipe index -> item ID it crafts
+COOK_ITEM = _u16_table('catalog_cooking.bin')          # cooking row -> dish item ID (a dish can have several rows)
+
+
+def _named(lst, i):
+    return 0 <= i < len(lst) and bool(lst[i].strip())
+
+
+def _dex_name(i):
+    r = DEX_RESIDENT[i] if i < len(DEX_RESIDENT) else 0
+    return VILLAGER_NAMES[r] if r and _named(VILLAGER_NAMES, r) else DEX_NAMES[i]
+
+
+COOK_ROWS = {}
+for _row, _item in enumerate(COOK_ITEM[:COOK_COUNT]):
+    if _row and _item and _named(ITEM_NAMES, _item):
+        COOK_ROWS.setdefault(_item, []).append(_row)
+# kind -> [(id, name)]. IDs: dex slot, habitat number, recipe index, dish item ID, frame number, filter number.
+COLLECTION = {
+    'dex': [(i, _dex_name(i)) for i in range(1, min(DEX_COUNT, len(_DEX_ROWS), len(DEX_NAMES)))
+            if _DEX_ROWS[i] != 0xFFFF and _named(DEX_NAMES, i)],
+    'habitat': [(i, HABITAT_NAMES[i]) for i in range(1, min(HABITAT_COUNT, len(HABITAT_NAMES))) if _named(HABITAT_NAMES, i)],
+    'recipe': [(i, ITEM_NAMES[RECIPE_ITEM[i]]) for i in range(1, min(RECIPE_COUNT, len(RECIPE_ITEM)))
+               if RECIPE_ITEM[i] and _named(ITEM_NAMES, RECIPE_ITEM[i])],
+    'cooking': [(i, ITEM_NAMES[i]) for i in sorted(COOK_ROWS)],
+    'frame': [(i, FRAME_NAMES[i]) for i in range(1, min(FRAME_COUNT, len(FRAME_NAMES))) if _named(FRAME_NAMES, i)],
+    'filter': [(i, FILTER_NAMES[i]) for i in range(1, min(FILTER_COUNT, len(FILTER_NAMES))) if _named(FILTER_NAMES, i)],
+    'item': [(i, ITEM_NAMES[i]) for i in range(1, min(len(ITEM_GROUP), len(ITEM_NAMES)))
+             if ITEM_GROUP[i] and _named(ITEM_NAMES, i)],
+    'record': [(n, ITEM_NAMES[RECORD_ITEM[n]]) for n in range(1, min(RECORD_COUNT, len(RECORD_ITEM)))
+               if RECORD_ITEM[n] and _named(ITEM_NAMES, RECORD_ITEM[n])],
+    'artifact': [(row, f'{ITEM_NAMES[i] if _named(ITEM_NAMES, i) else f"Item {i}"}  ({ARTIFACT_SECTION.get(s, "other")})')
+                 for row, (i, s) in ARTIFACTS.items()],
+    'photoop': [(i, PHOTOOP_NAMES[i]) for i in range(1, min(PHOTOOP_COUNT, len(PHOTOOP_NAMES))) if _named(PHOTOOP_NAMES, i)],
+}
+_COLLECTION_IDS = {k: {i for i, _ in v} for k, v in COLLECTION.items()}
+# kind -> (title, name of state 1 or '', name of state 2)
+COLLECTION_INFO = {
+    'dex': ('Pokédex', 'seen', 'registered'),
+    'habitat': ('Habitat Dex', 'discovered', 'built'),
+    'recipe': ('Crafting recipes', '', 'learned'),
+    'cooking': ('Cooking recipes', 'partly known', 'known'),
+    'frame': ('Photo frames', '', 'unlocked'),
+    'filter': ('Photo filters', '', 'unlocked'),
+    'item': ('Item list', '', 'obtained'),
+    'record': ('Human Records', '', 'found'),
+    'artifact': ('Ancient Artifacts', '', 'found'),
+    'photoop': ('Highlight Reel', '', 'completed'),
+}
+
+
+def collection_item(kind, i):
+    """Item ID behind a recipe or dish (0 for the other kinds)."""
+    if kind == 'record':
+        return RECORD_ITEM[i] if i < len(RECORD_ITEM) else 0
+    if kind == 'artifact':
+        return ARTIFACTS[i][0] if i in ARTIFACTS else 0
+    return RECIPE_ITEM[i] if kind == 'recipe' else i if kind in ('cooking', 'item') else 0
 
 
 def item_tag(i):
@@ -626,6 +781,110 @@ class CommonSave:
                 raise ValueError(f'{KNOWN_WARDROBE.get(i, i)} is available from the start and cannot be removed')
             self.data[CATALOG_OFS + i] = 0
 
+    # ---------- collection: Pokédex, habitats, crafting recipes, cooking, photo frames/filters ----------
+    def collection_state(self, kind, i):
+        """0 = nothing, 1 = partial (Pokémon seen, habitat discovered, some ways to cook a dish), 2 = complete."""
+        if i not in _COLLECTION_IDS[kind]:
+            raise ValueError(f'{i} is not an entry of {COLLECTION_INFO[kind][0]}')
+        d = self.data
+        if kind == 'dex':
+            v = d[DEX_OFS + i]
+            return 2 if v & 3 == 3 else 1 if v & 8 else 0
+        if kind == 'habitat':
+            v = d[HABITAT_OFS + i * HABITAT_SIZE]
+            return 2 if v & 2 else v & 1
+        if kind == 'recipe':
+            return 2 if d[RECIPE_OFS + i * RECIPE_SIZE + 4] & 2 else 0
+        if kind == 'cooking':
+            known = [d[COOK_OFS + r] & 1 for r in COOK_ROWS[i]]
+            return 2 if all(known) else 1 if any(known) else 0
+        if kind == 'item':
+            return 2 if d[CATALOG_OFS + i] else 0
+        if kind == 'record':
+            return 2 if d[RECORD_OFS + i] & 1 else 0
+        if kind == 'artifact':
+            return 2 if d[ARTIFACT_OFS + i] & 1 else 0
+        if kind == 'photoop':
+            return 2 if d[PHOTOOP_OFS + i] & 1 else 0
+        ofs = PHOTO_STYLE_OFS + (FRAME_COUNT if kind == 'filter' else 0)
+        return 2 if d[ofs + i] & 1 else 0
+
+    def collection_count(self, kind, state=2):
+        return sum(self.collection_state(kind, i) >= state for i, _ in COLLECTION[kind])
+
+    def unlock_collection(self, kind, ids=None, partial=False):
+        """Complete entries (all of the kind by default). partial=True only marks a Pokémon seen / a habitat
+        discovered. Only sets bits; entries already there are left alone. Returns how many entries changed."""
+        if kind not in COLLECTION:
+            raise ValueError(f'Unknown collection {kind!r} ({", ".join(COLLECTION)})')
+        if partial and kind not in ('dex', 'habitat'):
+            raise ValueError('Only Pokémon and habitats have a seen/discovered state')
+        ids = [i for i, _ in COLLECTION[kind]] if ids is None else list(ids)
+        d = self.data
+        todo = [i for i in ids if self.collection_state(kind, i) < (1 if partial else 2)]
+        order = 0
+        if kind == 'recipe' and todo:
+            order = max(struct.unpack_from('<H', d, RECIPE_OFS + k * RECIPE_SIZE + 2)[0] for k in range(RECIPE_COUNT))
+            if order + len(todo) > 0xFFFF:
+                raise ValueError('There is no room for more recipes in the learned order')
+        for i in todo:
+            if kind == 'dex':
+                d[DEX_OFS + i] |= 8 if partial else 3
+            elif kind == 'habitat':
+                d[HABITAT_OFS + i * HABITAT_SIZE] |= 1 if partial else 3
+            elif kind == 'recipe':
+                order += 1
+                o = RECIPE_OFS + i * RECIPE_SIZE
+                struct.pack_into('<H', d, o + 2, order)
+                d[o + 4] |= 2
+            elif kind == 'cooking':
+                for r in COOK_ROWS[i]:
+                    d[COOK_OFS + r] |= 1
+            elif kind == 'item':
+                d[CATALOG_OFS + i] = CATALOG_OBTAINED
+            elif kind == 'record':
+                d[RECORD_OFS + i] |= 1
+            elif kind == 'artifact':
+                d[ARTIFACT_OFS + i] |= 1
+                item = ARTIFACTS[i][0]
+                if not d[CATALOG_OFS + item]:
+                    d[CATALOG_OFS + item] = CATALOG_OBTAINED
+            elif kind == 'photoop':
+                d[PHOTOOP_OFS + i] |= 1
+            else:
+                d[PHOTO_STYLE_OFS + (FRAME_COUNT if kind == 'filter' else 0) + i] |= 1
+        return len(todo)
+
+    # ---------- upgrades and features (function flags) ----------
+    def upgrade(self, key):
+        return all(self.get_flag(f) for f in UPGRADES[key][1])
+
+    def set_upgrade(self, key, on=True):
+        """Switch an upgrade on (with the ones it builds on) or off (with the ones that build on it)."""
+        if key not in UPGRADES:
+            raise ValueError(f'Unknown upgrade {key!r} ({", ".join(UPGRADES)})')
+        if on:
+            need = UPGRADES[key][2]
+            if need:
+                self.set_upgrade(need, True)
+        else:
+            for other, (_, _, need) in UPGRADES.items():
+                if need == key and self.upgrade(other):
+                    self.set_upgrade(other, False)
+        for f in UPGRADES[key][1]:
+            self.set_flag(f, on)
+
+    # ---------- Life Coins ----------
+    @property
+    def coins(self):
+        return struct.unpack_from('<i', self.data, COINS_OFS)[0]
+
+    @coins.setter
+    def coins(self, value):
+        if not 0 <= value <= COINS_MAX:
+            raise ValueError(f'Life Coins must be 0-{COINS_MAX:,}')
+        struct.pack_into('<i', self.data, COINS_OFS, value)
+
     def forget_reaction(self, i):
         """Unlearn an emote and take it off the emote wheel."""
         if i not in PUBLIC_REACTIONS:
@@ -718,6 +977,19 @@ def describe_changes(a, b, limit=400):
         gone = [i for i in wa if i not in wb]
         out.append(f'Outfits & hairstyles: {len(wa)} -> {len(wb)} of {len(WARDROBE_IDS)} unlocked'
                    + (f' (new: {names(new)})' if new else '') + (f' (removed: {names(gone)})' if gone else ''))
+    if a.coins != b.coins:
+        out.append(f'Life Coins: {a.coins:,} -> {b.coins:,}')
+    for kind, entries in COLLECTION.items():
+        title, _, full = COLLECTION_INFO[kind]
+        ch = [(n, b.collection_state(kind, i)) for i, n in entries
+              if a.collection_state(kind, i) != b.collection_state(kind, i)]
+        if ch:
+            done = [n for n, y in ch if y == 2]
+            other = len(ch) - len(done)
+            more = f' and {len(done) - 6} more' if len(done) > 6 else ''
+            out.append(f'{title}: {a.collection_count(kind)} -> {b.collection_count(kind)} of {len(entries)} {full}'
+                       + (f' (new: {", ".join(done[:6])}{more})' if done else '')
+                       + (f' ({other} other state change{"s" if other != 1 else ""})' if other else ''))
     for i in range(1, FLAG_COUNT):
         if a.get_flag(i) != b.get_flag(i):
             out.append(f'Flag {i} ({KNOWN_FLAGS.get(i, "unknown")}): {"on" if b.get_flag(i) else "off"}')

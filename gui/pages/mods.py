@@ -76,8 +76,9 @@ class ModsPage(Page):
         card.body.addWidget(W.label('Change Pokémon while playing', 'h3'))
         card.body.addWidget(W.label(
             'With the game running in your emulator on this PC, pick a Pokémon and press Transform. No restart '
-            f'is needed. If you installed "{mod.any_label}", {mod.meta["controls"][0][0]} also turns you into the '
-            'last Pokémon you picked here, or Ditto if you have not picked one.', 'small', wrap=True))
+            'is needed. ZL + L3 then turns you into the last Pokémon you picked here, and ZL + D-pad Left / Right '
+            'go on from it in A to Z order. Until you pick one, ZL + L3 uses the Pokémon you installed '
+            f'(Ditto for "{mod.any_label}").', 'small', wrap=True))
         names = list(mod.numbers)
         card.live = QComboBox()
         card.live.setEditable(True)
@@ -142,7 +143,9 @@ class ModsPage(Page):
                 raise pl.LiveError(f'"{name}" is not in the list.')
             game = self.live_game(mod)
             if match is not None and not experimental:
-                game.select(table[match])  # the button combo keeps using the last Pokémon, not an experimental form
+                # the button combo keeps using the last Pokémon, not an experimental form; ZL + D-pad Left / Right
+                # go on from its place in the A-Z list
+                game.select(table[match], sorted(table, key=str.lower).index(match) + 1)
             game.transform(0 if back else table[match])
         except (pl.LiveError, OSError) as e:
             W.set_role(state, 'warn')

@@ -15,7 +15,8 @@ HEAD_SHA256 = 'a8e03f9572c9688f55057ef2e8d8bd4c1faa36549c9dbe081ea8fdeb1f6effe7'
 SELF_PTR = (0x3483AB8, 0x35618F0)  # main+a holds the game address of main+b: gives the game-side base of main
 PLAYER_PTR = 0x3561928             # player object = [[main + this] + 0x30]
 FORM = 0x3D14C00                   # u16 the patch reads: form to hold (0 = off)
-SELECTED = 0x3D14C06               # u16 the "Any" cheat reads: form its button combo turns you into
+SELECTED = 0x3D14C06               # u16 the cheat reads: form its button combo turns you into
+POSITION = 0x3D14C1A               # u16 the cheat keeps: SELECTED's place in the A-Z list + 1 (0 = not in it)
 P_CURRENT, P_DESIRED = 0x5A44, 0x5A46
 P_STATE, P_ANIM, P_GO = 0x3788, 0x378A, 0x378C
 ANIM_TRANSFORM = 0x3B2
@@ -69,15 +70,19 @@ def emulator_pids():
 
 
 def ips_records(data):
-    """[(offset in main, bytes)] of an .ips patch for an NSO (file offset = main offset + 0x100)."""
-    if data[:5] != b'PATCH':
+    """[(offset in main, bytes)] of an .ips or IPS32 patch for an NSO (file offset = main offset + 0x100)."""
+    if data[:5] == b'PATCH':
+        i, w, eof = 5, 3, b'EOF'
+    elif data[:5] == b'IPS32':
+        i, w, eof = 5, 4, b'EEOF'
+    else:
         raise ValueError('not an IPS patch')
-    out, i = [], 5
-    while data[i:i + 3] != b'EOF' and i + 5 <= len(data):
-        off = int.from_bytes(data[i:i + 3], 'big')
-        n = int.from_bytes(data[i + 3:i + 5], 'big')
-        out.append((off - 0x100, data[i + 5:i + 5 + n]))
-        i += 5 + n
+    out = []
+    while data[i:i + w] != eof and i + w + 2 <= len(data):
+        off = int.from_bytes(data[i:i + w], 'big')
+        n = int.from_bytes(data[i + w:i + w + 2], 'big')
+        out.append((off - 0x100, data[i + w + 2:i + w + 2 + n]))
+        i += w + 2 + n
     return out
 
 
@@ -132,9 +137,11 @@ class Game:
         p = self.player()
         return self.u16(self.main + FORM), (self.u16(p + P_CURRENT) if p else 0)
 
-    def select(self, form):
-        """Set the form the "Any" button combo turns you into."""
+    def select(self, form, position=0):
+        """Set the form the button combo turns you into. position: its place in the A-Z Pokémon list, from 1
+        (0 = not in the list); ZL + D-pad Left / Right go on from there."""
         self.write(self.main + SELECTED, struct.pack('<H', form))
+        self.write(self.main + POSITION, struct.pack('<H', position))
 
     def transform(self, form):
         """Turn the player into `form` now (0 = back to your character). Same writes as the button combos."""

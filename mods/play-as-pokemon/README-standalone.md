@@ -9,17 +9,21 @@ Turn into any Pokémon in Pokopia. Only works on **Pokopia 2.0.0, update 655360*
 
 ## Buttons
 
-| Hold | Does |
+| Press | Does |
 |---|---|
-| ZL + D-pad Left | Turn into the Pokémon |
-| ZL + D-pad Right | Turn back into your character |
+| ZL + L3 (left stick click) | Turn into the Pokémon; press again to turn back |
+| ZL + D-pad Left / Right | Pick the previous / next Pokémon (A to Z) |
 | ZR (as a flying Pokémon) | Take off, hold to rise |
 | ZL (while flying) | Go down. Keep holding on the ground to land |
 | ZL + ZR (while flying) | Drop out of the air |
 
+Press a combo for a moment rather than tapping it: the emulator only checks the buttons about 12 times a second.
+
 ## Change the Pokémon
 
-You turn into **Ditto** unless you change it. To pick a different Pokémon:
+While playing, ZL + D-pad Left / Right go through every Pokémon from A to Z. If you are already transformed, you change as soon as you stop.
+
+You start as **Ditto**. To start as a different Pokémon:
 
 1. Open the file `76A489F3BD3642FA.txt` in Notepad. It is in the `cheats` folder you unzipped.
 2. Near the top, find this line:
