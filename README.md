@@ -26,6 +26,8 @@
 Supported emulators: **Eden · Yuzu · Suyu · Sudachi · Citron · Torzu · Ryujinx**.
 If your save isn't found, click **Open → Browse for a folder**.
 
+Recompia supported: https://github.com/Dittobyte/Recompia
+
 > [!NOTE]
 > If Windows shows *"Windows protected your PC"*, click **More info → Run anyway**.
 > The warning appears because the app is new and unsigned.
