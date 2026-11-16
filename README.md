@@ -110,7 +110,7 @@ Without the editor you start as Ditto and pick others with ZL + D-pad Left / Rig
 
 Details are in [mods/play-as-pokemon](mods/play-as-pokemon/).
 
-Recompia cannot load the IPS and cheat files. Its package is `play_as_pokemon-1.2.0.pkmod`: copy it into Recompia's `mods` folder. It has the same buttons, and F3 or ZL + R3 opens a list of every Pokémon. Install steps are in [recompia/play-as-pokemon](recompia/play-as-pokemon/README.md).
+Recompia cannot load the IPS and cheat files. Its package is `recompia_play_as_pokemon-1.2.1.pkmod`: copy it into Recompia's `mods` folder. It has the same buttons, and F3 or ZL + R3 opens a list of every Pokémon. Install steps are in [recompia/play-as-pokemon](recompia/play-as-pokemon/README.md).
 
 ---
 

@@ -1,13 +1,14 @@
 """Build Play as Pokemon for Recompia (a Modtopia code mod) into dist/play_as_pokemon-<version>.pkmod.
 
-Usage:  py recompia\\play-as-pokemon\\build.py [--zig PATH]
+Usage:  py recompia\\play-as-pokemon\\build.py [--zig PATH] [--clang PATH]
 
 Steps: write src/forms.h and mod.toml from the emulator mod's Pokemon lists (mods/play-as-pokemon/pokemon.json and
 experimental.json), compile src/play_as_pokemon.c for windows-x64 (mod.dll) and linux-x64 (mod.so) with zig, then pack
 mod.toml + bin/ into the .pkmod (a zip) and print its sha256.
 
 zig: --zig, else the ZIG environment variable, else `zig` on PATH. Recompia ships one in its install folder
-(tools/build/zig/zig.exe), which is what this was built with.
+(tools/build/zig/zig.exe), which is what this was built with. That zig has no Linux headers, so mod.so is then built with
+clang + ld.lld: --clang, else the CLANG environment variable, else `clang` on PATH (llvm-mingw works).
 """
 import argparse, hashlib, json, os, shutil, subprocess, sys, zipfile
 
@@ -17,7 +18,7 @@ LISTS = os.path.join(REPO, 'mods', 'play-as-pokemon')
 DIST = os.path.join(REPO, 'dist')
 
 MOD_ID = 'play_as_pokemon'
-VERSION = '1.2.0'
+VERSION = '1.2.1'
 DEFAULT_A_L, DEFAULT_M_Z, DEFAULT_EXPERIMENTAL = 'Ditto', 'Piplup', 'Ditto (Surf form)'
 LIST_A_L, LIST_M_Z, LIST_EXPERIMENTAL = 'A to L', 'M to Z', 'Experimental forms'
 
@@ -185,26 +186,82 @@ def find_zig(arg):
     sys.exit('zig not found: pass --zig PATH (Recompia has one at <install>/tools/build/zig/zig.exe)')
 
 
-def compile_all(zig, out):
+# The Linux library without Linux headers: Recompia's zig has Windows headers only, so when it cannot build mod.so, clang and
+# lld (any LLVM, e.g. llvm-mingw) build it with declarations of the few libc functions the mod calls and a stub libc.so.6 to
+# link against. The result needs glibc 2.17 or newer. A new libc call fails this build (-Werror): declare it here.
+LINUX_SHIM = {
+    'stdio.h': '#pragma once\n#include <stdarg.h>\n#include <stddef.h>\n'
+               'int snprintf(char *restrict s, size_t n, const char *restrict fmt, ...);\n'
+               'int vsnprintf(char *restrict s, size_t n, const char *restrict fmt, va_list ap);\n',
+    'string.h': '#pragma once\n#include <stddef.h>\n'
+                'void *memset(void *s, int c, size_t n);\nint strcmp(const char *a, const char *b);\n',
+    'time.h': '#pragma once\ntypedef long time_t;\ntypedef int clockid_t;\n'
+              'struct timespec { time_t tv_sec; long tv_nsec; };\n#define CLOCK_MONOTONIC 1\n'
+              'int clock_gettime(clockid_t clk, struct timespec *tp);\n',
+}
+LIBC_STUB = ('#include <stdarg.h>\n#include <stddef.h>\n'
+             'int snprintf(char *s, size_t n, const char *f, ...) { return 0; }\n'
+             'int vsnprintf(char *s, size_t n, const char *f, va_list ap) { return 0; }\n'
+             'void *memset(void *s, int c, size_t n) { return s; }\n'
+             'int strcmp(const char *a, const char *b) { return 0; }\n'
+             'int clock_gettime(int c, void *t) { return 0; }\n')
+LIBC_VERSIONS = ('GLIBC_2.2.5 { global: snprintf; vsnprintf; memset; strcmp; local: *; };\n'
+                 'GLIBC_2.17 { global: clock_gettime; } GLIBC_2.2.5;\n')
+
+
+def find_clang(arg):
+    for c in (arg, os.environ.get('CLANG'), shutil.which('clang')):
+        if c and os.path.isfile(c) and (shutil.which('ld.lld') or os.path.isfile(os.path.join(os.path.dirname(c), 'ld.lld.exe'))
+                                        or os.path.isfile(os.path.join(os.path.dirname(c), 'ld.lld'))):
+            return c
+    return None
+
+
+def build_linux_with_clang(clang, flags, src, dst):
+    work = os.path.join(HERE, 'build', 'linux-sdk')
+    shutil.rmtree(work, ignore_errors=True)
+    os.makedirs(os.path.join(work, 'include'))
+    for name, text in LINUX_SHIM.items():
+        with open(os.path.join(work, 'include', name), 'w', encoding='ascii', newline='\n') as f:
+            f.write(text)
+    for name, text in (('libc_stub.c', LIBC_STUB), ('libc.map', LIBC_VERSIONS)):
+        with open(os.path.join(work, name), 'w', encoding='ascii', newline='\n') as f:
+            f.write(text)
+    libc = os.path.join(work, 'libc.so.6')
+    base = [clang, '-target', 'x86_64-linux-gnu', '-ffreestanding', '-nostdlib', '-shared', '-fPIC', '-fuse-ld=lld']
+    cmds = [base + ['-Wl,-soname,libc.so.6', '-Wl,--version-script,' + os.path.join(work, 'libc.map'), '-o', libc,
+                    os.path.join(work, 'libc_stub.c')],
+            base + [*flags, '-nostdlibinc', '-isystem', os.path.join(work, 'include'), '-fvisibility=hidden',
+                    '-Wl,--no-undefined', '-Wl,-z,now', '-Wl,-z,relro', '-o', dst, src, libc]]
+    for cmd in cmds:
+        print(' '.join(cmd))
+        if subprocess.run(cmd).returncode:
+            return False
+    return True
+
+
+def compile_all(zig, clang, out):
     src, inc = os.path.join(HERE, 'src', 'play_as_pokemon.c'), os.path.join(HERE, 'include')
     flags = ['-std=c11', '-O2', '-Wall', '-Wextra', '-Wno-unused-parameter', '-Werror', '-I', inc, '-I', os.path.join(HERE, 'src')]
-    # (platform, zig target, library, extra flags, required). Recompia's own zig has Windows headers only: there the Linux
-    # library is left out (Recompia on Linux then lists the mod as having no code for linux-x64).
-    targets = [('windows-x64', 'x86_64-windows-gnu', 'mod.dll', [], True),
-               ('linux-x64', 'x86_64-linux-gnu', 'mod.so', ['-fPIC', '-fvisibility=hidden'], False)]
+    # (platform, zig target, library, extra flags). Both are required: Recompia on Linux lists a mod without mod.so as
+    # having no code for linux-x64 and shows it as "Not loaded".
+    targets = [('windows-x64', 'x86_64-windows-gnu', 'mod.dll', []),
+               ('linux-x64', 'x86_64-linux-gnu', 'mod.so', ['-fPIC', '-fvisibility=hidden'])]
     built = []
-    for plat, triple, lib, extra, required in targets:
+    for plat, triple, lib, extra in targets:
         d = os.path.join(out, 'bin', plat)
         os.makedirs(d, exist_ok=True)
         dst = os.path.join(d, lib)
         cmd = [zig, 'cc', '-target', triple, '-shared', *flags, *extra, '-o', dst, src]
         print(' '.join(cmd))
         if subprocess.run(cmd).returncode:
-            if required:
+            if plat != 'linux-x64':
                 sys.exit(f'the {plat} build failed')
-            print(f'note: no {plat} library (this zig cannot build it); the package has the others')
-            shutil.rmtree(d, ignore_errors=True)
-            continue
+            print('note: this zig cannot build the Linux library (no Linux headers); trying clang + lld')
+            if not clang:
+                sys.exit('no clang with ld.lld for the Linux library: pass --clang PATH (any LLVM, e.g. llvm-mingw)')
+            if not build_linux_with_clang(clang, flags, src, dst):
+                sys.exit('the linux-x64 build failed')
         for junk in ('mod.lib', 'mod.pdb'):   # import library / symbols zig leaves beside the dll
             p = os.path.join(d, junk)
             if os.path.exists(p):
@@ -228,6 +285,7 @@ def pack(stage, files, out):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--zig')
+    ap.add_argument('--clang', help='clang with ld.lld beside it, for the Linux library when zig has no Linux headers')
     a = ap.parse_args()
     pokemon, experimental, names, a_l, m_z, exp = load_lists()
     write_forms_h(pokemon, experimental, names, exp)
@@ -236,7 +294,7 @@ def main():
     shutil.rmtree(stage, ignore_errors=True)
     os.makedirs(stage)
     shutil.copy(os.path.join(HERE, 'mod.toml'), stage)
-    files = ['mod.toml'] + compile_all(find_zig(a.zig), stage)
+    files = ['mod.toml'] + compile_all(find_zig(a.zig), find_clang(a.clang), stage)
     os.makedirs(DIST, exist_ok=True)
     out = os.path.join(DIST, f'{MOD_ID}-{VERSION}.pkmod')
     sha = pack(stage, files, out)

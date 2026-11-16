@@ -2,7 +2,7 @@
 
 The [Play as Pokemon](../../mods/play-as-pokemon/README.md) mod for [Recompia](https://github.com/Dittobyte/Recompia), the PC port of Pokopia. Turn into Ditto or any other Pokémon and walk around as it, even one that doesn't live in your town. Flying Pokémon can fly.
 
-**Game version 2.0.1 only** (the version Recompia needs). Windows. The Linux library is not built yet.
+**Game version 2.0.1 only** (the version Recompia needs). Windows and Linux (x86-64; the Linux library needs glibc 2.17 or newer). The Linux build is untested in game so far.
 
 ## Controls
 
@@ -19,9 +19,9 @@ Keyboard players can also set a key for "turn into" and "turn back", and change 
 
 ## Install
 
-1. Copy `play_as_pokemon-1.2.0.pkmod` into Recompia's `mods` folder (next to `pkp.exe`).
+1. Copy `recompia_play_as_pokemon-1.2.1.pkmod` into Recompia's `mods` folder (on Windows, next to `pkp.exe`).
 2. Open `PokopiaLauncher.exe`, go to **Mods**, and allow the new mod's code when it asks.
-3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from 1.1.x uses the same points, so that rebuild is skipped. Then press **Play**.
+3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from 1.1.x or 1.2.0 uses the same points, so that rebuild is skipped. Then press **Play**.
 
 The game log (`pkp.log`) should show `[play_as_pokemon] ready: ZL + L3 turns into Ditto and back, ZL + D-pad Left / Right picks another, F3 or ZL + R3 opens the list`.
 
@@ -57,4 +57,4 @@ The source is `src/play_as_pokemon.c`. `include/modtopia/modtopia.h` is the Modt
 py recompia\play-as-pokemon\build.py --zig "C:\path\to\recompia\tools\build\zig\zig.exe"
 ```
 
-It writes `src/forms.h` and `mod.toml` from `mods/play-as-pokemon/pokemon.json` and `experimental.json`, compiles `mod.dll` with zig (Recompia ships one under `tools/build/zig`), and packs `dist/play_as_pokemon-<version>.pkmod` with a `.sha256` file beside it. A zig with Linux headers also builds `bin/linux-x64/mod.so`.
+It writes `src/forms.h` and `mod.toml` from `mods/play-as-pokemon/pokemon.json` and `experimental.json`, compiles `mod.dll` with zig (Recompia ships one under `tools/build/zig`) and `mod.so` for Linux (with zig if it has Linux headers, else with clang + ld.lld: `--clang PATH`, e.g. llvm-mingw's), and packs `dist/play_as_pokemon-<version>.pkmod` with a `.sha256` file beside it.
