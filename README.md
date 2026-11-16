@@ -67,6 +67,12 @@ Recompia supported: https://github.com/Dittobyte/Recompia
     <td align="center"><b>Residents</b></td>
     <td align="center"><b>Moves & Emotes</b></td>
   </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="docs/screenshots/collection.png" width="50%" alt="Collection"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><b>Collection</b></td>
+  </tr>
 </table>
 
 ---
