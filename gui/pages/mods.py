@@ -55,7 +55,9 @@ class ModsPage(Page):
             card.body.addWidget(W.label(f'Made for Pokopia {m.get("game_update", "")} (build {mod.build_id[:16]}). '
                                         'On other versions it is not applied.', 'small', wrap=True))
             card.body.addWidget(W.label('After installing, tick it in the game\'s Properties → Add-Ons, and keep '
-                                        'Enable GDB Stub off. Use the button combos only once you are in the world.',
+                                        'Enable GDB Stub off.'
+                                        + (' Use the button combos only once you are in the world.'
+                                           if m.get('controls') else ''),
                                         'small', wrap=True))
             card.b_install = W.button('Install', T.G['add'], lambda mod=mod: self.install(mod), accent=True)
             card.b_remove = W.button('Uninstall', T.G['delete'], lambda mod=mod: self.uninstall(mod), danger=True)
