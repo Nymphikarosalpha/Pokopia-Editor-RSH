@@ -155,7 +155,7 @@ The exe stores its settings in `%APPDATA%\Pokopia Editor`.
 </details>
 
 <div align="center">
-<sub>Built with data from <a href="https://github.com/berichan/PokoHex">PokoHex</a> by berichan: the item, resident, move and emote icons, the name lists, the icon, portrait and map-part tables, the island file layout used by the map, and the save layout of the Pokédex, habitat, recipe, cooking, photo style, Life Coin and upgrade records.</sub>
+<sub>Built with data from <a href="https://github.com/berichan/PokoHex">PokoHex</a>
 </div>
 <div align="center">
 <sub>Released under the <a href="LICENSE">GNU General Public License v3.0</a>. Pokémon names, icons and other game assets belong to Nintendo, Game Freak and The Pokémon Company. Fan-made tool, not affiliated with them.</sub>
