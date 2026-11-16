@@ -25,8 +25,7 @@
 
 Supported emulators: **Eden · Yuzu · Suyu · Sudachi · Citron · Torzu · Ryujinx**.
 If your save isn't found, click **Open → Browse for a folder**.
-
-Recompia supported: https://github.com/Dittobyte/Recompia
+[Recompia](https://github.com/Dittobyte/Recompia) is supported too.
 
 > [!NOTE]
 > If Windows shows *"Windows protected your PC"*, click **More info → Run anyway**.
@@ -44,11 +43,11 @@ Recompia supported: https://github.com/Dittobyte/Recompia
 | 💛 | **Residents** | Set friendship, see when you met each resident, and find their home on the map |
 | ✨ | **Moves & Emotes** | Learn or unlearn with a click, then set up your move and emote wheels |
 | 👕 | **Wardrobe** | Unlock any outfit or hairstyle, or all of them at once, including the Expansion Pass ones |
-| ⭐ | **Collection** | Complete the Pokédex, the Habitat Dex, crafting recipes, cooking recipes, the item list, Human Records, Ancient Artifacts, the Highlight Reel, and photo frames and filters, one entry at a time or all at once. Switch on bag, PP, Jump, painting and Poké Center PC features, and set your Life Coins |
+| ⭐ | **Collection** | Complete the Pokédex, Habitat Dex, recipes, item list, Human Records, Ancient Artifacts, Highlight Reel, and photo frames and filters, one at a time or all at once. Turn on upgrades and set your Life Coins |
 | 🗺️ | **Island Map** | See each island from above with everything you've placed. Export it as a PNG |
 | 📷 | **Photos** | Browse your in-game album and export full-size photos |
 | 🛟 | **Backups** | Make, compare, restore and delete backups |
-| 🧩 | **Mods** | Play as Ditto or any other Pokémon, fly as flying Pokémon, and change Pokémon while the game is running. See [mods/](mods/) |
+| 🧩 | **Mods** | Install game mods, like Play as Pokemon |
 
 <table>
   <tr>
@@ -83,40 +82,29 @@ Recompia supported: https://github.com/Dittobyte/Recompia
 
 ### Play as Pokemon <sub>(experimental)</sub>
 
-Turn into Ditto or any other Pokémon and walk around as it. It doesn't have to live in your town.
+Turn into Ditto or any other Pokémon. Flying Pokémon can fly.
+
+1. On the editor's **Mods** page, press **Install**.
+2. Restart the game and tick **Play as Pokemon** in its Properties → Add-Ons.
+3. In the game, press **ZL + L3**. To choose the Pokémon, pick one on the Mods page and press **Transform**, or use ZL + D-pad.
 
 | Press | Does |
 |---|---|
-| **ZL + L3** (left stick click) | Turn into the chosen Pokémon; press again to turn back |
-| **ZL + D-pad Left / Right** | Pick the previous / next Pokémon (A to Z). While transformed you change as soon as you stop flicking through |
+| **ZL + L3** (left stick click) | Transform; press again to turn back |
+| **ZL + D-pad Left / Right** | Previous / next Pokémon |
 | **ZR** as a flying Pokémon | Take off, hold to rise |
-| **ZL** while flying | Descend; keep holding it on the ground to land |
+| **ZL** while flying | Descend; hold on the ground to land |
 | **ZL + ZR** while flying | Drop out of the air |
 
-1. Open the editor's **Mods** page and press **Install**.
-2. Restart the game and tick **Play as Pokemon** under its Properties → Add-Ons.
-3. With the game running, pick a Pokémon under **Change Pokémon while playing** and press **Transform**. No restart is needed.
+- **Only for Pokopia 2.0.0** (update 655360).
+- **Transform** on the Mods page needs the emulator on the same PC. On a console, pick the Pokémon before installing.
+- **Experimental forms**, below the Pokémon list, turn you into things like the Master Ball.
 
-ZL + L3 uses the Pokémon you picked last, or Ditto until you pick one. Changing Pokémon while playing needs the emulator and the editor on the same Windows PC. On a console, choose one Pokémon in the list before you install instead.
+**Without the editor:** [emulator zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-emulator.zip) (unzip into the emulator's `load` folder) or [SD card zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-SD-card.zip) (Atmosphère, untested). You start as Ditto; [how to start as another Pokémon](mods/play-as-pokemon/README-standalone.md#change-the-pokémon).
 
-**Only for Pokopia 2.0.0, update 655360.** On other versions the patch is not applied.
+**Recompia:** copy `recompia_play_as_pokemon-1.2.1.pkmod` into Recompia's `mods` folder. F3 or ZL + R3 opens the Pokémon list. [Install steps](recompia/play-as-pokemon/README.md).
 
-Play as Pokemon replaces the older **Always Ditto** and **Play as Resident** mods. If you have them, press **Update** on the Mods page and the editor removes them for you.
-
-Pokémon that hover or fly in the game, such as Charizard, Scyther and Noctowl, can fly with their own hover and flying animations. Let go of both buttons to hover in place.
-
-Below the Pokémon list, **Experimental forms** turns you into things that are not Pokémon, such as the Master Ball or Ditto's Surf and Glide forms.
-
-Want the mod without the editor? Download it on its own:
-
-- [**`PlayAsPokemon-emulator.zip`**](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-emulator.zip): unzip into your emulator's `load` folder, then tick **Play as Pokemon** under the game's Properties → Add-Ons
-- [**`PlayAsPokemon-SD-card.zip`**](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-SD-card.zip): unzip onto the SD card for Atmosphère-style custom firmware (untested)
-
-Without the editor you start as Ditto and pick others with ZL + D-pad Left / Right. To start as another Pokémon, change one number in the cheat file: [how to, with every Pokémon's code](mods/play-as-pokemon/README-standalone.md#change-the-pokémon).
-
-Details are in [mods/play-as-pokemon](mods/play-as-pokemon/).
-
-Recompia cannot load the IPS and cheat files. Its package is `recompia_play_as_pokemon-1.2.1.pkmod`: copy it into Recompia's `mods` folder. It has the same buttons, and F3 or ZL + R3 opens a list of every Pokémon. Install steps are in [recompia/play-as-pokemon](recompia/play-as-pokemon/README.md).
+More details: [mods/play-as-pokemon](mods/play-as-pokemon/).
 
 ---
 
