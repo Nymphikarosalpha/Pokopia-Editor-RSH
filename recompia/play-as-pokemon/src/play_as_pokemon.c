@@ -24,6 +24,10 @@
  * Every hook acts on the player's own character only. In Link Play the other players are characters of the same kind, and
  * RequestState runs for every character, so without that check a transformed player's game would also keep the others from
  * turning back and hand them its own form.
+ *
+ * Link Play (1.4): the game sends each player's wanted form to the others, but a game only turns another player into the
+ * game's own six player forms (it plays that form's transformation action). So player_tick, char_setup and probe also act on
+ * the other players' characters while they are in one of this mod's forms: see "Link Play" below.
  */
 #include <modtopia/modtopia.h>
 
@@ -65,6 +69,7 @@ MT_DECLARE_MOD()
 #define P_REQ_GO      0x378C   /* u8 request */
 #define TRANSFORM_ANIM 0x3B2
 #define HUMAN 1
+#define FORM_MAX 1000  /* the player update applies a pending state 1..1000 */
 
 /* player entity (flying) */
 #define E_MOTION 0x228   /* current motion record */
@@ -101,6 +106,7 @@ MT_DECLARE_MOD()
 #define WORLD         0x34EFC98ull   /* [main+this] = the world's blocks */
 #define SLUDGE        8              /* the block kind Bubble works on (the sludge on Bleak Beach) */
 #define RESIDENT_IDS  0x2            /* a character id's top nibble: 1 players, 2 the town's Pokemon */
+#define PLAYER_IDS    0x1
 #define SLOT          0x3D14D00ull   /* unused bss (the crafting range mod uses +0xE00): the test slot, and the cell passed to the game */
 #define SLOT_MAGIC    0x42414B50u    /* "PKAB" */
 
@@ -111,6 +117,7 @@ static uint64_t MAIN;
 
 static _Atomic uint16_t g_form;        /* read by hooks on any game thread */
 static uint16_t g_requested, g_acquired; /* the player's own threads only (model setup, update) */
+static int g_built_unbound;            /* the model of g_requested was built while its motion set had no animations bound */
 static _Atomic uint16_t g_selected = DEFAULT_FORM;   /* what the combo turns the player into */
 static _Atomic int g_settings_changed;
 static _Atomic int g_fly = 1, g_cycle = 1, g_messages = 1;
@@ -215,6 +222,12 @@ static int motion_set_uses(uint64_t set) {
     uint16_t count = 0;
     if (!set || !rd(set + 0x1076, &loaded, 1) || !loaded || !r16(set + 0x1074, &count)) return -1;
     return count;
+}
+/* At a model setup: 1 when the resource has a motion set that is not loaded or has no animations bound (no one uses it), so
+   the model is built without animations and must be built again once the set is bound. */
+static int built_unbound(uint16_t res) {
+    uint64_t set = res ? motion_set(res) : 0;
+    return set && motion_set_uses(set) <= 0;
 }
 
 /* ---------------------------------------------------------------- forms */
@@ -511,7 +524,8 @@ static void buttons(uint64_t P) {
  * The game attaches animation data to a species' motion set only while its animation package is loaded and the set is
  * acquired. Residents do both when they spawn; the player's form change does neither, so a species that does not live in
  * the town would be invisible. char_setup requests the package, this binds the set once it is loaded, and when that was
- * the set's first use (the model was built without animations) it builds the form again. */
+ * the set's first use, or the model was built while the set had no animations (char_setup notes it: another character,
+ * such as another player turning into the same Pokemon at the same time, may have bound it since), it builds the form again. */
 static void bind_animations(uint64_t P) {
     uint16_t req = g_requested;
     if (!req || req == g_acquired) return;
@@ -523,7 +537,9 @@ static void bind_animations(uint64_t P) {
     int before = motion_set_uses(set);
     call(FN_MSET_ACQ, mgr, req, 0);
     g_acquired = req;
-    if (before == 0 && motion_set_uses(set) == 1) {
+    int unbound = g_built_unbound;
+    g_built_unbound = 0;
+    if ((before == 0 && motion_set_uses(set) == 1) || unbound) {
         uint16_t form = atomic_load(&g_form);
         if (!form) return;
         w16(P + P_FORM_NOW, HUMAN);   /* the current form is stale: request it again */
@@ -583,18 +599,19 @@ static void keep_form(uint64_t P) {
     request(P, form);
 }
 
-static void remote_model(uint64_t ch, uint16_t res);   /* Link Play diagnostics, below */
+static void remote_model(MtHookCtx *c, uint64_t ch, uint16_t res);   /* Link Play, below */
 
 static int h_char_setup(MtHookCtx *c, void *u) {   /* strh w8, [x25, #0xe94]: w8 = resource ID, x19 = character */
     (void)u;
     uint64_t P = player();
     if (!P || H->reg_get(c, 19) != P) {
-        if (P) remote_model(H->reg_get(c, 19), (uint16_t)H->reg_get(c, 8));
+        if (P) remote_model(c, H->reg_get(c, 19), (uint16_t)H->reg_get(c, 8));
         return MT_CONTINUE;
     }
     uint16_t res = (uint16_t)H->reg_get(c, 8), form = atomic_load(&g_form), now = form ? res : 0, old = g_requested;
     if (now == old) return MT_CONTINUE;
     g_requested = now;
+    g_built_unbound = built_unbound(now);
     if (form) mt_logf(H, M, MT_LOG_DEBUG, "the player's model: animation resource %u (form %u)", res, form);
     w16(H->reg_get(c, 25) + 0xE94, res);   /* the patch ran after this store: do it first (the game repeats it) */
     uint64_t x0 = H->reg_get(c, 0);
@@ -1040,53 +1057,202 @@ static void trace(uint64_t P) {
             (unsigned long long)(H->frame ? H->frame() : 0), v[0], v[1], v[2], v[3], b[0], b[1], b[2], atomic_load(&g_form));
 }
 
-/* Link Play diagnostics: the other players' characters run the same update. While online, each change of their form fields
-   (and each model setup, in h_char_setup) goes to pkp.log, to see whether a transform reaches the other players' games. */
+/* ---------------------------------------------------------------- Link Play (1.4)
+ * The other players' characters are the same kind of character as the player's and run the same update (h_player_tick sees
+ * them too). Each game sends its player's wanted form (P_FORM_WANT, through the form_get vfunc, so a transformed player sends
+ * the Pokemon) and the others store it with form_set (main+0x271360, the player state receiver). But a game changes another
+ * player's form only by playing that form's transformation action (main+0x2F6FCC), and only the game's own six player forms
+ * have one. So the Pokemon arrived and was never applied: the others kept seeing the human, and the actions they received,
+ * which are played for the wanted form, did not fit the human model, so it stood still in its idle pose.
+ * Here each game shows the other players' forms itself, as it does for its own player: it requests the form on their
+ * character, loads the Pokemon's animation package for their model (char_setup), binds its motion set once loaded and then
+ * builds their model once more (a Pokemon that does not live in this town would be invisible otherwise), and keeps the
+ * stand-up stretch off them (probe). Turning back is requested the same way. The game's own forms are left to the game. */
 #define REMOTE_MAX 4
-static struct { uint64_t ch; uint16_t id, v[4]; uint8_t b[3]; } g_remote[REMOTE_MAX];
+#define REMOTE_GONE_MS  5000   /* a character not updated for this long has left: its slot is free again */
+#define REMOTE_TRIES       5   /* requests for one form that did not take, before waiting for the next form */
+typedef struct {
+    _Atomic uint64_t ch;          /* the other player's character (0 = free slot) */
+    _Atomic int shown;            /* in one of this mod's forms (read by h_probe on any thread) */
+    _Atomic uint64_t seen;        /* its last update */
+    uint16_t id, v[4];            /* its character id; the form fields as last logged */
+    uint8_t b[3];
+    uint16_t requested, acquired; /* as g_requested / g_acquired: its model's animation resource, and the one acquired */
+    int built_unbound;            /* as g_built_unbound */
+    uint16_t asked;               /* the form last requested for it here */
+    int tries;
+    uint64_t last_request;
+} Remote;
+static Remote g_remote[REMOTE_MAX];
+
+/* The game's own player forms: human, Ditto, and the move forms. The game changes these itself. */
+static int game_form(uint16_t f) { return f == HUMAN || f == 0x1F || f == 0x46 || f == 0x99 || f == 0xCE || f == 0x128; }
+static int mod_form(uint16_t f) { return f > HUMAN && f <= FORM_MAX && !game_form(f); }
+
 static int online(void) {
     uint64_t gm = r64(MAIN + GAME_MGR);
     uint8_t f = 0;
     return gm && rd(gm + 0x90, &f, 1) && (f & 1);   /* GameMgr.online, bit 0 */
 }
 static int remote_slot(uint64_t ch) {
-    for (int i = 0; i < REMOTE_MAX; i++)
-        if (ch && g_remote[i].ch == ch) return i;
+    for (int i = 0; ch && i < REMOTE_MAX; i++)
+        if (atomic_load(&g_remote[i].ch) == ch) return i;
     return -1;
 }
-static void remote_model(uint64_t ch, uint16_t res) {
-    int i = remote_slot(ch);
-    if (i >= 0) mt_logf(H, M, MT_LOG_INFO, "remote model id 0x%x: animation resource %u", g_remote[i].id, res);
+/* A slot is let go without releasing what it acquired: the character is gone (or the session over), and releasing a motion
+   set while a model might still use it would unbind its animations under it. The package stays loaded, that is all. */
+static void remote_free(int i) {
+    Remote *R = &g_remote[i];
+    atomic_store(&R->shown, 0);
+    R->id = 0, R->requested = R->acquired = R->asked = 0, R->tries = 0, R->last_request = 0, R->built_unbound = 0;
+    atomic_store(&R->ch, 0);
 }
-static void trace_remote(uint64_t ch) {
-    if (!online()) return;
-    int i = remote_slot(ch);
-    if (i < 0) {
-        uint16_t id = 0;
-        if (!r16(ch + 0x27FE, &id) || (id & 0x800) || (unsigned)((id >> 12) - 1) >= 4) return;   /* not a player's id */
-        for (i = 0; i < REMOTE_MAX && g_remote[i].ch; i++) {}
-        if (i == REMOTE_MAX) return;
-        g_remote[i].ch = ch, g_remote[i].id = id;
-        g_remote[i].v[0] = 0xFFFF;   /* log the first state */
+static int remote_claim(uint64_t ch, uint16_t id) {
+    for (int i = 0; i < REMOTE_MAX; i++) {
+        uint64_t none = 0;
+        if (!atomic_compare_exchange_strong(&g_remote[i].ch, &none, ch)) continue;
+        Remote *R = &g_remote[i];
+        R->id = id;
+        R->v[0] = 0xFFFF;   /* log the first state */
+        atomic_store(&R->seen, now_ms());
         mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x", id);
+        return i;
     }
-    uint16_t v[4] = {0};
-    uint8_t b[3] = {0};
+    return -1;
+}
+/* From the player's own update: slots of characters that stopped updating (a player left) are freed; all of them once the
+   session is over. */
+static void remote_sweep(void) {
+    int on = online();
+    uint64_t now = now_ms();
+    for (int i = 0; i < REMOTE_MAX; i++) {
+        if (!atomic_load(&g_remote[i].ch)) continue;
+        if (on && now - atomic_load(&g_remote[i].seen) < REMOTE_GONE_MS) continue;
+        mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x: gone", g_remote[i].id);
+        remote_free(i);
+    }
+}
+static int any_remote_shown(void) {
+    for (int i = 0; i < REMOTE_MAX; i++)
+        if (atomic_load(&g_remote[i].shown)) return 1;
+    return 0;
+}
+static int remote_shown(uint64_t ch) {
+    int i = remote_slot(ch);
+    return i >= 0 && atomic_load(&g_remote[i].shown);
+}
+
+static void remote_request(Remote *R, uint64_t ch, uint16_t form, uint64_t now) {
+    w16(ch + P_REQ_STATE, form);
+    w16(ch + P_REQ_ANIM, TRANSFORM_ANIM);
+    w8(ch + P_REQ_GO, 1);
+    R->last_request = now;
+}
+
+/* The model setup of another player's character (h_char_setup): while its current form is one of this mod's, the animation
+   package of the model's resource is requested, and the previous one released, exactly as for the player. */
+static void remote_model(MtHookCtx *c, uint64_t ch, uint16_t res) {
+    int i = remote_slot(ch);
+    if (i < 0) return;
+    Remote *R = &g_remote[i];
+    uint16_t cur = 0;
+    r16(ch + P_FORM_NOW, &cur);   /* the model setup builds the current form (vfunc 0x1D0) */
+    uint16_t now = mod_form(cur) ? res : 0, old = R->requested;
+    mt_logf(H, M, MT_LOG_INFO, "remote model id 0x%x: animation resource %u (form %u)", R->id, res, cur);
+    if (now == old) return;
+    R->requested = now;
+    R->built_unbound = built_unbound(now);
+    w16(H->reg_get(c, 25) + 0xE94, res);   /* as in h_char_setup: the store this hook point replaces, first */
+    uint64_t mgr = pkg_mgr();
+    if (!mgr) return;
+    if (old) {
+        if (R->acquired == old) {
+            R->acquired = 0;
+            call(FN_MSET_REL, mgr, old, 0);
+        }
+        uint16_t pkg = pkg_of(mgr, old);
+        if (pkg) call(FN_PKG_REL, mgr, pkg, 0);
+    }
+    if (now) {
+        uint16_t pkg = pkg_of(mgr, now);
+        if (pkg) call(FN_PKG_REQ, mgr, pkg, 0);
+    }
+}
+
+/* As bind_animations: once the package is loaded, acquire the motion set; when that was its first use, or the model was
+   built while the set had no animations, the model has none (invisible), so the form is built again. */
+static void remote_bind(Remote *R, uint64_t ch, uint64_t now) {
+    uint16_t req = R->requested, cur = 0;
+    if (!req || req == R->acquired) return;
+    uint64_t mgr = pkg_mgr();
+    if (!mgr) return;
+    uint16_t pkg = pkg_of(mgr, req);
+    if (pkg && !(uint32_t)call(FN_PKG_READY, mgr, pkg, 0)) return;   /* still loading */
+    uint64_t set = motion_set(req);
+    int before = motion_set_uses(set);
+    call(FN_MSET_ACQ, mgr, req, 0);
+    R->acquired = req;
+    int unbound = R->built_unbound;
+    R->built_unbound = 0;
+    if (!((before == 0 && motion_set_uses(set) == 1) || unbound) || !r16(ch + P_FORM_NOW, &cur) || !mod_form(cur)) return;
+    mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x: animations of %s loaded, building it again", R->id, form_name(cur));
+    w16(ch + P_FORM_NOW, HUMAN);   /* the current form is stale: request it again */
+    remote_request(R, ch, cur, now);
+}
+
+/* Another player's update (h_player_tick): show the form that player wants when it is one of this mod's, or turn them back
+   from one. One request at a time, REQUEST_GAP_MS apart, as for the player; a form that does not take is tried REMOTE_TRIES
+   times. */
+static void remote_tick(uint64_t ch) {
+    uint16_t id = 0;
+    if (!online() || !r16(ch + P_ID, &id)) return;
+    int i = remote_slot(ch);
+    if (i >= 0 && g_remote[i].id != id) {   /* the character was freed and made again for another player */
+        remote_free(i);
+        i = -1;
+    }
+    if (i < 0) {
+        if ((id & 0x800) || (id >> 12) != PLAYER_IDS) return;   /* not a player's id */
+        if ((i = remote_claim(ch, id)) < 0) return;
+    }
+    Remote *R = &g_remote[i];
+    uint64_t now = now_ms();
+    atomic_store(&R->seen, now);
+
+    uint16_t v[4] = {0};   /* form, want, request, anim */
+    uint8_t b[3] = {0};    /* go, isDitto, transform motion playing */
     r16(ch + P_FORM_NOW, &v[0]), r16(ch + P_FORM_WANT, &v[1]), r16(ch + P_REQ_STATE, &v[2]), r16(ch + P_REQ_ANIM, &v[3]);
     rd(ch + P_REQ_GO, b, 3);
     int same = 1;
-    for (int k = 0; k < 4; k++) same &= v[k] == g_remote[i].v[k], g_remote[i].v[k] = v[k];
-    for (int k = 0; k < 3; k++) same &= b[k] == g_remote[i].b[k], g_remote[i].b[k] = b[k];
-    if (same) return;
-    mt_logf(H, M, MT_LOG_INFO, "remote trace id 0x%x f%llu: form %u want %u | request %u anim 0x%x go %u ditto %u playing %u", g_remote[i].id,
-            (unsigned long long)(H->frame ? H->frame() : 0), v[0], v[1], v[2], v[3], b[0], b[1], b[2]);
+    for (int k = 0; k < 4; k++) same &= v[k] == R->v[k], R->v[k] = v[k];
+    for (int k = 0; k < 3; k++) same &= b[k] == R->b[k], R->b[k] = b[k];
+    if (!same)
+        mt_logf(H, M, MT_LOG_INFO, "remote trace id 0x%x f%llu: form %u want %u | request %u anim 0x%x go %u ditto %u playing %u", R->id,
+                (unsigned long long)(H->frame ? H->frame() : 0), v[0], v[1], v[2], v[3], b[0], b[1], b[2]);
+
+    uint16_t cur = v[0], want = v[1], pending = v[2];
+    atomic_store(&R->shown, mod_form(cur) || mod_form(want));
+    remote_bind(R, ch, now);
+    if (want != R->asked) R->tries = 0;
+    if (want == cur || b[0] || (pending >= 1 && pending <= FORM_MAX)) return;   /* nothing to do, or a change under way */
+    if (!mod_form(want) && !mod_form(cur)) return;                              /* the game's own forms: the game does it */
+    if (want == 0 || want > FORM_MAX || now - R->last_request < REQUEST_GAP_MS || R->tries >= REMOTE_TRIES) return;
+    if (++R->tries == REMOTE_TRIES)
+        mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x: form %u does not take, last try", R->id, want);
+    R->asked = want;
+    if (mod_form(want))
+        mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x is %s (form %u): shown here", R->id, form_name(want), want);
+    else
+        mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x turns from %s into form %u", R->id, form_name(cur), want);
+    remote_request(R, ch, want, now);
 }
 
 static int h_player_tick(MtHookCtx *c, void *u) {   /* blr x8 near the top of the player's update: x0 = the character */
     (void)u;
     uint64_t P = player(), ch = H->reg_get(c, 0);
-    if (P && ch && ch != P) trace_remote(ch);
+    if (P && ch && ch != P) remote_tick(ch);
     if (!P || ch != P) return MT_CONTINUE;
+    remote_sweep();
     trace(P);
     buttons(P);
     bind_animations(P);
@@ -1145,13 +1311,20 @@ static int h_to_human(MtHookCtx *c, void *u) {
     return MT_CONTINUE;
 }
 /* Animation condition 0x56 = not (wall probe). Function entry: (x0 = &controller, w1 = mode); returns probe ^ (mode == 1).
-   For the player while transformed the probe counts as true, so the idle -> stand-up transition never fires. */
+   For the player while transformed, and for another player shown in one of this mod's forms, the probe counts as true, so the
+   idle -> stand-up transition never fires. The probe (main+0x6D5374) finds the character as entity [ENTITY_TABLE] + 0x58 +
+   8 * ([[controller] + 8] + 0x1C), whose +0x10 is the character; the player's entity is index 0. */
 static int h_probe(MtHookCtx *c, void *u) {
     (void)u;
-    if (!atomic_load(&g_form)) return MT_CONTINUE;
+    int local = atomic_load(&g_form) != 0, remote = any_remote_shown();
+    if (!local && !remote) return MT_CONTINUE;
     uint64_t ctl = r64(H->reg_get(c, 0)), owner = ctl ? r64(ctl + 8) : 0;
     uint16_t idx = 0xFFFF;
-    if (!owner || !r16(owner + 0x1C, &idx) || idx != 0) return MT_CONTINUE;
+    if (!owner || !r16(owner + 0x1C, &idx) || idx >= 0x4B) return MT_CONTINUE;
+    if (!(local && idx == 0)) {
+        uint64_t t = remote ? r64(MAIN + ENTITY_TABLE) : 0, e = t ? r64(t + 0x58 + 8ull * idx) : 0;
+        if (!e || !remote_shown(r64(e + 0x10))) return MT_CONTINUE;
+    }
     H->reg_set(c, 0, (uint32_t)H->reg_get(c, 1) == 1 ? 0 : 1);
     return MT_HANDLED;
 }

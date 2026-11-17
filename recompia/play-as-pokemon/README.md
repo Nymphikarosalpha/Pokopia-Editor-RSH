@@ -20,11 +20,11 @@ Keyboard players can also set a key for "turn into", "turn back" and the ability
 
 ## Install
 
-1. Copy `recompia_play_as_pokemon-1.3.0.pkmod` into Recompia's `mods` folder (on Windows, next to `pkp.exe`), and remove an older version of it.
+1. Copy `recompia_play_as_pokemon-1.4.0.pkmod` into Recompia's `mods` folder (on Windows, next to `pkp.exe`), and remove an older version of it.
 2. Open `PokopiaLauncher.exe`, go to **Mods**, and allow the new mod's code when it asks.
-3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from 1.1.x or 1.2.0-1.2.1 rebuilds once more, because 1.2.2 changes the hook points (1.3.0 keeps 1.2.2's). Then press **Play**.
+3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from 1.1.x or 1.2.0-1.2.1 rebuilds once more, because 1.2.2 changes the hook points (1.3.0 and 1.4.0 keep 1.2.2's). Then press **Play**.
 
-The game log (`pkp.log`) should show `play_as_pokemon 1.3.0 started` and `[play_as_pokemon] ready: ZL + L3 turns into Ditto and back, ...`.
+The game log (`pkp.log`) should show `play_as_pokemon 1.4.0 started` and `[play_as_pokemon] ready: ZL + L3 turns into Ditto and back, ...`.
 
 ## Choosing the Pokémon
 
@@ -71,9 +71,15 @@ If the game changes your form any other way, the mod turns you into your Pokémo
 
 The mod changes gameplay, so every player in a Link Play session needs it.
 
-Your Pokémon is only shown on your own screen: the other players still see your usual character, standing still. Since 1.2.2 the mod only touches your own character. Before, a transformed player's game could also act on the other players' characters, for example by stopping them from turning back.
+Since 1.4.0 the other players see your Pokémon, walking and moving with its own animations, and you see theirs. Before, they saw your usual character standing still in its idle pose (only your shoes and backpack changed colour).
 
-While a Link Play session is open, `pkp.log` also gets `remote trace` and `remote model` lines for the other players' characters. When one player transforms, the other players' logs show whether the change reached their game. Please send both players' logs.
+Why: the game does send your chosen form to the other players, but a game only changes another player's form by playing that form's transformation, and only the game's own forms (Ditto and its move forms) have one. So the Pokémon arrived and was never shown, and the movements the others received were played for a Pokémon on a human model, which stood still. Now each player's mod shows the other players' Pokémon itself, the way it shows your own: it turns their character into the Pokémon, loads that Pokémon's animations for it (a Pokémon that doesn't live in the town would be invisible otherwise) and turns them back when they do. The game's own forms, such as the Ditto blob in a small space, are still left to the game.
+
+Untested in Link Play so far: flying (the others may see you rise and sink without the hovering animation) and abilities (their animation is sent like any other movement; whether their effect, such as grown plants or a lit campfire, reaches the other players is not known yet).
+
+Since 1.2.2 the mod only touches your own character's controls and form. Before, a transformed player's game could also act on the other players' characters, for example by stopping them from turning back.
+
+While a Link Play session is open, `pkp.log` also gets lines for the other players' characters: `remote player id 0x....` when one is seen, `remote trace` for each change of their form, `is <Pokémon> (form N): shown here` and `turns from <Pokémon> into form N` when the mod changes their form, `animations of <Pokémon> loaded, building it again`, and `remote model` for each model built. Please send every player's log with a report.
 
 ## How it works
 
@@ -82,6 +88,7 @@ The emulator version is an IPS patch plus a cheat file. Recompia runs the game a
 - six of the IPS's eight code patches are `take_over` hook points at the same game instructions (`mod.toml` lists them with the instruction each one expects; the two small-space ground writers are not needed here since 1.2.2), plus one more (`to_human`, the game's "turn the player human for an interaction");
 - the cheat's button combos and memory writes run in the player's per-frame hook, with the player's controller read through Modtopia (`pad_read`);
 - the animation loading (so non-resident Pokémon are not invisible) calls the game's own package and motion-set functions (`call_guest`), as the patch did;
+- Link Play (1.4.0): the same update runs for the other players' characters. Each game receives the others' wanted form (`main+0x271360` stores it), but changes their form only through a form's transformation action (`main+0x2F6FCC`), which only the game's own forms have. So the mod requests the Pokémon form on their character itself, requests its animation package in their model setup and binds the motion set once loaded (then builds them once more), turns them back the same way, and keeps the stand-up stretch off them in the probe hook;
 - abilities: the residents' specialty actions (Burn 700, Water 703, Bubble 705, Grow 706, Generate 709) only animate when the player asks for them, because the game applies their effect for residents only. So the mod plays the action for the animation and calls the effect itself on the cell in front of the player (found as the game finds the target of the player's own moves): Grow `main+0x1F1200`, Burn and Generate `main+0x77CEA0` (the object at the cell, as a town Pokémon), Bubble the handler of action 705, the Water Gun's hit `main+0x3694C0`.
 
 A test slot in unused game memory (`main+0x3D14D00`, used by nothing in normal play) lets a script on the PC run single ability steps; it does nothing unless a script writes its marker.

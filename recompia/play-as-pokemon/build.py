@@ -18,7 +18,7 @@ LISTS = os.path.join(REPO, 'mods', 'play-as-pokemon')
 DIST = os.path.join(REPO, 'dist')
 
 MOD_ID = 'play_as_pokemon'
-VERSION = '1.3.0'
+VERSION = '1.4.0'
 ABILITIES = ['Grow', 'Burn', 'Water', 'Generate']   # the order of AB_* in play_as_pokemon.c
 ABILITY_AUTO = 'Auto (the Pokémon’s own)'
 # Which Pokemon have each ability (the in-game specialty lists; the game's own table for it is not found yet). A Pokemon in none of
@@ -54,6 +54,7 @@ DESCRIPTION = (
     "ZL + L3 (left stick click) turns you into the chosen Pokémon and back, ZL + D-pad Left / Right picks "
     "the previous / next Pokémon while playing, F3 or ZL + R3 opens a list of all of them. Flying Pokémon can fly: ZR takes off and rises, ZL descends and lands, "
     "ZL + ZR drops. Pokémon abilities: ZR, or ZL + D-pad Down, uses Grow, Burn, Water or Generate on what is in front of you. "
+    "In Link Play the other players see your Pokémon (everyone needs the mod). "
     "The Pokopia Editor's Play as Pokemon mod, made for Recompia.")
 
 
