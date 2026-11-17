@@ -72,7 +72,7 @@ load/0400A3A01EE4C000/Play as Pokemon/cheats/76A489F3BD3642FA.txt
 Keep **Enable GDB Stub** off, and use the combos only once you're in the world, not on the title screen. The emulator reads the buttons about 12 times a second, so press a combo for a moment rather than tapping it. After a change, the next one waits about 0.75 s: changing form too fast can crash the game.
 
 ### Recompia (PC)
-Recompia runs the game natively, so it can't use the IPS and cheat files. Use `recompia_play_as_pokemon-1.2.1.pkmod` instead: copy it into Recompia's `mods` folder and allow it in the launcher's Mods page. It has the same buttons, plus a list of every Pokémon on F3 or ZL + R3. The Pokémon can also be picked in the mod's settings (launcher or F1 in game). See [recompia/play-as-pokemon/README.md](../../recompia/play-as-pokemon/README.md).
+Recompia runs the game natively, so it can't use the IPS and cheat files. Use `recompia_play_as_pokemon-1.2.2.pkmod` instead: copy it into Recompia's `mods` folder and allow it in the launcher's Mods page. It has the same buttons, plus a list of every Pokémon on F3 or ZL + R3. The Pokémon can also be picked in the mod's settings (launcher or F1 in game). See [recompia/play-as-pokemon/README.md](../../recompia/play-as-pokemon/README.md).
 
 ### Console with custom firmware (untested)
 ```

@@ -19,9 +19,9 @@ Keyboard players can also set a key for "turn into" and "turn back", and change 
 
 ## Install
 
-1. Copy `recompia_play_as_pokemon-1.2.1.pkmod` into Recompia's `mods` folder (on Windows, next to `pkp.exe`).
+1. Copy `recompia_play_as_pokemon-1.2.2.pkmod` into Recompia's `mods` folder (on Windows, next to `pkp.exe`).
 2. Open `PokopiaLauncher.exe`, go to **Mods**, and allow the new mod's code when it asks.
-3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from 1.1.x or 1.2.0 uses the same points, so that rebuild is skipped. Then press **Play**.
+3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from 1.1.x or 1.2.0-1.2.1 rebuilds once more, because 1.2.2 changes the hook points. Then press **Play**.
 
 The game log (`pkp.log`) should show `[play_as_pokemon] ready: ZL + L3 turns into Ditto and back, ZL + D-pad Left / Right picks another, F3 or ZL + R3 opens the list`.
 
@@ -37,15 +37,29 @@ A change made in F1 while you are transformed turns you into the new Pokémon at
 
 The other settings switch flying, the Left / Right picking and the name message off.
 
+## Talking to Pokémon
+
+Talking to most Pokémon makes the game turn you back into your usual character: the conversation needs it (the Pokémon that comment on your transformation don't). Since 1.2.2 the mod lets that happen and turns you back into your Pokémon when the conversation is over and you walk off.
+
+Crafting, sitting and opening doors don't show their button prompts while you're transformed. Turn back with ZL + L3 for those: a Pokémon has no animations for them anyway.
+
+If the game changes your form any other way, the mod turns you into your Pokémon again half a second later. If that keeps happening (more than 3 times in 20 seconds), the mod leaves it and you count as turned back: ZL + L3 transforms you again.
+
+`pkp.log` notes each of these (`an interaction turns the player human`, `the interaction is over`, `the game turned the player into form ...`, `the game asked to turn the player into form ...`), plus `trace` lines of every form change while transformed. Please include those lines when you report a problem.
+
 ## Link Play
 
 The mod changes gameplay, so every player in a Link Play session needs it.
+
+Your Pokémon is only shown on your own screen: the other players still see your usual character, standing still. Since 1.2.2 the mod only touches your own character. Before, a transformed player's game could also act on the other players' characters, for example by stopping them from turning back.
+
+While a Link Play session is open, `pkp.log` also gets `remote trace` and `remote model` lines for the other players' characters. When one player transforms, the other players' logs show whether the change reached their game. Please send both players' logs.
 
 ## How it works
 
 The emulator version is an IPS patch plus a cheat file. Recompia runs the game as native code, so neither works there. This version is a Modtopia code mod (`mod.dll`):
 
-- each of the IPS's eight code patches is a `take_over` hook point at the same game instruction (`mod.toml` lists them with the instruction each one expects);
+- six of the IPS's eight code patches are `take_over` hook points at the same game instructions (`mod.toml` lists them with the instruction each one expects; the two small-space ground writers are not needed here since 1.2.2), plus one more (`to_human`, the game's "turn the player human for an interaction");
 - the cheat's button combos and memory writes run in the player's per-frame hook, with the player's controller read through Modtopia (`pad_read`);
 - the animation loading (so non-resident Pokémon are not invisible) calls the game's own package and motion-set functions (`call_guest`), as the patch did.
 

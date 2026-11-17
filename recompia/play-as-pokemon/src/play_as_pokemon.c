@@ -14,10 +14,15 @@
  *   form_get       desired-form getter: returns g_form while transformed
  *   form_set       desired-form setter: stores g_form while transformed
  *   request_state  RequestState: drops the request for state 1 (human) while transformed
- *   ground_a/b     the two ground-info writers: sets "inside a small space" while transformed (no forced stand-up)
  *   probe          animation condition 0x56 (wall probe): true for the player while transformed (no stretch / flashing)
+ *   to_human       the game's "turn the player human for an interaction" (talking): noted, the player turns back after it
  *   char_setup     the character's model setup: requests / releases the form's animation package for the player
- *   player_tick    the player's update: buttons, binding the animations (and rebuilding the model once), flying
+ *   player_tick    the player's update: buttons, binding the animations (and rebuilding the model once), flying, and
+ *                  turning the player back into the Pokemon when the game changed the form some other way (talking to a Pokemon)
+ *
+ * Every hook acts on the player's own character only. In Link Play the other players are characters of the same kind, and
+ * RequestState runs for every character, so without that check a transformed player's game would also keep the others from
+ * turning back and hand them its own form.
  */
 #include <modtopia/modtopia.h>
 
@@ -47,8 +52,11 @@ MT_DECLARE_MOD()
 #define FN_PKG_REL    0x8D2420ull    /* (mgr, w1 package, w2 0): release it */
 #define MGR_OFFSET    0x8C830ull
 #define PKG_MAP       0x4E08ull      /* mgr + 0x4E08: u16 package per resource ID */
+#define GAME_MGR      0x3561710ull   /* [main+0x3561710] = the game manager: +0x8C its permission mask, 0 until the world is up */
+#define GM_PERMISSIONS 0x8C
 
 /* player character */
+#define P_STATE       0x3778   /* the state machine RequestState gets (x0) */
 #define P_FORM_NOW    0x5A44   /* u16 current form */
 #define P_FORM_WANT   0x5A46   /* u16 desired form */
 #define P_REQ_STATE   0x3788   /* u16 pending state */
@@ -86,12 +94,23 @@ static int g_prev_key_on, g_prev_key_off;
 #define DROP_HOLD_MS     120   /* ZL + ZR held this long = drop (a shorter overlap is a change of direction) */
 #define LAND_STILL_MS     70   /* descending without losing height for this long = standing on something */
 #define HOP_MS            50   /* the landing hop */
+#define REVERT_WAIT_MS   500   /* the game changed the form: let its own change finish this long before turning back */
+#define REVERT_LIMIT       3   /* turn back at most this often within REVERT_WINDOW_MS, then leave the form as the game wants it */
+#define REVERT_WINDOW_MS 20000
+#define INTERACTION_QUIET_MS 1000   /* an interaction is over once the game stopped asking for the human form this long ... */
+#define WALK_MS           250   /* ... and the player has walked (left stick past WALK_STICK) this long */
+#define WALK_STICK      12000
+static _Atomic uint64_t g_interaction_at;   /* the game's last "turn the player human for an interaction" while transformed (0 = none) */
+static uint64_t g_interaction_start, g_walk_since;
+static int16_t g_lx, g_ly;                  /* the left stick, as buttons() last read it */
 static int g_want = -1;                 /* the form to turn into once the last change is done (0 = human, -1 = nothing waiting) */
 static uint64_t g_want_after;           /* not before this time */
 static uint64_t g_last_request, g_settled_since;
 static int g_zr_was, g_takeoff, g_descending;
 static uint64_t g_both_since, g_still_since, g_hop_until;
 static float g_ref_y;
+static uint64_t g_wrong_since, g_revert_window;   /* keep_form */
+static int g_reverts;
 
 static uint64_t now_ms(void) {
 #ifdef _WIN32
@@ -119,6 +138,11 @@ static void wf(uint64_t a, float v) { H->mem_write(a, &v, 4); }
 static uint64_t player(void) {
     uint64_t g = r64(MAIN + PLAYER_GLOBAL);
     return g ? r64(g + 0x30) : 0;
+}
+/* 1 when a hooked function is working on the player's own character (x0 = the character) */
+static int is_player(uint64_t obj) {
+    uint64_t P = player();
+    return P && obj == P;
 }
 static uint64_t pkg_mgr(void) {
     uint64_t g = r64(MAIN + MGR_GLOBAL);
@@ -187,6 +211,11 @@ static void request(uint64_t P, uint16_t state) {
 static void transform(uint64_t P, uint16_t form) {
     atomic_store(&g_form, form);
     request(P, form);
+    g_wrong_since = g_revert_window = 0, g_reverts = 0;
+    atomic_store(&g_interaction_at, 0);
+    uint16_t id = 0;
+    r16(P + 0x27FE, &id);
+    mt_logf(H, M, MT_LOG_INFO, "transform: player id 0x%x into %s (form %u)", id, form_name(form), form);
     say("Play as Pokemon: %s", form_name(form));
 }
 static void turn_back(uint64_t P) {
@@ -194,6 +223,8 @@ static void turn_back(uint64_t P) {
     request(P, HUMAN);
     g_hop_until = 0;
     g_takeoff = g_descending = 0;
+    g_wrong_since = 0;
+    atomic_store(&g_interaction_at, 0);
 }
 
 /* A form change rebuilds the player's model over several frames, partly on the game's worker threads. A second request
@@ -401,6 +432,7 @@ static void buttons(uint64_t P) {
     if (MT_HOST_HAS(H, pad_read) && H->pad_read) H->pad_read(M, 0, &pad);
     uint32_t b = pad.buttons, was = g_prev_buttons;
     g_prev_buttons = b;
+    g_lx = pad.lx, g_ly = pad.ly;
     int kon = key_down("key_transform"), koff = key_down("key_turn_back");
     int key_on = kon && !g_prev_key_on, key_off = koff && !g_prev_key_off;
     g_prev_key_on = kon, g_prev_key_off = koff;
@@ -455,13 +487,67 @@ static void bind_animations(uint64_t P) {
     }
 }
 
+/* Some of the game's form changes skip RequestState. Talking to most Pokemon turns the player human through h_to_human's
+   function (the ones that comment on the transformation don't): the player stays human until the game stopped asking for
+   INTERACTION_QUIET_MS and the player walks off, then turns back into the Pokemon. Any other time, a form other than the chosen
+   one that stays for REVERT_WAIT_MS with no request under way is undone, as ZL + L3 would. If the game keeps doing it (more than REVERT_LIMIT times in REVERT_WINDOW_MS),
+   the player is left as the game wants and counts as turned back: ZL + L3 transforms again. */
+static void keep_form(uint64_t P) {
+    uint16_t form = atomic_load(&g_form), cur = 0;
+    uint8_t go = 1;
+    uint32_t perms = 0;
+    uint64_t now = now_ms(), gm = r64(MAIN + GAME_MGR), ia = atomic_load(&g_interaction_at);
+    if (!ia) g_interaction_start = 0;
+    if (form && ia) {   /* an interaction (talking) turned the player human: back once it is over and the player walks off */
+        if (!g_interaction_start) g_interaction_start = ia;
+        g_wrong_since = 0;
+        int walking = g_lx > WALK_STICK || g_lx < -WALK_STICK || g_ly > WALK_STICK || g_ly < -WALK_STICK;
+        if (now - ia < INTERACTION_QUIET_MS || g_menu || !walking) {
+            g_walk_since = 0;
+            return;
+        }
+        if (!g_walk_since) g_walk_since = now;
+        if (now - g_walk_since < WALK_MS) return;
+        atomic_store(&g_interaction_at, 0);
+        mt_logf(H, M, MT_LOG_INFO, "the interaction is over (%llu ms): back into %s", (unsigned long long)(ia - g_interaction_start), form_name(form));
+        g_interaction_start = g_walk_since = 0;
+        if (g_want < 0 && r16(P + P_FORM_NOW, &cur) && cur != form && rd(P + P_REQ_GO, &go, 1) && !go) request(P, form);
+        return;
+    }
+    if (!form || g_want >= 0 || !gm || !rd(gm + GM_PERMISSIONS, &perms, 4) || !perms || !r16(P + P_FORM_NOW, &cur)
+        || !rd(P + P_REQ_GO, &go, 1) || go || cur == form || now - g_last_request < REQUEST_GAP_MS) {
+        g_wrong_since = 0;
+        return;
+    }
+    if (!g_wrong_since) g_wrong_since = now;
+    if (now - g_wrong_since < REVERT_WAIT_MS) return;
+    g_wrong_since = 0;
+    if (!g_revert_window || now - g_revert_window > REVERT_WINDOW_MS) g_revert_window = now, g_reverts = 0;
+    if (++g_reverts > REVERT_LIMIT) {
+        mt_logf(H, M, MT_LOG_INFO, "the game keeps turning the player into form %u: leaving it", cur);
+        atomic_store(&g_form, 0);
+        g_hop_until = 0;
+        g_takeoff = g_descending = 0;
+        say("Play as Pokemon: the game turned you back (%s to transform again)", "ZL + L3");
+        return;
+    }
+    mt_logf(H, M, MT_LOG_INFO, "the game turned the player into form %u: back into %s (form %u)", cur, form_name(form), form);
+    request(P, form);
+}
+
+static void remote_model(uint64_t ch, uint16_t res);   /* Link Play diagnostics, below */
+
 static int h_char_setup(MtHookCtx *c, void *u) {   /* strh w8, [x25, #0xe94]: w8 = resource ID, x19 = character */
     (void)u;
     uint64_t P = player();
-    if (!P || H->reg_get(c, 19) != P) return MT_CONTINUE;
+    if (!P || H->reg_get(c, 19) != P) {
+        if (P) remote_model(H->reg_get(c, 19), (uint16_t)H->reg_get(c, 8));
+        return MT_CONTINUE;
+    }
     uint16_t res = (uint16_t)H->reg_get(c, 8), form = atomic_load(&g_form), now = form ? res : 0, old = g_requested;
     if (now == old) return MT_CONTINUE;
     g_requested = now;
+    if (form) mt_logf(H, M, MT_LOG_DEBUG, "the player's model: animation resource %u (form %u)", res, form);
     w16(H->reg_get(c, 25) + 0xE94, res);   /* the patch ran after this store: do it first (the game repeats it) */
     uint64_t x0 = H->reg_get(c, 0);
     if (old) {
@@ -559,43 +645,128 @@ out:
     g_descending = descending;
 }
 
+/* Diagnostics: while transformed (and 10 s after), each change of the player's form fields goes to pkp.log. The transition
+   animation (+0x378A) the game writes is a constant at each place in its code, so it shows where a form change came from. */
+static uint64_t g_trace_until;
+static void trace(uint64_t P) {
+    static uint16_t last[4];
+    static uint8_t lastb[3];
+    static int have;
+    uint16_t v[4] = {0};
+    uint8_t b[3] = {0};
+    uint64_t now = now_ms();
+    if (atomic_load(&g_form)) g_trace_until = now + 10000;
+    if (now >= g_trace_until) { have = 0; return; }
+    r16(P + P_FORM_NOW, &v[0]), r16(P + P_FORM_WANT, &v[1]), r16(P + P_REQ_STATE, &v[2]), r16(P + P_REQ_ANIM, &v[3]);
+    rd(P + P_REQ_GO, b, 3);   /* +0x378C request, +0x378D isDitto, +0x378E transform motion playing */
+    int same = have;
+    for (int i = 0; i < 4; i++) same &= v[i] == last[i], last[i] = v[i];
+    for (int i = 0; i < 3; i++) same &= b[i] == lastb[i], lastb[i] = b[i];
+    have = 1;
+    if (same) return;
+    mt_logf(H, M, MT_LOG_INFO, "trace f%llu: form %u want %u | request %u anim 0x%x go %u ditto %u playing %u | mod form %u",
+            (unsigned long long)(H->frame ? H->frame() : 0), v[0], v[1], v[2], v[3], b[0], b[1], b[2], atomic_load(&g_form));
+}
+
+/* Link Play diagnostics: the other players' characters run the same update. While online, each change of their form fields
+   (and each model setup, in h_char_setup) goes to pkp.log, to see whether a transform reaches the other players' games. */
+#define REMOTE_MAX 4
+static struct { uint64_t ch; uint16_t id, v[4]; uint8_t b[3]; } g_remote[REMOTE_MAX];
+static int online(void) {
+    uint64_t gm = r64(MAIN + GAME_MGR);
+    uint8_t f = 0;
+    return gm && rd(gm + 0x90, &f, 1) && (f & 1);   /* GameMgr.online, bit 0 */
+}
+static int remote_slot(uint64_t ch) {
+    for (int i = 0; i < REMOTE_MAX; i++)
+        if (ch && g_remote[i].ch == ch) return i;
+    return -1;
+}
+static void remote_model(uint64_t ch, uint16_t res) {
+    int i = remote_slot(ch);
+    if (i >= 0) mt_logf(H, M, MT_LOG_INFO, "remote model id 0x%x: animation resource %u", g_remote[i].id, res);
+}
+static void trace_remote(uint64_t ch) {
+    if (!online()) return;
+    int i = remote_slot(ch);
+    if (i < 0) {
+        uint16_t id = 0;
+        if (!r16(ch + 0x27FE, &id) || (id & 0x800) || (unsigned)((id >> 12) - 1) >= 4) return;   /* not a player's id */
+        for (i = 0; i < REMOTE_MAX && g_remote[i].ch; i++) {}
+        if (i == REMOTE_MAX) return;
+        g_remote[i].ch = ch, g_remote[i].id = id;
+        g_remote[i].v[0] = 0xFFFF;   /* log the first state */
+        mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x", id);
+    }
+    uint16_t v[4] = {0};
+    uint8_t b[3] = {0};
+    r16(ch + P_FORM_NOW, &v[0]), r16(ch + P_FORM_WANT, &v[1]), r16(ch + P_REQ_STATE, &v[2]), r16(ch + P_REQ_ANIM, &v[3]);
+    rd(ch + P_REQ_GO, b, 3);
+    int same = 1;
+    for (int k = 0; k < 4; k++) same &= v[k] == g_remote[i].v[k], g_remote[i].v[k] = v[k];
+    for (int k = 0; k < 3; k++) same &= b[k] == g_remote[i].b[k], g_remote[i].b[k] = b[k];
+    if (same) return;
+    mt_logf(H, M, MT_LOG_INFO, "remote trace id 0x%x f%llu: form %u want %u | request %u anim 0x%x go %u ditto %u playing %u", g_remote[i].id,
+            (unsigned long long)(H->frame ? H->frame() : 0), v[0], v[1], v[2], v[3], b[0], b[1], b[2]);
+}
+
 static int h_player_tick(MtHookCtx *c, void *u) {   /* blr x8 near the top of the player's update: x0 = the character */
     (void)u;
-    uint64_t P = player();
-    if (!P || H->reg_get(c, 0) != P) return MT_CONTINUE;
+    uint64_t P = player(), ch = H->reg_get(c, 0);
+    if (P && ch && ch != P) trace_remote(ch);
+    if (!P || ch != P) return MT_CONTINUE;
+    trace(P);
     buttons(P);
     bind_animations(P);
+    keep_form(P);
     if (!g_menu && atomic_load(&g_form) && atomic_load(&g_fly)) fly(P);
     return MT_CONTINUE;
 }
 
 /* ---------------------------------------------------------------- the form patches (v0.3 - v0.5) */
-static int h_form_get(MtHookCtx *c, void *u) {   /* entry of the desired-form getter: return the form */
+static int h_form_get(MtHookCtx *c, void *u) {   /* entry of the desired-form getter (x0 = character): return the form */
     (void)u;
     uint16_t f = atomic_load(&g_form);
-    if (!f) return MT_CONTINUE;
+    if (!f || !is_player(H->reg_get(c, 0))) return MT_CONTINUE;
     H->reg_set(c, 0, f);
     return MT_HANDLED;
 }
-static int h_form_set(MtHookCtx *c, void *u) {   /* entry of the desired-form setter: store the form instead */
+static int h_form_set(MtHookCtx *c, void *u) {   /* entry of the desired-form setter (x0 = character, w1): store the form instead */
     (void)u;
     uint16_t f = atomic_load(&g_form);
-    if (f) H->reg_set(c, 1, f);
+    if (f && is_player(H->reg_get(c, 0))) H->reg_set(c, 1, f);
     return MT_CONTINUE;
 }
-static int h_request_state(MtHookCtx *c, void *u) {   /* RequestState(x0, w1 state): drop "back to human" */
+/* RequestState(x0 = character + P_STATE, w1 state): drop "back to human" for the player. While transformed, the game's other
+   requests for the player are logged once per state and caller, to find what changes the form (pkp.log). */
+static int h_request_state(MtHookCtx *c, void *u) {
     (void)u;
-    if (atomic_load(&g_form) && (uint32_t)H->reg_get(c, 1) == HUMAN) return MT_HANDLED;
-    return MT_CONTINUE;
+    uint16_t form = atomic_load(&g_form);
+    uint64_t P = player();
+    if (!form || !P || H->reg_get(c, 0) != P + P_STATE) return MT_CONTINUE;
+    uint32_t state = (uint32_t)H->reg_get(c, 1) & 0xFFFF;
+    uint64_t from = H->reg_get(c, 30);
+    static uint32_t last_state;
+    static uint64_t last_from;
+    if (state != form && (state != last_state || from != last_from)) {
+        last_state = state, last_from = from;
+        mt_logf(H, M, MT_LOG_INFO, "the game asked to turn the player into form %u (from main+0x%llx)%s", state,
+                (unsigned long long)(from >= MAIN ? from - MAIN : from), state == HUMAN ? ": ignored" : "");
+    }
+    return state == HUMAN ? MT_HANDLED : MT_CONTINUE;
 }
-static int h_ground_a(MtHookCtx *c, void *u) {   /* str w10, [x9]: ground info, bit 16 = inside a small space */
+/* main+0x455580 (w0 = local player slot 0 / 1, ...) -> w0 1: turns that player human for an interaction, writing "state 1,
+   animation 0x3AF" into its state machine itself (RequestState inlined). Talking to most Pokemon calls it every frame, and the
+   conversation waits for the human form (keeping the player transformed here left it stuck). So the game gets its way: this
+   only notes the time, and keep_form turns the player back into the Pokemon once the interaction is over. */
+static int h_to_human(MtHookCtx *c, void *u) {
     (void)u;
-    if (atomic_load(&g_form)) H->reg_set(c, 10, H->reg_get(c, 10) | 0x10000);
-    return MT_CONTINUE;
-}
-static int h_ground_b(MtHookCtx *c, void *u) {   /* str w9, [x8] */
-    (void)u;
-    if (atomic_load(&g_form)) H->reg_set(c, 9, H->reg_get(c, 9) | 0x10000);
+    uint64_t P = player(), g = r64(MAIN + PLAYER_GLOBAL);
+    if (!atomic_load(&g_form) || !P || !g || r64(g + (((uint32_t)H->reg_get(c, 0) & 0xFF) ? 0x38 : 0x30)) != P) return MT_CONTINUE;
+    uint64_t now = now_ms(), last = atomic_load(&g_interaction_at), from = H->reg_get(c, 30);
+    if (!last || now - last > INTERACTION_QUIET_MS)
+        mt_logf(H, M, MT_LOG_INFO, "an interaction turns the player human (from main+0x%llx)", (unsigned long long)(from >= MAIN ? from - MAIN : from));
+    atomic_store(&g_interaction_at, now);
     return MT_CONTINUE;
 }
 /* Animation condition 0x56 = not (wall probe). Function entry: (x0 = &controller, w1 = mode); returns probe ^ (mode == 1).
@@ -620,8 +791,8 @@ MT_EXPORT int mod_init(const MtHost *host, MtMod *mod) {
     }
     static const struct { const char *point; MtHookFn fn; } hooks[] = {
         {"form_get", h_form_get},       {"form_set", h_form_set}, {"request_state", h_request_state},
-        {"ground_a", h_ground_a},       {"ground_b", h_ground_b}, {"probe", h_probe},
-        {"char_setup", h_char_setup},   {"player_tick", h_player_tick},
+        {"probe", h_probe},
+        {"char_setup", h_char_setup},   {"player_tick", h_player_tick}, {"to_human", h_to_human},
     };
     for (size_t i = 0; i < sizeof hooks / sizeof hooks[0]; i++) {
         int rc = H->hook(M, hooks[i].point, hooks[i].fn, NULL);

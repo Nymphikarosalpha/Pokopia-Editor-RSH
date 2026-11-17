@@ -18,7 +18,7 @@ LISTS = os.path.join(REPO, 'mods', 'play-as-pokemon')
 DIST = os.path.join(REPO, 'dist')
 
 MOD_ID = 'play_as_pokemon'
-VERSION = '1.2.1'
+VERSION = '1.2.2'
 DEFAULT_A_L, DEFAULT_M_Z, DEFAULT_EXPERIMENTAL = 'Ditto', 'Piplup', 'Ditto (Surf form)'
 LIST_A_L, LIST_M_Z, LIST_EXPERIMENTAL = 'A to L', 'M to Z', 'Experimental forms'
 
@@ -27,11 +27,10 @@ HOOKS = [
     ('form_get', 0x6671B0, 0x528B48C8, 'desired-form getter (entry): returns the form while transformed'),
     ('form_set', 0x6671BC, 0x528B48C8, 'desired-form setter (entry): stores the form while transformed'),
     ('request_state', 0x2F14E0, 0xD503237F, 'RequestState (entry): drops "back to human" while transformed'),
-    ('ground_a', 0x405178, 0xB900012A, 'str w10, [x9]: ground info, "inside a small space" while transformed'),
-    ('ground_b', 0x40A388, 0xB9000109, 'str w9, [x8]: the same, second writer'),
     ('probe', 0x6F2310, 0xD503237F, 'animation condition 0x56 (entry): no stand-up stretch for the player'),
     ('char_setup', 0x27CBD0, 0x791D2B28, 'strh w8, [x25, #0xe94]: the model setup, loads the form\'s animations'),
     ('player_tick', 0x2FACE0, 0xD63F0100, 'blr x8 in the player update: buttons, animations, flying'),
+    ('to_human', 0x455580, 0xD503237F, 'turns the player human for an interaction (entry): noted, the player turns back after it (talking)'),
 ]
 
 DESCRIPTION = (
@@ -170,7 +169,7 @@ def write_mod_toml(a_l, m_z, exp):
         'label = "Keyboard key: open the list of Pokémon (as ZL + R3)"',
         'description = "In the list: Up / Down move, Left / Right move by 10, L / R jump to the next letter, A or Enter chooses, B or Esc closes. The choice lasts until the next start."',
         '',
-        '# Every code patch of the emulator version (an IPS for main build 76a489f3bd3642fa), as a take_over point.',
+        '# The code patches of the emulator version (an IPS for main build 76a489f3bd3642fa) but the two small-space ground writers, as a take_over point.',
     ]
     for name, off, word, what in HOOKS:
         L += ['', '[[hooks."2.0.1"]]', f'name = "{name}"   # {what}', f'target = "main+{off:#x}"', f'word = {word:#010x}',
