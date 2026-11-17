@@ -6,8 +6,7 @@ VERSION = (1, 7, 0)
 VERSION_STR = '.'.join(map(str, VERSION))
 
 WHATS_NEW = [
-    ('Pokémon abilities', 'Play as Pokemon 1.3: as a Pokémon with the Grow, Burn, Water or Generate specialty, press ZR (or ZL + '
-                          'D-pad Down) to use it on what is in front of you: crops grow, campfires light, soil gets watered, '
-                          'sludge gets Bubbled and washed, lights and machines get powered. Update the mod on the Mods page.'),
-    ('Recompia', 'The abilities are in the Recompia version too (1.3.0, a .pkmod on the release page).'),
+    ('Pokémon abilities', 'Press ZR (or ZL + D-pad Down) as a Pokémon to use Grow, Burn, Water or Generate. '
+                          'Update Play as Pokemon on the Mods page.'),
+    ('Recompia', 'Play as Pokemon 1.4.0 has the abilities too, and other Link Play players now see your Pokémon.'),
 ]
