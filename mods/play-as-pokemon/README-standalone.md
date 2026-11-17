@@ -16,6 +16,7 @@ Turn into any Pokémon in Pokopia. Only works on **Pokopia 2.0.0, update 655360*
 | ZR (as a flying Pokémon) | Take off, hold to rise |
 | ZL (while flying) | Go down. Keep holding on the ground to land |
 | ZL + ZR (while flying) | Drop out of the air |
+| ZR (Pokémon that can't fly) or ZL + D-pad Down | Use the Pokémon's ability: Grow, Burn, Water or Generate, on what is in front of you |
 
 Press a combo for a moment rather than tapping it: the emulator only checks the buttons about 12 times a second.
 

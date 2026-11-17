@@ -1,9 +1,9 @@
 {
   "id": "play-as-pokemon",
   "name": "Play as Pokemon",
-  "version": "1.2",
+  "version": "1.3",
   "status": "experimental",
-  "summary": "Turn into Ditto or any other Pokémon and walk around as it. Flying Pokémon can fly.",
+  "summary": "Turn into Ditto or any other Pokémon and walk around as it. Flying Pokémon can fly; Grow, Burn, Water and Generate Pokémon can use their ability.",
   "controls": [
     [
       "ZL + L3 (left stick click)",
@@ -12,6 +12,10 @@
     [
       "ZL + D-pad Left / Right",
       "Pick the previous / next Pokémon (A to Z)"
+    ],
+    [
+      "ZR, or ZL + D-pad Down",
+      "Use the Pokémon's ability (Grow, Burn, Water, Generate) on what is in front of you"
     ],
     [
       "ZR (as a flying Pokémon)",

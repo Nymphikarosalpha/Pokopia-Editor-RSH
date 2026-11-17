@@ -17,8 +17,9 @@
  *   probe          animation condition 0x56 (wall probe): true for the player while transformed (no stretch / flashing)
  *   to_human       the game's "turn the player human for an interaction" (talking): noted, the player turns back after it
  *   char_setup     the character's model setup: requests / releases the form's animation package for the player
- *   player_tick    the player's update: buttons, binding the animations (and rebuilding the model once), flying, and
- *                  turning the player back into the Pokemon when the game changed the form some other way (talking to a Pokemon)
+ *   player_tick    the player's update: buttons, binding the animations (and rebuilding the model once), flying, the
+ *                  Pokemon's ability (Grow, Burn, Water), and turning the player back into the Pokemon when the game changed
+ *                  the form some other way (talking to a Pokemon)
  *
  * Every hook acts on the player's own character only. In Link Play the other players are characters of the same kind, and
  * RequestState runs for every character, so without that check a transformed player's game would also keep the others from
@@ -74,6 +75,35 @@ MT_DECLARE_MOD()
 #define MOTION_HOVER 7
 #define INFO_FLYING  0x22
 
+/* abilities (1.3) */
+#define FN_GROW       0x1F1200ull    /* (farm, s16 cell[3]) -> w0 1: crops and plants in a plus shape around the cell grew a stage */
+#define FN_OBJECT_ACT 0x77CEA0ull    /* (objects, u16 *by, x, y, z, w5 0) -> bit 0: the object placed at the cell reacted (vfunc 0x118: burn) */
+#define FIELD         0x35616F8ull   /* [main+this] = the field manager; + FARM = its crops and plants */
+#define FARM          0x11058ull
+#define OBJECTS       0x35616F0ull   /* [main+this] = the placed objects */
+#define P_ACTIONS     0x18B8         /* the player's action controller; its +0x984 = the action playing (u16) */
+#define A_CURRENT     0x984
+#define P_ID          0x27FE         /* u16 the character's id */
+#define VF_POSITION   0x140          /* player vfuncs: position (q0 = x, y, z), yaw (s0, radians), request an action */
+#define VF_YAW        0x18
+#define VF_REQUEST    0x338
+#define ACT_BURN      700            /* the residents' specialty actions: on the player they play the animation only */
+#define ACT_WATER     703
+#define ACT_GROW      706
+#define FN_WATER      0x3694C0ull    /* (&cell, power 1, by the player 1, 0, waterer's id, 0) -> w0 1: soil / plants / basin watered (Water Gun's) */
+#define BURN_HANDLER  120            /* the Burn action's handler: what a resident's Burn passes as w5 (object vfunc 0x118) */
+#define POWER_HANDLER 122            /* Generate's (action 709): w5 'z' = object vfunc 0x120, a light or machine is powered */
+#define BUBBLE_HANDLER 121           /* action 705's handler: Water's Bubble, 13 cells around the target (sludge, crops) */
+#define FN_BUBBLE     0x5A60E0ull    /* its execute (handler, controller, args): the owner must be a town Pokemon */
+#define ACT_GENERATE  709
+#define ACT_BUBBLE    705            /* a resident's Bubble: the animation for it */
+#define FN_HAS_LAYER  0x38DF8ull     /* (world, &u8 kind, &cell) -> 1: the cell holds a block of that kind (a query) */
+#define WORLD         0x34EFC98ull   /* [main+this] = the world's blocks */
+#define SLUDGE        8              /* the block kind Bubble works on (the sludge on Bleak Beach) */
+#define RESIDENT_IDS  0x2            /* a character id's top nibble: 1 players, 2 the town's Pokemon */
+#define SLOT          0x3D14D00ull   /* unused bss (the crafting range mod uses +0xE00): the test slot, and the cell passed to the game */
+#define SLOT_MAGIC    0x42414B50u    /* "PKAB" */
+
 /* ---------------------------------------------------------------- state */
 static const MtHost *H;
 static MtMod *M;
@@ -84,8 +114,13 @@ static uint16_t g_requested, g_acquired; /* the player's own threads only (model
 static _Atomic uint16_t g_selected = DEFAULT_FORM;   /* what the combo turns the player into */
 static _Atomic int g_settings_changed;
 static _Atomic int g_fly = 1, g_cycle = 1, g_messages = 1;
+enum { AB_GROW, AB_BURN, AB_WATER, AB_GENERATE, AB_KINDS };
+static const char *const AB_NAMES[] = {"Grow", "Burn", "Water", "Generate"};
+static _Atomic int g_abilities = 1, g_ability = -1;   /* -1: the Pokemon's own (ABILITY_OF) */
 static uint32_t g_prev_buttons;
-static int g_prev_key_on, g_prev_key_off;
+static int g_prev_key_on, g_prev_key_off, g_prev_key_ability;
+enum { PRESS_NONE, PRESS_ZR, PRESS_COMBO, PRESS_KEY };
+static int g_ab_press;   /* the ability button pressed this frame (buttons), used by abilities() */
 /* Everything timed is in milliseconds, never in frames: Recompia's frame rate is whatever the player set (60, 120, unlimited). */
 #define REQUEST_GAP_MS   700   /* least time between two form requests */
 #define SETTLED_MS       250   /* how long the last form change must have been complete */
@@ -268,6 +303,12 @@ static void read_settings(void) {
     atomic_store(&g_fly, H->config_bool(M, "fly"));
     atomic_store(&g_cycle, H->config_bool(M, "cycle"));
     atomic_store(&g_messages, H->config_bool(M, "messages"));
+    atomic_store(&g_abilities, H->config_bool(M, "abilities"));
+    const char *ab = H->config_string(M, "ability");
+    int kind = -1;
+    for (int i = 0; ab && i < AB_KINDS; i++)
+        if (!strcmp(ab, AB_NAMES[i])) kind = i;
+    atomic_store(&g_ability, kind);
 }
 static void on_config(MtMod *mod, const char *key, void *user) {
     (void)mod, (void)key, (void)user;
@@ -439,6 +480,9 @@ static void buttons(uint64_t P) {
 
     int kmenu = key_down("key_menu"), key_menu = kmenu && !g_prev_key_menu;
     g_prev_key_menu = kmenu;
+    int kab = key_down("key_ability"), key_ability = kab && !g_prev_key_ability;
+    g_prev_key_ability = kab;
+    g_ab_press = PRESS_NONE;
 
     if (g_menu) {
         menu_tick(&pad, was, key_menu);
@@ -456,6 +500,10 @@ static void buttons(uint64_t P) {
     else if (atomic_load(&g_cycle) && combo(b, was, MT_PAD_LEFT)) cycle(-1);
     else if (atomic_exchange(&g_settings_changed, 0) && atomic_load(&g_form) && atomic_load(&g_selected) != atomic_load(&g_form))
         want(atomic_load(&g_selected), 0);   /* a new Pokemon picked in the settings while transformed */
+    /* The ability: ZL + D-pad Down, ZR alone (abilities() leaves it to flying Pokemon), or its keyboard key */
+    if (combo(b, was, MT_PAD_DOWN)) g_ab_press = PRESS_COMBO;
+    else if ((b & MT_PAD_ZR) && !(was & MT_PAD_ZR) && !(b & MT_PAD_ZL)) g_ab_press = PRESS_ZR;
+    else if (key_ability) g_ab_press = PRESS_KEY;
     apply_wanted(P);
 }
 
@@ -645,6 +693,330 @@ out:
     g_descending = descending;
 }
 
+/* ---------------------------------------------------------------- abilities (1.3)
+ * The residents' specialties are actions (Burn 700, Water 703, Grow 706) whose handlers apply the effect for residents only: the
+ * handler's execute call checks that its owner is one (vfunc 0x1D8), and the game fires it only for characters that are not the
+ * player (main+0x584AE0). Asked for by the player, the same action plays the species' animation and nothing else. So the ability
+ * plays that animation and, a moment later, calls the effect itself on the cell in front of the player, found the way the game finds
+ * the target of the player's own moves (main+0x2E19A0: the cell the player stands in, one step in the direction it faces):
+ *   Grow   FN_GROW(farm, &cell): every crop and growable plant in a plus shape around the cell grows a stage, each once (the game
+ *          marks it), as when a resident uses Grow
+ *   Burn   FN_OBJECT_ACT(objects, &a resident's id, cell, 120): the object placed at the cell reacts to being burnt, as by a
+ *          resident's Burn. The burner must be one of the town's Pokemon: a campfire (main+0x7648EC) lights only for an id whose
+ *          top nibble is 2 and puts itself out for a player's (1). The id of a resident of the same species is used, else any.
+ *   Water  sludge not bubbled yet in reach (FN_HAS_LAYER finds block kind 8): Bubble, with its own animation (action 705's handler
+ *          run with a town Pokemon as its owner: 13 cells around, as Piplup does on Bleak Beach); otherwise FN_WATER(&cell, ...),
+ *          the Water Gun's hit: waters the soil, plants and basins there and washes bubbled sludge away
+ *   Generate  FN_OBJECT_ACT(objects, &a resident's id, cell, 122): the light or machine placed there is powered (Mareep's 709)
+ * Grow and Burn try the cell at the player's height, then one lower and one higher; Water the ground under it first. The test slot (below) runs single steps that a
+ * script on the PC writes into the game's memory, to try cells and actions without a rebuild. */
+#define ABILITY_EFFECT_MS   700   /* from the animation's start to the effect */
+#define ABILITY_COOLDOWN_MS 600
+
+typedef struct { int16_t x, y, z; int dir; float px, py, pz, yaw; } Target;
+static int g_ab_phase;   /* 1: the animation plays, the effect comes at g_ab_at */
+static int g_ab_kind;
+static uint64_t g_ab_at, g_ab_ready_at;
+static Target g_ab_target;
+static int g_ab_bubble;   /* Water: this use is a Bubble on sludge, not the Water Gun */
+
+static float f32_at(const uint8_t *b) {
+    union { uint8_t b[4]; float f; } u;
+    for (int i = 0; i < 4; i++) u.b[i] = b[i];
+    return u.f;
+}
+static int sane(float v) { return v == v && v < 1e7f && v > -1e7f; }
+static uint64_t vfunc(uint64_t obj, uint32_t off) {
+    uint64_t vt = r64(obj);
+    return vt ? r64(vt + off) : 0;
+}
+static void tell(const char *text) {
+    if (atomic_load(&g_messages) && MT_HOST_HAS(H, notify) && H->notify) H->notify(M, text, 2.5);
+}
+
+/* The cell in front of the player, as main+0x2E19A0 finds it: position (vfunc 0x140) and yaw (vfunc 0x18) from the game, the
+   cell = (x + 102400) / 100, y / 100, (z + 102400) / 100, plus one step in the facing quarter (0 = +z, 1 = +x, 2 = -z, 3 = -x). */
+static int target_front(uint64_t P, Target *t) {
+    static const int8_t DX[4] = {0, 1, 0, -1}, DZ[4] = {1, 0, -1, 0};
+    MtCall c;
+    uint64_t f = vfunc(P, VF_POSITION);
+    memset(&c, 0, sizeof c);
+    c.x[0] = P;
+    if (!f || H->call_guest(f, &c) != MT_OK) return 0;
+    float x = f32_at(c.v[0]), y = f32_at(c.v[0] + 4), z = f32_at(c.v[0] + 8);
+    f = vfunc(P, VF_YAW);
+    memset(&c, 0, sizeof c);
+    c.x[0] = P;
+    if (!f || H->call_guest(f, &c) != MT_OK) return 0;
+    float yaw = f32_at(c.v[0]), a = yaw < 0 ? -yaw : yaw;
+    if (!sane(x) || !sane(y) || !sane(z) || !sane(yaw) || y < 0) return 0;
+    int dir = yaw >= 0.7853982f && yaw < 2.3561945f ? 1 : yaw > -2.3561945f && yaw <= -0.7853982f ? 3 : a >= 2.3561945f ? 2 : 0;
+    t->dir = dir;
+    t->x = (int16_t)((int)((x + 102400.0f) / 100.0f) + DX[dir]);
+    t->y = (int16_t)(int)(y / 100.0f);
+    t->z = (int16_t)((int)((z + 102400.0f) / 100.0f) + DZ[dir]);
+    t->px = x, t->py = y, t->pz = z, t->yaw = yaw;
+    return 1;
+}
+
+static uint16_t action_now(uint64_t P) {
+    uint64_t ctl = r64(P + P_ACTIONS);
+    uint16_t a = 0xFFFF;
+    if (ctl) r16(ctl + A_CURRENT, &a);
+    return a;
+}
+/* The game's own rule (main+0x27DA60): the player starts a new action while none plays, or an idle one (100, 101, 103, 318). */
+static int action_free(uint16_t a) { return a == 0 || a == 100 || a == 101 || a == 103 || a == 318; }
+static int request_action(uint64_t P, uint16_t id) {   /* 1 started, 0 refused, -1 the call failed */
+    uint64_t f = vfunc(P, VF_REQUEST);
+    MtCall c;
+    memset(&c, 0, sizeof c);
+    c.x[0] = P, c.x[1] = id, c.x[4] = 1;   /* (player, id, 0, 0, 1, 0, 0, 0), as the game's move start asks */
+    if (!f || H->call_guest(f, &c) != MT_OK) return -1;
+    return (int)(c.x[0] & 1);
+}
+static int grow_at(int16_t x, int16_t y, int16_t z) {   /* 1 something grew, 0 nothing did, -1 the call failed */
+    uint64_t field = r64(MAIN + FIELD);
+    int16_t cell[3] = {x, y, z};
+    MtCall c;
+    if (!field || H->mem_write(MAIN + SLOT + 0x30, cell, sizeof cell) != MT_OK) return -1;
+    memset(&c, 0, sizeof c);
+    c.x[0] = field + FARM, c.x[1] = MAIN + SLOT + 0x30;
+    if (H->call_guest(MAIN + FN_GROW, &c) != MT_OK) return -1;
+    return (int)(c.x[0] & 1);
+}
+/* A town Pokemon (id top nibble 2) to act as: the same species as the player's form when one lives here, else any. 0: none */
+static uint64_t town_pokemon(uint16_t form) {
+    uint64_t t = r64(MAIN + ENTITY_TABLE), any = 0;
+    uint16_t id, sp;
+    for (int i = 1; t && i < 0x4B; i++) {
+        uint64_t e = r64(t + 0x58 + 8ull * i), o = e ? r64(e + 0x10) : 0;
+        if (!o || !r16(o + P_ID, &id) || id >> 12 != RESIDENT_IDS || !r64(o + P_ACTIONS)) continue;
+        if (r16(o + 0x398C, &sp) && sp == form) return o;
+        if (!any) any = o;
+    }
+    return any;
+}
+static uint16_t burner_id(uint16_t form) {
+    uint64_t o = town_pokemon(form);
+    uint16_t id = 0;
+    if (o) r16(o + P_ID, &id);
+    return id;
+}
+/* The object placed at the cell reacts as to a resident's specialty: kind BURN_HANDLER burns it, POWER_HANDLER powers it */
+static int burn_at(uint16_t by, int16_t x, int16_t y, int16_t z, uint32_t kind) {   /* 1 the object reacted, 0 not (or none), -1 failed */
+    uint64_t objects = r64(MAIN + OBJECTS);
+    MtCall c;
+    if (!objects || !by || H->mem_write(MAIN + SLOT + 0x36, &by, 2) != MT_OK) return -1;
+    memset(&c, 0, sizeof c);
+    c.x[0] = objects, c.x[1] = MAIN + SLOT + 0x36, c.x[2] = (uint16_t)x, c.x[3] = (uint16_t)y, c.x[4] = (uint16_t)z, c.x[5] = kind & 0xFF;
+    if (H->call_guest(MAIN + FN_OBJECT_ACT, &c) != MT_OK) return -1;
+    return (int)(c.x[0] & 1);
+}
+static int water_at(uint64_t P, int16_t x, int16_t y, int16_t z) {   /* 1 something was watered, 0 not, -1 failed */
+    int16_t cell[3] = {x, y, z};
+    uint16_t id = 0;
+    MtCall c;
+    if (!r16(P + P_ID, &id) || H->mem_write(MAIN + SLOT + 0x30, cell, sizeof cell) != MT_OK) return -1;
+    memset(&c, 0, sizeof c);
+    c.x[0] = MAIN + SLOT + 0x30, c.x[1] = 1, c.x[2] = 1, c.x[3] = 0, c.x[4] = id, c.x[5] = 0;   /* as the Water Gun's hit, uncharged */
+    if (H->call_guest(MAIN + FN_WATER, &c) != MT_OK) return -1;
+    return (int)(c.x[0] & 1);
+}
+/* Water's Bubble (what Piplup does to the sludge on Bleak Beach): the resident handler's execute, with a town Pokemon's action
+   controller as its owner (it checks for one) and the cell as the argument. It reports nothing back: 1 called, -1 failed. */
+static int bubble_at(uint16_t form, int16_t x, int16_t y, int16_t z) {
+    uint64_t o = town_pokemon(form), ctl = o ? r64(o + P_ACTIONS) : 0, gm = r64(MAIN + GAME_MGR), ht = gm ? r64(gm + 0xA8) : 0;
+    uint64_t h = ht ? r64(ht + 0x4470 + 8ull * BUBBLE_HANDLER) : 0;
+    uint32_t args[5] = {(uint16_t)x, (uint16_t)y, (uint16_t)z, 0, 4};   /* x, y, z, no request to complete, 4 values */
+    MtCall c;
+    if (!ctl || !h || H->mem_write(MAIN + SLOT + 0x40, args, sizeof args) != MT_OK) return -1;
+    memset(&c, 0, sizeof c);
+    c.x[0] = h, c.x[1] = ctl, c.x[2] = MAIN + SLOT + 0x40;
+    return H->call_guest(MAIN + FN_BUBBLE, &c) == MT_OK ? 1 : -1;
+}
+/* 1 when sludge that has not been bubbled lies where a Bubble at the cell reaches: the cells with |dx| + |dz| < 3, at the cell's
+   height and one lower (the area Bubble's handler works on). */
+static int sludge_at(int16_t x, int16_t y, int16_t z) {
+    uint64_t world = r64(MAIN + WORLD);
+    uint8_t kind = SLUDGE;
+    if (!world || H->mem_write(MAIN + SLOT + 0x38, &kind, 1) != MT_OK) return 0;
+    for (int dy = -1; dy <= 0; dy++)
+        for (int dx = -2; dx <= 2; dx++)
+            for (int dz = -2; dz <= 2; dz++) {
+                int16_t cell[3] = {(int16_t)(x + dx), (int16_t)(y + dy), (int16_t)(z + dz)};
+                MtCall c;
+                if ((dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz) > 2) continue;
+                if (H->mem_write(MAIN + SLOT + 0x30, cell, sizeof cell) != MT_OK) return 0;
+                memset(&c, 0, sizeof c);
+                c.x[0] = world, c.x[1] = MAIN + SLOT + 0x38, c.x[2] = MAIN + SLOT + 0x30;
+                if (H->call_guest(MAIN + FN_HAS_LAYER, &c) == MT_OK && (c.x[0] & 1)) return 1;
+            }
+    return 0;
+}
+
+/* Flying: the species has a hover motion; in flight: the current motion is a flying one (as fly() tells them) */
+static int motion_kind(uint64_t rec, uint8_t *kind) {
+    uint64_t info = rec ? r64(rec + 8) : 0;
+    return info && rd(info, kind, 1);
+}
+static int can_fly(void) {
+    uint64_t t = r64(MAIN + ENTITY_TABLE), E = t ? r64(t + 0x58) : 0, set = E ? r64(E + E_MSET) : 0, recs = set ? r64(set + 0xC8) : 0;
+    uint32_t count = 0;
+    uint8_t kind = 0;
+    if (!recs || !rd(set + 0xD0, &count, 4) || count < MOTION_HOVER + 1) return 0;
+    return motion_kind(r64(recs + 8 * MOTION_HOVER), &kind) && kind == INFO_FLYING;
+}
+static int in_flight(void) {
+    uint64_t t = r64(MAIN + ENTITY_TABLE), E = t ? r64(t + 0x58) : 0;
+    uint8_t kind = 0;
+    return E && motion_kind(r64(E + E_MOTION), &kind) && kind == INFO_FLYING;
+}
+
+static void ability_effect(uint64_t P, int kind, const Target *t) {
+    static const int DY[3] = {0, -1, 1}, DY_WATER[3] = {-1, 0, 1};
+    static const char *const DONE[] = {"Grow: the plants grew", "Burn: it worked", "Water: watered", "Generate: powered"};
+    static const char *const NONE[] = {"Grow: nothing in front of you to grow (or it grew already)", "Burn: nothing in front of you burns",
+                                       "Water: sprayed (no soil or plants to water in front of you)", "Generate: nothing in front of you to power"};
+    uint16_t form = atomic_load(&g_form), by = 0;
+    if (kind == AB_BURN || kind == AB_GENERATE) {
+        by = burner_id(form);
+        if (!by) {
+            mt_logf(H, M, MT_LOG_INFO, "ability %s: no Pokemon lives in the town to act as", AB_NAMES[kind]);
+            tell("This ability needs a Pokemon living in your town");
+            return;
+        }
+    }
+    for (int i = 0; i < 3; i++) {
+        int16_t y = (int16_t)(t->y + (kind == AB_WATER ? DY_WATER[i] : DY[i]));
+        int r = kind == AB_GROW ? grow_at(t->x, y, t->z)
+              : kind == AB_BURN ? burn_at(by, t->x, y, t->z, BURN_HANDLER)
+              : kind == AB_GENERATE ? burn_at(by, t->x, y, t->z, POWER_HANDLER) : water_at(P, t->x, y, t->z);
+        if (r < 0) {
+            mt_logf(H, M, MT_LOG_WARN, "ability %s: the game call failed", AB_NAMES[kind]);
+            return;
+        }
+        if (r) {
+            mt_logf(H, M, MT_LOG_INFO, "ability %s: worked at (%d, %d, %d)%s", AB_NAMES[kind], t->x, y, t->z, by ? " (as a town Pokemon)" : "");
+            tell(DONE[kind]);
+            return;
+        }
+    }
+    mt_logf(H, M, MT_LOG_INFO, "ability %s: nothing at (%d, %d to %d, %d)", AB_NAMES[kind], t->x, t->y - 1, t->y + 1, t->z);
+    tell(NONE[kind]);
+}
+static void ability_start(uint64_t P, uint64_t now) {
+    int kind = atomic_load(&g_ability), ok;
+    uint16_t a = action_now(P), form = atomic_load(&g_form);
+    Target t;
+    if (kind < 0) {   /* Auto: the Pokemon's own ability */
+        for (int i = 0; i < ABILITY_COUNT; i++)
+            if (ABILITY_OF[i].id == form) kind = ABILITY_OF[i].ability;
+        if (kind < 0) {
+            char m[120];
+            snprintf(m, sizeof m, "%s has no ability this mod can use yet", form_name(form));
+            tell(m);
+            return;
+        }
+    }
+    if (in_flight()) {
+        tell("Land first to use the ability");
+        return;
+    }
+    if (!action_free(a)) {
+        mt_logf(H, M, MT_LOG_INFO, "ability %s: busy (action %u)", AB_NAMES[kind], a);
+        return;
+    }
+    memset(&t, 0, sizeof t);
+    if (!target_front(P, &t)) {
+        mt_logf(H, M, MT_LOG_WARN, "ability %s: no position or facing from the game", AB_NAMES[kind]);
+        return;
+    }
+    static const uint16_t ACT[] = {ACT_GROW, ACT_BURN, ACT_WATER, ACT_GENERATE};
+    g_ab_bubble = kind == AB_WATER && sludge_at(t.x, t.y, t.z);   /* sludge not bubbled yet: Bubble it, else the Water Gun */
+    ok = request_action(P, g_ab_bubble ? ACT_BUBBLE : ACT[kind]);
+    if (ok <= 0 && g_ab_bubble) ok = request_action(P, ACT_WATER);   /* no Bubble animation: the water one */
+    mt_logf(H, M, MT_LOG_INFO, "ability %s: animation %s, cell in front (%d, %d, %d), facing %d (player at %.0f %.0f %.0f, yaw %.2f)",
+            g_ab_bubble ? "Water (Bubble)" : AB_NAMES[kind], ok > 0 ? "started" : "refused", t.x, t.y, t.z, t.dir, t.px, t.py, t.pz, t.yaw);
+    g_ab_kind = kind, g_ab_target = t, g_ab_phase = 1, g_ab_at = now + ABILITY_EFFECT_MS;
+}
+static void abilities(uint64_t P) {
+    uint64_t now = now_ms();
+    int press = g_ab_press;
+    g_ab_press = PRESS_NONE;
+    if (g_ab_phase == 1 && now >= g_ab_at && g_ab_kind == AB_WATER && g_ab_bubble) {   /* Water on sludge: Bubble it */
+        const Target *t = &g_ab_target;
+        int r = bubble_at(atomic_load(&g_form), t->x, t->y, t->z);
+        mt_logf(H, M, MT_LOG_INFO, "ability Water: Bubble around (%d, %d, %d)%s", t->x, t->y, t->z, r < 0 ? ": no town Pokemon to act as" : "");
+        tell(r < 0 ? "Bubble needs a Pokemon living in your town" : "Water: Bubble on the sludge (now wash it with Water)");
+        g_ab_phase = 0, g_ab_bubble = 0;
+        g_ab_ready_at = now + ABILITY_COOLDOWN_MS;
+        return;
+    }
+    if (g_ab_phase) {
+        if (now >= g_ab_at) {
+            g_ab_phase = 0;
+            ability_effect(P, g_ab_kind, &g_ab_target);
+            g_ab_ready_at = now + ABILITY_COOLDOWN_MS;
+        }
+        return;
+    }
+    if (!press || now < g_ab_ready_at) return;
+    if (press == PRESS_ZR && atomic_load(&g_fly) && can_fly()) return;   /* a flying Pokemon's ZR flies */
+    ability_start(P, now);
+}
+
+/* The test slot. A script on the PC writes SLOT_MAGIC at SLOT, the arguments, and last a step number at SLOT + 4; the player's next
+ * update runs it, writes the result back and clears the step. Layout: +0 u32 magic, +4 u16 step, +6 u16 argument, +8 s16 x, y, z,
+ * +0x10 s32 result, +0x14 u32 steps run, +0x18 f32 player x, y, z, yaw, +0x28 s16 the cell in front x, y, z, +0x2E u16 the action
+ * playing, +0x30 the cell this mod hands to the game. Steps: 1 Grow at (x, y, z); 2 burn the object at (x, y, z), the argument as
+ * w5, as a town Pokemon; 3 request action <argument>; 4 report only (result: the direction faced); 5 the ability, as if its button
+ * was pressed; 6 water (x, y, z); 7 turn into form <argument> (0: back); 8 Bubble around (x, y, z). Step 2 with argument 122 powers. */
+static void test_slot(uint64_t P) {
+    uint32_t magic = 0, done = 0;
+    uint16_t step = 0, arg = 0, a;
+    int16_t cell[3] = {0, 0, 0}, front[3];
+    int32_t result = -1;
+    Target t;
+    if (!rd(MAIN + SLOT, &magic, 4) || magic != SLOT_MAGIC || !r16(MAIN + SLOT + 4, &step) || !step) return;
+    r16(MAIN + SLOT + 6, &arg);
+    rd(MAIN + SLOT + 8, cell, sizeof cell);
+    memset(&t, 0, sizeof t);
+    int have = target_front(P, &t);
+    switch (step) {
+    case 1: result = grow_at(cell[0], cell[1], cell[2]); break;
+    case 2: result = burn_at(burner_id(atomic_load(&g_form)), cell[0], cell[1], cell[2], arg); break;
+    case 6: result = water_at(P, cell[0], cell[1], cell[2]); break;
+    case 8: result = bubble_at(atomic_load(&g_form), cell[0], cell[1], cell[2]); break;
+    case 7:   /* turn into form <argument> (0: back to the player's own character), queued like the menu's choice */
+        if (arg) atomic_store(&g_selected, arg);
+        want(arg, 0);
+        result = 1;
+        break;
+    case 3: result = request_action(P, arg); break;
+    case 4: result = have ? t.dir : -1; break;
+    case 5:
+        result = atomic_load(&g_form) ? 1 : 0;
+        if (result) g_ab_press = PRESS_KEY;
+        break;
+    default: break;
+    }
+    a = action_now(P);
+    front[0] = t.x, front[1] = t.y, front[2] = t.z;
+    float pos[4] = {t.px, t.py, t.pz, t.yaw};
+    rd(MAIN + SLOT + 0x14, &done, 4);
+    done++;
+    H->mem_write(MAIN + SLOT + 0x10, &result, 4);
+    H->mem_write(MAIN + SLOT + 0x14, &done, 4);
+    H->mem_write(MAIN + SLOT + 0x18, pos, sizeof pos);
+    H->mem_write(MAIN + SLOT + 0x28, front, sizeof front);
+    H->mem_write(MAIN + SLOT + 0x2E, &a, 2);
+    mt_logf(H, M, MT_LOG_INFO, "test slot: step %u (argument %u, cell %d %d %d) -> %d; in front (%d, %d, %d), action %u", step, arg,
+            cell[0], cell[1], cell[2], result, front[0], front[1], front[2], a);
+    step = 0;
+    H->mem_write(MAIN + SLOT + 4, &step, 2);
+}
+
 /* Diagnostics: while transformed (and 10 s after), each change of the player's form fields goes to pkp.log. The transition
    animation (+0x378A) the game writes is a constant at each place in its code, so it shows where a form change came from. */
 static uint64_t g_trace_until;
@@ -719,7 +1091,10 @@ static int h_player_tick(MtHookCtx *c, void *u) {   /* blr x8 near the top of th
     buttons(P);
     bind_animations(P);
     keep_form(P);
+    test_slot(P);
     if (!g_menu && atomic_load(&g_form) && atomic_load(&g_fly)) fly(P);
+    if (!g_menu && atomic_load(&g_form) && atomic_load(&g_abilities)) abilities(P);
+    else g_ab_phase = 0;
     return MT_CONTINUE;
 }
 
@@ -803,6 +1178,8 @@ MT_EXPORT int mod_init(const MtHost *host, MtMod *mod) {
     }
     read_settings();
     H->on_config_changed(M, on_config, NULL);
-    mt_logf(H, M, MT_LOG_INFO, "ready: ZL + L3 turns into %s and back, ZL + D-pad Left / Right picks another, %s or ZL + R3 opens the list", form_name(atomic_load(&g_selected)), H->config_string(M, "key_menu"));
+    mt_logf(H, M, MT_LOG_INFO, "ready: ZL + L3 turns into %s and back, ZL + D-pad Left / Right picks another, %s or ZL + R3 opens the list; "
+            "ZR or ZL + D-pad Down uses the ability (%s%s)", form_name(atomic_load(&g_selected)), H->config_string(M, "key_menu"),
+            atomic_load(&g_ability) < 0 ? "the Pokemon's own" : AB_NAMES[atomic_load(&g_ability)], atomic_load(&g_abilities) ? "" : ", off");
     return MT_OK;
 }

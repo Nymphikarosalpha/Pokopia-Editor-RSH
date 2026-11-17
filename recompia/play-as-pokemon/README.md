@@ -1,6 +1,6 @@
 # Play as Pokemon for Recompia
 
-The [Play as Pokemon](../../mods/play-as-pokemon/README.md) mod for [Recompia](https://github.com/Dittobyte/Recompia), the PC port of Pokopia. Turn into Ditto or any other Pokémon and walk around as it, even one that doesn't live in your town. Flying Pokémon can fly.
+The [Play as Pokemon](../../mods/play-as-pokemon/README.md) mod for [Recompia](https://github.com/Dittobyte/Recompia), the PC port of Pokopia. Turn into Ditto or any other Pokémon and walk around as it, even one that doesn't live in your town. Flying Pokémon can fly, and Pokémon with the Grow, Burn, Water or Generate specialty can use it.
 
 **Game version 2.0.1 only** (the version Recompia needs). Windows and Linux (x86-64; the Linux library needs glibc 2.17 or newer). The Linux build is untested in game so far.
 
@@ -14,16 +14,17 @@ The [Play as Pokemon](../../mods/play-as-pokemon/README.md) mod for [Recompia](h
 | **ZR** as a flying Pokémon | Take off, hold to rise |
 | **ZL** while flying | Descend; keep holding it on the ground to land |
 | **ZL + ZR** held while flying | Drop out of the air (press ZR again to take off) |
+| **ZR** (Pokémon that can't fly) or **ZL + D-pad Down** (any) | Use the Pokémon's ability on what is in front of you |
 
-Keyboard players can also set a key for "turn into" and "turn back", and change the F3 key, in the mod's settings.
+Keyboard players can also set a key for "turn into", "turn back" and the ability, and change the F3 key, in the mod's settings.
 
 ## Install
 
-1. Copy `recompia_play_as_pokemon-1.2.2.pkmod` into Recompia's `mods` folder (on Windows, next to `pkp.exe`).
+1. Copy `recompia_play_as_pokemon-1.3.0.pkmod` into Recompia's `mods` folder (on Windows, next to `pkp.exe`), and remove an older version of it.
 2. Open `PokopiaLauncher.exe`, go to **Mods**, and allow the new mod's code when it asks.
-3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from 1.1.x or 1.2.0-1.2.1 rebuilds once more, because 1.2.2 changes the hook points. Then press **Play**.
+3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from 1.1.x or 1.2.0-1.2.1 rebuilds once more, because 1.2.2 changes the hook points (1.3.0 keeps 1.2.2's). Then press **Play**.
 
-The game log (`pkp.log`) should show `[play_as_pokemon] ready: ZL + L3 turns into Ditto and back, ZL + D-pad Left / Right picks another, F3 or ZL + R3 opens the list`.
+The game log (`pkp.log`) should show `play_as_pokemon 1.3.0 started` and `[play_as_pokemon] ready: ZL + L3 turns into Ditto and back, ...`.
 
 ## Choosing the Pokémon
 
@@ -36,6 +37,25 @@ In the launcher's **Mods** page, or in game with **F1 → Mods**:
 A change made in F1 while you are transformed turns you into the new Pokémon at once. The list and ZL + D-pad Left / Right pick one for this session only: the settings stay as they are.
 
 The other settings switch flying, the Left / Right picking and the name message off.
+
+## Abilities
+
+A transformed Pokémon can use its town specialty: press **ZR**, or **ZL + D-pad Down** (flying Pokémon keep ZR for flying). It plays the Pokémon's own specialty animation and then acts on what is in front of you:
+
+| Ability | Pokémon | Does |
+|---|---|---|
+| **Grow** | Bulbasaur, Oddish, Snivy, Rowlet, ... (26) | The crops and plants in front of you grow a stage, each once, as when a resident uses Grow |
+| **Burn** | Charmander, Vulpix, Torchic, Litwick, ... (34) | The object in front of you is burnt: a campfire lights |
+| **Water** | Squirtle, Piplup, Marill, Lapras, ... (37) | Sludge that is not bubbled yet (Bleak Beach) gets Bubbled, with the Bubble animation. Otherwise the Water Gun: it waters soil and plants and washes bubbled sludge away |
+| **Generate** | Pikachu, Pawmi, Mareep, Magnemite, ... (27) | The light or machine in front of you is powered |
+
+The setting **Ability** is `Auto` by default: each Pokémon uses its own specialty. Pick Grow, Burn, Water or Generate there to use that one with any Pokémon. A Pokémon without one of these says so when you press the button. Flying Pokémon with one of these (Charizard: Burn and Fly) fly with ZR and use the other with ZL + D-pad Down.
+
+Burn, Generate and Bubble act as one of the Pokémon living in the area (the game only lets a town Pokémon light a campfire), so a Pokémon must live where you are. The other specialties (Chop, Crush, Recycle, Search, ...) are not in yet: the game does those inside each Pokémon's job routine, not as an effect the mod can call. Which Pokémon has which specialty comes from the lists on pokopialab.com.
+
+Press the button once you have finished transforming: a press during the transformation is ignored (`busy` in `pkp.log`).
+
+`pkp.log` notes each use: `ability Grow: animation started, cell in front (x, y, z) ...` and `worked at` or `nothing at`.
 
 ## Talking to Pokémon
 
@@ -61,7 +81,10 @@ The emulator version is an IPS patch plus a cheat file. Recompia runs the game a
 
 - six of the IPS's eight code patches are `take_over` hook points at the same game instructions (`mod.toml` lists them with the instruction each one expects; the two small-space ground writers are not needed here since 1.2.2), plus one more (`to_human`, the game's "turn the player human for an interaction");
 - the cheat's button combos and memory writes run in the player's per-frame hook, with the player's controller read through Modtopia (`pad_read`);
-- the animation loading (so non-resident Pokémon are not invisible) calls the game's own package and motion-set functions (`call_guest`), as the patch did.
+- the animation loading (so non-resident Pokémon are not invisible) calls the game's own package and motion-set functions (`call_guest`), as the patch did;
+- abilities: the residents' specialty actions (Burn 700, Water 703, Bubble 705, Grow 706, Generate 709) only animate when the player asks for them, because the game applies their effect for residents only. So the mod plays the action for the animation and calls the effect itself on the cell in front of the player (found as the game finds the target of the player's own moves): Grow `main+0x1F1200`, Burn and Generate `main+0x77CEA0` (the object at the cell, as a town Pokémon), Bubble the handler of action 705, the Water Gun's hit `main+0x3694C0`.
+
+A test slot in unused game memory (`main+0x3D14D00`, used by nothing in normal play) lets a script on the PC run single ability steps; it does nothing unless a script writes its marker.
 
 The source is `src/play_as_pokemon.c`. `include/modtopia/modtopia.h` is the Modtopia SDK header (MIT, see the LICENSE beside it).
 

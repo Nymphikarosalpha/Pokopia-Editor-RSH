@@ -82,7 +82,7 @@ If your save isn't found, click **Open → Browse for a folder**.
 
 ### Play as Pokemon <sub>(experimental)</sub>
 
-Turn into Ditto or any other Pokémon. Flying Pokémon can fly.
+Turn into Ditto or any other Pokémon. Flying Pokémon can fly; Grow, Burn, Water and Generate Pokémon can use their ability on what is in front of them.
 
 1. On the editor's **Mods** page, press **Install**.
 2. Restart the game and tick **Play as Pokemon** in its Properties → Add-Ons.
@@ -95,6 +95,7 @@ Turn into Ditto or any other Pokémon. Flying Pokémon can fly.
 | **ZR** as a flying Pokémon | Take off, hold to rise |
 | **ZL** while flying | Descend; hold on the ground to land |
 | **ZL + ZR** while flying | Drop out of the air |
+| **ZR** (Pokémon that can't fly) or **ZL + D-pad Down** | Use the Pokémon's ability: Grow, Burn, Water or Generate |
 
 - **Only for Pokopia 2.0.0** (update 655360).
 - **Transform** on the Mods page needs the emulator on the same PC. On a console, pick the Pokémon before installing.
@@ -102,7 +103,7 @@ Turn into Ditto or any other Pokémon. Flying Pokémon can fly.
 
 **Without the editor:** [emulator zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-emulator.zip) (unzip into the emulator's `load` folder) or [SD card zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-SD-card.zip) (Atmosphère, untested). You start as Ditto; [how to start as another Pokémon](mods/play-as-pokemon/README-standalone.md#change-the-pokémon).
 
-**Recompia:** copy `recompia_play_as_pokemon-1.2.2.pkmod` into Recompia's `mods` folder. F3 or ZL + R3 opens the Pokémon list. [Install steps](recompia/play-as-pokemon/README.md).
+**Recompia:** copy `recompia_play_as_pokemon-1.3.0.pkmod` into Recompia's `mods` folder. F3 or ZL + R3 opens the Pokémon list; ZR or ZL + D-pad Down uses the Pokémon's ability (Grow, Burn, Water, Generate). [Install steps](recompia/play-as-pokemon/README.md).
 
 More details: [mods/play-as-pokemon](mods/play-as-pokemon/).
 

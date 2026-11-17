@@ -1,6 +1,6 @@
 # Play as Pokemon (experimental)
 
-Turn into Ditto or any other Pokémon and walk around as it. It doesn't have to live in your town.
+Turn into Ditto or any other Pokémon and walk around as it. It doesn't have to live in your town. Flying Pokémon can fly, and Pokémon with the Grow, Burn, Water or Generate specialty can use it.
 
 | Press | Does |
 |---|---|
@@ -9,6 +9,7 @@ Turn into Ditto or any other Pokémon and walk around as it. It doesn't have to 
 | **ZR** as a flying Pokémon | Take off, hold to rise |
 | **ZL** while flying | Descend; keep holding it on the ground to land |
 | **ZL + ZR** while flying | Drop out of the air |
+| **ZR** (Pokémon that can't fly) or **ZL + D-pad Down** | Use the Pokémon's ability: Grow, Burn, Water or Generate |
 
 This mod replaces **Always Ditto** and **Play as Resident**. Remove those two before using it: they use some of the same buttons. The Pokopia Editor's **Mods** page does that for you when you press Install or Update.
 
@@ -49,6 +50,19 @@ The two towers are far larger than the camera expects. Press **Turn back** to re
 ## Flying
 
 Pokémon that hover or fly in the game (Charizard, Scyther, Noctowl, Venomoth, Volbeat, Combee, Vespiquen and others) can fly when you are one of them. You get their own hover and flying animations. Let go of both buttons to hover in place. Other Pokémon ignore the fly buttons.
+
+## Abilities
+
+A transformed Pokémon can use its town specialty: press **ZR**, or **ZL + D-pad Down** (flying Pokémon keep ZR for flying). It plays the Pokémon's own specialty animation and then acts on what is in front of you:
+
+| Ability | Pokémon | Does |
+|---|---|---|
+| **Grow** | Bulbasaur, Oddish, Snivy, Rowlet, ... (26) | The crops and plants in front of you grow a stage, each once, as when a resident uses Grow |
+| **Burn** | Charmander, Vulpix, Torchic, Litwick, ... (34) | The object in front of you is burnt: a campfire lights |
+| **Water** | Squirtle, Piplup, Marill, Lapras, ... (37) | Sludge that is not bubbled yet (Bleak Beach) gets Bubbled, with the Bubble animation. Otherwise the Water Gun: it waters soil and plants and washes bubbled sludge away |
+| **Generate** | Pikachu, Pawmi, Mareep, Magnemite, ... (27) | The light or machine in front of you is powered |
+
+Each Pokémon uses its own specialty; a Pokémon without one of these does nothing. Burn, Generate and Bubble act as one of the Pokémon living in the area (the game only lets a town Pokémon light a campfire), so a Pokémon must live where you are. Chop, Crush, Recycle and the other specialties are not in: the game does those inside each Pokémon's job routine. Which Pokémon has which specialty comes from the lists on pokopialab.com. Wait until you have finished transforming before you press the button. Hold the combo for a moment: the emulator reads the buttons about 12 times a second.
 
 ## Install
 
@@ -94,6 +108,8 @@ The `.ips` patch is applied when the game loads. Each change only acts while a "
 5. The game only loads a Pokémon's animations while that Pokémon lives in your town, and a model without animations is drawn as nothing. So the patch loads the animations of the Pokémon you turn into, then repeats the form change once they are ready.
 6. Flying Pokémon have a hover motion, and the game applies no gravity while it plays. Every frame the patch looks at the fly buttons: ZR switches you to the hover motion and sets an upward speed, ZL sets a downward speed, and landing switches you back to the idle motion so the game does its normal fall and landing.
 
+7. Abilities: the residents' specialty actions (Burn 700, Water 703, Bubble 705, Grow 706, Generate 709) only animate when the player asks for them, because the game applies their effect for residents only. Every frame the patch looks at the ability buttons; on a press it plays the action for the animation and, 0.7 seconds later, calls the effect itself on the cell in front of you (found the way the game finds the target of the player's own moves). This part is C (`src/abilities.c`), compiled for the Switch's CPU and placed after the A to Z list by `src/build_abilities.py`.
+
 The patch also holds the A to Z list of Pokémon numbers, in unused space after the game's code. It is an IPS32 patch because that space lies past what a plain IPS can reach.
 
-The cheat file only writes data: it sets the "which form" value and asks the game to switch, and it notes whether ZR, ZL, L3 or the D-pad is held so the patch can read it. It reads the Pokémon from a second value and keeps its place in the A to Z list, which ZL + D-pad Left / Right step through and the editor sets while the game runs by writing to the emulator's memory. Neither touches your save.
+The cheat file only writes data: it sets the "which form" value and asks the game to switch, and it notes whether ZR, ZL, L3, the D-pad or ZL + D-pad Down is held so the patch can read it. It reads the Pokémon from a second value and keeps its place in the A to Z list, which ZL + D-pad Left / Right step through and the editor sets while the game runs by writing to the emulator's memory. Neither touches your save.
