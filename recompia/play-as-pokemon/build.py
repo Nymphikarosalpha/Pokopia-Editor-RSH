@@ -1,4 +1,4 @@
-"""Build Play as Pokemon for Recompia (a Modtopia code mod) into dist/play_as_pokemon-<version>.pkmod.
+"""Build Play as Pokemon for Recompia (a Modtopia code mod) into dist/recompia_play_as_pokemon-<version>.pkmod.
 
 Usage:  py recompia\\play-as-pokemon\\build.py [--zig PATH] [--clang PATH]
 
@@ -296,7 +296,7 @@ def main():
     shutil.copy(os.path.join(HERE, 'mod.toml'), stage)
     files = ['mod.toml'] + compile_all(find_zig(a.zig), find_clang(a.clang), stage)
     os.makedirs(DIST, exist_ok=True)
-    out = os.path.join(DIST, f'{MOD_ID}-{VERSION}.pkmod')
+    out = os.path.join(DIST, f'recompia_{MOD_ID}-{VERSION}.pkmod')
     sha = pack(stage, files, out)
     with open(out + '.sha256', 'w', encoding='ascii', newline='\n') as f:
         f.write(f'{sha}  {os.path.basename(out)}\n')

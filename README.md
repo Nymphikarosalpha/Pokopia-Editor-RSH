@@ -47,7 +47,7 @@ If your save isn't found, click **Open → Browse for a folder**.
 | 🗺️ | **Island Map** | See each island from above with everything you've placed. Export it as a PNG |
 | 📷 | **Photos** | Browse your in-game album and export full-size photos |
 | 🛟 | **Backups** | Make, compare, restore and delete backups |
-| 🧩 | **Mods** | Install game mods, like Play as Pokemon |
+| 🧩 | **Mods** | Install game mods: Play as Pokemon, Unlimited Crafting Storage Range |
 
 <table>
   <tr>
@@ -105,6 +105,22 @@ Turn into Ditto or any other Pokémon. Flying Pokémon can fly.
 **Recompia:** copy `recompia_play_as_pokemon-1.2.1.pkmod` into Recompia's `mods` folder. F3 or ZL + R3 opens the Pokémon list. [Install steps](recompia/play-as-pokemon/README.md).
 
 More details: [mods/play-as-pokemon](mods/play-as-pokemon/).
+
+### Unlimited Crafting Storage Range
+
+Crafting stations use the items in every storage box, chest and crate you have placed, at any distance, not only the boxes right next to them. No buttons.
+
+1. On the editor's **Mods** page, press **Install**.
+2. Restart the game and tick **Unlimited Crafting Storage Range** in its Properties → Add-Ons.
+
+- **Only for Pokopia 2.0.0** (update 655360). Works together with Play as Pokemon.
+- Not tested in multiplayer.
+
+**Without the editor:** [emulator zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-UnlimitedCraftingStorageRange-emulator.zip) or [SD card zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-UnlimitedCraftingStorageRange-SD-card.zip) (Atmosphère, untested).
+
+**Recompia:** copy `recompia_unlimited_crafting_storage_range-1.0.0.pkmod` into Recompia's `mods` folder. Windows and Linux. [Install steps](recompia/unlimited-crafting-storage-range/README.md).
+
+More details: [mods/unlimited-crafting-storage-range](mods/unlimited-crafting-storage-range/).
 
 ---
 

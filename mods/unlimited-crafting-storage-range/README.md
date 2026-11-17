@@ -1,4 +1,4 @@
-# Craft from Storage
+# Unlimited Crafting Storage Range
 
 Crafting stations (the workbench and the other crafting stations) normally only use storage boxes that stand right
 next to them. With this mod they use the items in **every** storage box, chest and crate you have placed, at any
@@ -8,12 +8,19 @@ No buttons: install it and craft as usual.
 
 ## Install
 
+- **Pokopia Editor:** open **Mods** and press **Install**, then tick **Unlimited Crafting Storage Range** in the
+  game's Properties → Add-Ons.
 - **Emulator (Eden, Yuzu and forks):** copy the `0400A3A01EE4C000` folder into the emulator's `load` folder
-  (right-click the game → Open Mod Data Location), then tick **Craft from Storage** in the game's
+  (right-click the game → Open Mod Data Location), then tick **Unlimited Crafting Storage Range** in the game's
   Properties → Add-Ons.
 - **Switch with Atmosphère:** copy the `atmosphere` folder to the root of the SD card.
+- **Recompia (PC port):** use `recompia_unlimited_crafting_storage_range-1.0.0.pkmod` instead
+  ([install steps](../../recompia/unlimited-crafting-storage-range/README.md)).
 
 It works together with Play as Pokemon.
+
+This mod was called **Craft from Storage** in its test builds. Installing it from the editor removes that copy; by
+hand, delete the old `Craft from Storage` folder first.
 
 ## Notes
 

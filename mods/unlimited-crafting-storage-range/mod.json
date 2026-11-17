@@ -1,8 +1,8 @@
 {
-  "id": "craft-from-storage",
-  "name": "Craft from Storage",
+  "id": "unlimited-crafting-storage-range",
+  "name": "Unlimited Crafting Storage Range",
   "version": "1.0",
-  "status": "experimental",
+  "status": "stable",
   "summary": "Crafting stations use the items in all your storage boxes, chests and crates, wherever they are. No more keeping a box next to the workbench.",
   "controls": [],
   "known_issues": [],
@@ -11,5 +11,8 @@
   "build_id": "76A489F3BD3642FA5E18BD83D32C98BACC5F7D0E",
   "files": {
     "exefs": "76A489F3BD3642FA5E18BD83D32C98BACC5F7D0E.ips"
-  }
+  },
+  "replaces": [
+    "Craft from Storage"
+  ]
 }
