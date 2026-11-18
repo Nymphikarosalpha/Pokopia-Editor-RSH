@@ -1,0 +1,6591 @@
+[
+{
+"name": "Tall grass",
+"dex": "001",
+"type": 3,
+"parts": [
+{
+"kind": "item",
+"label": "Tall Grass",
+"count": 4,
+"item": 1201,
+"var": 1
+}
+]
+},
+{
+"name": "Tree-shaded tall grass",
+"dex": "002",
+"type": 1,
+"parts": [
+{
+"kind": "item",
+"label": "Tall Grass",
+"count": 4,
+"item": 1201,
+"var": 1
+},
+{
+"kind": "item",
+"label": "Large Tree (any)",
+"count": 1,
+"item": 1238,
+"var": 38
+}
+]
+},
+{
+"name": "Boulder-shaded tall grass",
+"dex": "003",
+"type": 116,
+"parts": [
+{
+"kind": "item",
+"label": "Tall Grass",
+"count": 4,
+"item": 1201,
+"var": 1
+},
+{
+"kind": "item",
+"label": "Large boulder",
+"count": 1,
+"item": 1323,
+"var": 123
+}
+]
+},
+{
+"name": "Hydrated tall grass",
+"dex": "004",
+"type": 31,
+"parts": [
+{
+"kind": "item",
+"label": "Tall Grass",
+"count": 4,
+"item": 1201,
+"var": 1
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Seaside tall grass",
+"dex": "005",
+"type": 43,
+"parts": [
+{
+"kind": "item",
+"label": "Tall Grass",
+"count": 4,
+"item": 1201,
+"var": 1
+},
+{
+"kind": "liquid",
+"label": "Ocean Water",
+"count": 2,
+"block": 389
+}
+]
+},
+{
+"name": "Elevated tall grass",
+"dex": "006",
+"type": 76,
+"parts": [
+{
+"kind": "item",
+"label": "Tall Grass",
+"count": 4,
+"item": 1201,
+"var": 1
+},
+{
+"kind": "note",
+"label": "High-up location",
+"count": 1,
+"note": "needs to be up high (raise the ground first)"
+}
+]
+},
+{
+"name": "Illuminated tall grass",
+"dex": "007",
+"type": 35,
+"parts": [
+{
+"kind": "item",
+"label": "Tall Grass (any)",
+"count": 4,
+"item": 1201,
+"var": 1
+},
+{
+"kind": "item",
+"label": "Lighting (any)",
+"count": 1,
+"item": 292,
+"var": 643
+}
+]
+},
+{
+"name": "Pretty flower bed",
+"dex": "008",
+"type": 9,
+"parts": [
+{
+"kind": "item",
+"label": "Wildflowers",
+"count": 4,
+"item": 2533,
+"var": 814
+}
+]
+},
+{
+"name": "Tree-shaded flower bed",
+"dex": "009",
+"type": 16,
+"parts": [
+{
+"kind": "item",
+"label": "Wildflowers",
+"count": 4,
+"item": 2533,
+"var": 814
+},
+{
+"kind": "item",
+"label": "Berry Tree (any)",
+"count": 1,
+"item": 1238,
+"var": 38
+}
+]
+},
+{
+"name": "Hydrated flower bed",
+"dex": "010",
+"type": 167,
+"parts": [
+{
+"kind": "item",
+"label": "Wildflowers",
+"count": 4,
+"item": 2533,
+"var": 814
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Field of flowers",
+"dex": "011",
+"type": 17,
+"parts": [
+{
+"kind": "item",
+"label": "Wildflowers",
+"count": 8,
+"item": 2533,
+"var": 814
+}
+]
+},
+{
+"name": "Elevated flower bed",
+"dex": "012",
+"type": 169,
+"parts": [
+{
+"kind": "item",
+"label": "Wildflowers",
+"count": 4,
+"item": 2533,
+"var": 814
+},
+{
+"kind": "note",
+"label": "High-up location",
+"count": 1,
+"note": "needs to be up high (raise the ground first)"
+}
+]
+},
+{
+"name": "Grave with flowers",
+"dex": "013",
+"type": 171,
+"parts": [
+{
+"kind": "item",
+"label": "Wildflowers",
+"count": 4,
+"item": 2533,
+"var": 814
+},
+{
+"kind": "item",
+"label": "Gravestone",
+"count": 1,
+"item": 1402,
+"var": 2648
+}
+]
+},
+{
+"name": "Flower garden",
+"dex": "014",
+"type": 172,
+"parts": [
+{
+"kind": "item",
+"label": "Wildflowers",
+"count": 4,
+"item": 2533,
+"var": 814
+},
+{
+"kind": "item",
+"label": "Hedge (any)",
+"count": 4,
+"item": 2560,
+"var": 2788
+}
+]
+},
+{
+"name": "Fresh veggie field",
+"dex": "015",
+"type": 234,
+"parts": [
+{
+"kind": "item",
+"label": "Vegetable field (any)",
+"count": 8,
+"item": 1219,
+"var": 463
+}
+]
+},
+{
+"name": "Riding warm updrafts",
+"dex": "016",
+"type": 29,
+"parts": [
+{
+"kind": "item",
+"label": "Campfire",
+"count": 3,
+"item": 1280,
+"var": 80
+}
+]
+},
+{
+"name": "Campsite",
+"dex": "017",
+"type": 179,
+"parts": [
+{
+"kind": "item",
+"label": "Straw Table",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Straw Stool",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Campfire",
+"count": 1,
+"item": 1280,
+"var": 80
+}
+]
+},
+{
+"name": "Training waterfall",
+"dex": "018",
+"type": 11,
+"parts": [
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+},
+{
+"kind": "note",
+"label": "Waterfall",
+"count": 1,
+"note": "needs a waterfall"
+}
+]
+},
+{
+"name": "Tantalizing dining set",
+"dex": "019",
+"type": 128,
+"parts": [
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Picnic set",
+"dex": "020",
+"type": 130,
+"parts": [
+{
+"kind": "item",
+"label": "Picnic Basket",
+"count": 1,
+"item": 1370,
+"var": 843
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 2,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Flowery table",
+"dex": "021",
+"type": 174,
+"parts": [
+{
+"kind": "item",
+"label": "Small Vase",
+"count": 1,
+"item": 1529,
+"var": 2725
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Bench with greenery",
+"dex": "022",
+"type": 176,
+"parts": [
+{
+"kind": "item",
+"label": "Hedge (any)",
+"count": 2,
+"item": 2560,
+"var": 2788
+},
+{
+"kind": "item",
+"label": "Seat (wide)",
+"count": 1,
+"item": 1339,
+"var": 1238
+}
+]
+},
+{
+"name": "Illuminated bench",
+"dex": "023",
+"type": 184,
+"parts": [
+{
+"kind": "item",
+"label": "Streetlight (any)",
+"count": 1,
+"item": 3381,
+"var": 2911
+},
+{
+"kind": "item",
+"label": "Seat (wide)",
+"count": 1,
+"item": 1339,
+"var": 1238
+}
+]
+},
+{
+"name": "Exercise resting spot",
+"dex": "024",
+"type": 117,
+"parts": [
+{
+"kind": "item",
+"label": "Punching Bag",
+"count": 1,
+"item": 1403,
+"var": 876
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+}
+]
+},
+{
+"name": "Urgent care",
+"dex": "025",
+"type": 210,
+"parts": [
+{
+"kind": "item",
+"label": "First Aid Kit",
+"count": 1,
+"item": 1435,
+"var": 880
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Gym first aid",
+"dex": "026",
+"type": 178,
+"parts": [
+{
+"kind": "item",
+"label": "First Aid Kit",
+"count": 1,
+"item": 1435,
+"var": 880
+},
+{
+"kind": "item",
+"label": "Punching Bag",
+"count": 1,
+"item": 1403,
+"var": 876
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Road sign",
+"dex": "027",
+"type": 181,
+"parts": [
+{
+"kind": "item",
+"label": "Arrow Sign",
+"count": 1,
+"item": 1561,
+"var": 2799
+},
+{
+"kind": "item",
+"label": "Wooden Path",
+"count": 3,
+"item": 695,
+"var": 1105
+}
+]
+},
+{
+"name": "Large luggage carrier",
+"dex": "028",
+"type": 180,
+"parts": [
+{
+"kind": "item",
+"label": "Cart",
+"count": 1,
+"item": 1558,
+"var": 2791
+},
+{
+"kind": "item",
+"label": "Wooden Crate",
+"count": 2,
+"item": 1425,
+"var": 52
+}
+]
+},
+{
+"name": "Lumberjack's workplace",
+"dex": "029",
+"type": 122,
+"parts": [
+{
+"kind": "item",
+"label": "Log Table",
+"count": 1,
+"item": 1290,
+"var": 90
+},
+{
+"kind": "item",
+"label": "Log Chair",
+"count": 1,
+"item": 1985,
+"var": 596
+},
+{
+"kind": "item",
+"label": "Cart",
+"count": 1,
+"item": 1558,
+"var": 2791
+},
+{
+"kind": "item",
+"label": "Tree stump (any)",
+"count": 1,
+"item": 1240,
+"var": 39
+}
+]
+},
+{
+"name": "Bed with a plush",
+"dex": "030",
+"type": 173,
+"parts": [
+{
+"kind": "item",
+"label": "Bed (any)",
+"count": 1,
+"item": 1334,
+"var": 502
+},
+{
+"kind": "item",
+"label": "Doll (any)",
+"count": 1,
+"item": 1564,
+"var": 2802
+}
+]
+},
+{
+"name": "Gently lit bed",
+"dex": "031",
+"type": 177,
+"parts": [
+{
+"kind": "item",
+"label": "Slender Candle",
+"count": 1,
+"item": 2072,
+"var": 621
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Bed (any)",
+"count": 1,
+"item": 1334,
+"var": 502
+}
+]
+},
+{
+"name": "Grave offering",
+"dex": "032",
+"type": 175,
+"parts": [
+{
+"kind": "item",
+"label": "Slender Candle",
+"count": 2,
+"item": 2072,
+"var": 621
+},
+{
+"kind": "item",
+"label": "Gravestone",
+"count": 1,
+"item": 1402,
+"var": 2648
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Creepy grave offering",
+"dex": "033",
+"type": 123,
+"parts": [
+{
+"kind": "item",
+"label": "Eerie Candle",
+"count": 2,
+"item": 250,
+"var": 634
+},
+{
+"kind": "item",
+"label": "Gravestone",
+"count": 1,
+"item": 1402,
+"var": 2648
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Chansey resting area",
+"dex": "034",
+"type": 88,
+"parts": [
+{
+"kind": "item",
+"label": "Chansey Plant",
+"count": 1,
+"item": 1576,
+"var": 2814
+},
+{
+"kind": "item",
+"label": "Hedge (any)",
+"count": 6,
+"item": 2560,
+"var": 2788
+},
+{
+"kind": "item",
+"label": "Seat (wide)",
+"count": 1,
+"item": 1339,
+"var": 1238
+}
+]
+},
+{
+"name": "Irresistible scent and glow",
+"dex": "035",
+"type": 156,
+"parts": [
+{
+"kind": "item",
+"label": "Pitcher-Plant Pot",
+"count": 1,
+"item": 1543,
+"var": 2744
+},
+{
+"kind": "item",
+"label": "Mushroom Lamp",
+"count": 1,
+"item": 1367,
+"var": 1405
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Floating in the shade",
+"dex": "036",
+"type": 160,
+"parts": [
+{
+"kind": "item",
+"label": "Inflatable Boat",
+"count": 1,
+"item": 1674,
+"var": 2955
+},
+{
+"kind": "item",
+"label": "Beach Parasol",
+"count": 1,
+"item": 1392,
+"var": 1062
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Smooth tall grass",
+"dex": "037",
+"type": 64,
+"parts": [
+{
+"kind": "item",
+"label": "Smooth Rock",
+"count": 1,
+"item": 1299,
+"var": 2698
+},
+{
+"kind": "item",
+"label": "Dry tall grass",
+"count": 4,
+"item": 1202,
+"var": 2
+}
+]
+},
+{
+"name": "Factory storage",
+"dex": "038",
+"type": 63,
+"parts": [
+{
+"kind": "item",
+"label": "Jumbled Cords",
+"count": 1,
+"item": 1780,
+"var": 2351
+},
+{
+"kind": "item",
+"label": "Control Unit",
+"count": 1,
+"item": 2089,
+"var": 587
+},
+{
+"kind": "item",
+"label": "Metal Drum",
+"count": 1,
+"item": 1372,
+"var": 1046
+},
+{
+"kind": "item",
+"label": "Streetlight (any)",
+"count": 1,
+"item": 3381,
+"var": 2911
+}
+]
+},
+{
+"name": "Luxury chirp-chirp meal",
+"dex": "039",
+"type": 166,
+"parts": [
+{
+"kind": "item",
+"label": "Berry Basket",
+"count": 1,
+"item": 2100,
+"var": 694
+},
+{
+"kind": "item",
+"label": "Wooden Birdhouse",
+"count": 1,
+"item": 1814,
+"var": 2379
+}
+]
+},
+{
+"name": "Berry-feast campsite",
+"dex": "040",
+"type": 216,
+"parts": [
+{
+"kind": "item",
+"label": "Berry Basket",
+"count": 1,
+"item": 2100,
+"var": 694
+},
+{
+"kind": "item",
+"label": "Castform Weather Charm",
+"count": 2,
+"item": 1263,
+"var": 1173
+},
+{
+"kind": "item",
+"label": "Bonfire",
+"count": 1,
+"item": 1577,
+"var": 2829
+},
+{
+"kind": "note",
+"label": "High-up location",
+"count": 1,
+"note": "needs to be up high (raise the ground first)"
+}
+]
+},
+{
+"name": "Rain Dance site",
+"dex": "041",
+"type": 152,
+"parts": [
+{
+"kind": "item",
+"label": "Castform Weather Charm",
+"count": 2,
+"item": 1263,
+"var": 1173
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Sunny Day site",
+"dex": "042",
+"type": 155,
+"parts": [
+{
+"kind": "item",
+"label": "Castform Weather Charm",
+"count": 2,
+"item": 1263,
+"var": 1173
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Professor's treasure trove",
+"dex": "043",
+"type": 28,
+"parts": [
+{
+"kind": "note",
+"label": "Professor's Treasure Trove",
+"count": 1,
+"note": "the editor cannot place this one"
+},
+{
+"kind": "item",
+"label": "Bed (any)",
+"count": 1,
+"item": 1334,
+"var": 502
+},
+{
+"kind": "note",
+"label": "Lost relic (large)",
+"count": 4,
+"note": "the editor cannot place this one"
+}
+]
+},
+{
+"name": "Cozy log handicrafts",
+"dex": "044",
+"type": 219,
+"parts": [
+{
+"kind": "item",
+"label": "Log Table",
+"count": 1,
+"item": 1290,
+"var": 90
+},
+{
+"kind": "item",
+"label": "Log Chair",
+"count": 1,
+"item": 1985,
+"var": 596
+},
+{
+"kind": "item",
+"label": "Log Bed",
+"count": 1,
+"item": 1833,
+"var": 2394
+}
+]
+},
+{
+"name": "Very-berry space",
+"dex": "045",
+"type": 114,
+"parts": [
+{
+"kind": "item",
+"label": "Berry Table",
+"count": 1,
+"item": 1535,
+"var": 2734
+},
+{
+"kind": "item",
+"label": "Berry Chair",
+"count": 1,
+"item": 1533,
+"var": 2732
+},
+{
+"kind": "item",
+"label": "Berry Bed",
+"count": 1,
+"item": 1536,
+"var": 2735
+},
+{
+"kind": "item",
+"label": "Berry Table Lamp",
+"count": 1,
+"item": 1539,
+"var": 2738
+}
+]
+},
+{
+"name": "Garden terrace",
+"dex": "046",
+"type": 107,
+"parts": [
+{
+"kind": "item",
+"label": "Wildflowers",
+"count": 4,
+"item": 2533,
+"var": 814
+},
+{
+"kind": "item",
+"label": "Garden Table",
+"count": 1,
+"item": 2048,
+"var": 724
+},
+{
+"kind": "item",
+"label": "Garden Chair",
+"count": 1,
+"item": 2046,
+"var": 722
+},
+{
+"kind": "item",
+"label": "Garden Light",
+"count": 1,
+"item": 2050,
+"var": 726
+}
+]
+},
+{
+"name": "Tree-shaded snoozing Snorlax",
+"dex": "047",
+"type": 60,
+"parts": [
+{
+"kind": "item",
+"label": "Naptime Bed",
+"count": 1,
+"item": 1695,
+"var": 2995
+},
+{
+"kind": "item",
+"label": "Large Tree (any)",
+"count": 1,
+"item": 1238,
+"var": 38
+}
+]
+},
+{
+"name": "Good old-fashioned antiques",
+"dex": "048",
+"type": 220,
+"parts": [
+{
+"kind": "item",
+"label": "Antique Closet",
+"count": 1,
+"item": 1515,
+"var": 2667
+},
+{
+"kind": "item",
+"label": "Antique Chair",
+"count": 1,
+"item": 1500,
+"var": 2633
+},
+{
+"kind": "item",
+"label": "Antique Bed",
+"count": 1,
+"item": 1510,
+"var": 2662
+},
+{
+"kind": "item",
+"label": "Antique Dresser",
+"count": 1,
+"item": 1514,
+"var": 2666
+}
+]
+},
+{
+"name": "Nothin' but Poke Balls",
+"dex": "049",
+"type": 222,
+"parts": [
+{
+"kind": "item",
+"label": "Poke Ball Table",
+"count": 1,
+"item": 1547,
+"var": 2686
+},
+{
+"kind": "item",
+"label": "Poke Ball Sofa",
+"count": 1,
+"item": 1548,
+"var": 2687
+},
+{
+"kind": "item",
+"label": "Poke Ball Bed",
+"count": 1,
+"item": 1549,
+"var": 2688
+},
+{
+"kind": "item",
+"label": "Poke Ball Light",
+"count": 1,
+"item": 1550,
+"var": 2689
+}
+]
+},
+{
+"name": "Yellow tall grass",
+"dex": "050",
+"type": 33,
+"parts": [
+{
+"kind": "item",
+"label": "Yellow Tall Grass",
+"count": 4,
+"item": 2558,
+"var": 2786
+}
+]
+},
+{
+"name": "Tree-shaded yellow tall grass",
+"dex": "051",
+"type": 37,
+"parts": [
+{
+"kind": "item",
+"label": "Yellow Tall Grass",
+"count": 4,
+"item": 2558,
+"var": 2786
+},
+{
+"kind": "item",
+"label": "Large Tree (any)",
+"count": 1,
+"item": 1238,
+"var": 38
+}
+]
+},
+{
+"name": "Elevated yellow tall grass",
+"dex": "052",
+"type": 187,
+"parts": [
+{
+"kind": "item",
+"label": "Yellow Tall Grass",
+"count": 4,
+"item": 2558,
+"var": 2786
+},
+{
+"kind": "note",
+"label": "High-up location",
+"count": 1,
+"note": "needs to be up high (raise the ground first)"
+}
+]
+},
+{
+"name": "Hydrated yellow tall grass",
+"dex": "053",
+"type": 121,
+"parts": [
+{
+"kind": "item",
+"label": "Yellow Tall Grass",
+"count": 4,
+"item": 2558,
+"var": 2786
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Marshy tall grass",
+"dex": "054",
+"type": 124,
+"parts": [
+{
+"kind": "item",
+"label": "Yellow Tall Grass",
+"count": 4,
+"item": 2558,
+"var": 2786
+},
+{
+"kind": "liquid",
+"label": "Muddy Water",
+"count": 2,
+"block": 388
+}
+]
+},
+{
+"name": "Overgrowth vending machine",
+"dex": "055",
+"type": 145,
+"parts": [
+{
+"kind": "item",
+"label": "Yellow Tall Grass",
+"count": 4,
+"item": 2558,
+"var": 2786
+},
+{
+"kind": "item",
+"label": "Vending Machine",
+"count": 1,
+"item": 616,
+"var": 2501
+}
+]
+},
+{
+"name": "Breezy flower bed",
+"dex": "056",
+"type": 113,
+"parts": [
+{
+"kind": "item",
+"label": "Seashore Flowers",
+"count": 4,
+"item": 1214,
+"var": 680
+}
+]
+},
+{
+"name": "Tropical vibes",
+"dex": "057",
+"type": 49,
+"parts": [
+{
+"kind": "item",
+"label": "Seashore Flowers",
+"count": 4,
+"item": 1214,
+"var": 680
+},
+{
+"kind": "item",
+"label": "Large palm tree",
+"count": 1,
+"item": 1235,
+"var": 34
+}
+]
+},
+{
+"name": "Windy flower bed",
+"dex": "058",
+"type": 198,
+"parts": [
+{
+"kind": "item",
+"label": "Seashore Flowers",
+"count": 4,
+"item": 1214,
+"var": 680
+},
+{
+"kind": "item",
+"label": "Windmill Kit",
+"count": 1,
+"item": 2908,
+"var": 2619
+}
+]
+},
+{
+"name": "Shaded beach",
+"dex": "059",
+"type": 207,
+"parts": [
+{
+"kind": "item",
+"label": "Beach Chair",
+"count": 1,
+"item": 1393,
+"var": 910
+},
+{
+"kind": "item",
+"label": "Large palm tree",
+"count": 1,
+"item": 1235,
+"var": 34
+}
+]
+},
+{
+"name": "Tropical seaside",
+"dex": "060",
+"type": 109,
+"parts": [
+{
+"kind": "item",
+"label": "Hedge (any)",
+"count": 4,
+"item": 2560,
+"var": 2788
+},
+{
+"kind": "item",
+"label": "Large palm tree",
+"count": 1,
+"item": 1235,
+"var": 34
+},
+{
+"kind": "liquid",
+"label": "Ocean water",
+"count": 2,
+"block": 389
+}
+]
+},
+{
+"name": "Resting spot",
+"dex": "061",
+"type": 202,
+"parts": [
+{
+"kind": "item",
+"label": "Straw Bed",
+"count": 1,
+"item": 1334,
+"var": 502
+},
+{
+"kind": "item",
+"label": "Cardboard Boxes",
+"count": 1,
+"item": 1590,
+"var": 2834
+}
+]
+},
+{
+"name": "Perpetual mess",
+"dex": "062",
+"type": 201,
+"parts": [
+{
+"kind": "item",
+"label": "Cardboard Boxes",
+"count": 1,
+"item": 1590,
+"var": 2834
+},
+{
+"kind": "item",
+"label": "Toy (any)",
+"count": 2,
+"item": 1274,
+"var": 109
+}
+]
+},
+{
+"name": "Trash collection site",
+"dex": "063",
+"type": 209,
+"parts": [
+{
+"kind": "item",
+"label": "Garbage Bags",
+"count": 1,
+"item": 1388,
+"var": 856
+},
+{
+"kind": "item",
+"label": "Waste Bin (any)",
+"count": 1,
+"item": 1373,
+"var": 855
+},
+{
+"kind": "item",
+"label": "Sign (any)",
+"count": 1,
+"item": 673,
+"var": 1193
+}
+]
+},
+{
+"name": "Trash can central",
+"dex": "064",
+"type": 18,
+"parts": [
+{
+"kind": "item",
+"label": "Garbage Bin",
+"count": 4,
+"item": 1373,
+"var": 855
+}
+]
+},
+{
+"name": "Trash disposal site",
+"dex": "065",
+"type": 208,
+"parts": [
+{
+"kind": "item",
+"label": "Garbage Bags",
+"count": 1,
+"item": 1388,
+"var": 856
+},
+{
+"kind": "item",
+"label": "Utility Pole",
+"count": 1,
+"item": 1396,
+"var": 1077
+}
+]
+},
+{
+"name": "Park bench",
+"dex": "066",
+"type": 197,
+"parts": [
+{
+"kind": "item",
+"label": "Garbage Bin",
+"count": 1,
+"item": 1373,
+"var": 855
+},
+{
+"kind": "item",
+"label": "Seat (wide)",
+"count": 1,
+"item": 1339,
+"var": 1238
+}
+]
+},
+{
+"name": "Tantalizing restaurant",
+"dex": "067",
+"type": 189,
+"parts": [
+{
+"kind": "item",
+"label": "Menu Board",
+"count": 1,
+"item": 1374,
+"var": 845
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Tableside delivery cart",
+"dex": "068",
+"type": 87,
+"parts": [
+{
+"kind": "item",
+"label": "Push Cart",
+"count": 1,
+"item": 1623,
+"var": 2935
+},
+{
+"kind": "item",
+"label": "Chic Table",
+"count": 1,
+"item": 1688,
+"var": 2988
+},
+{
+"kind": "item",
+"label": "Chic Chair",
+"count": 2,
+"item": 1681,
+"var": 2962
+},
+{
+"kind": "item",
+"label": "Small Vase",
+"count": 1,
+"item": 1529,
+"var": 2725
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Chirp-chirp meal",
+"dex": "069",
+"type": 204,
+"parts": [
+{
+"kind": "item",
+"label": "Wooden Birdhouse",
+"count": 1,
+"item": 1814,
+"var": 2379
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Cafe space",
+"dex": "070",
+"type": 15,
+"parts": [
+{
+"kind": "item",
+"label": "Counter",
+"count": 2,
+"item": 1371,
+"var": 1254
+},
+{
+"kind": "item",
+"label": "Mug",
+"count": 1,
+"item": 1566,
+"var": 2804
+},
+{
+"kind": "item",
+"label": "Menu Board",
+"count": 1,
+"item": 1374,
+"var": 845
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 2,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Potted Plant (any)",
+"count": 1,
+"item": 1530,
+"var": 2726
+}
+]
+},
+{
+"name": "Beach set",
+"dex": "071",
+"type": 190,
+"parts": [
+{
+"kind": "item",
+"label": "Side Table",
+"count": 1,
+"item": 1567,
+"var": 2805
+},
+{
+"kind": "item",
+"label": "Beach Chair",
+"count": 1,
+"item": 1393,
+"var": 910
+},
+{
+"kind": "item",
+"label": "Beach Parasol",
+"count": 1,
+"item": 1392,
+"var": 1062
+}
+]
+},
+{
+"name": "Light-up stage",
+"dex": "072",
+"type": 195,
+"parts": [
+{
+"kind": "item",
+"label": "Small Stage",
+"count": 1,
+"item": 1434,
+"var": 879
+},
+{
+"kind": "item",
+"label": "Spotlight",
+"count": 2,
+"item": 1381,
+"var": 848
+}
+]
+},
+{
+"name": "Surprise in store",
+"dex": "073",
+"type": 71,
+"parts": [
+{
+"kind": "item",
+"label": "Balloons",
+"count": 2,
+"item": 1618,
+"var": 2884
+},
+{
+"kind": "item",
+"label": "Boo-In-The-Box",
+"count": 1,
+"item": 1760,
+"var": 3079
+}
+]
+},
+{
+"name": "Night festival venue",
+"dex": "074",
+"type": 20,
+"parts": [
+{
+"kind": "item",
+"label": "Balloons",
+"count": 2,
+"item": 1618,
+"var": 2884
+},
+{
+"kind": "item",
+"label": "Raichu Sign",
+"count": 1,
+"item": 1621,
+"var": 1502
+}
+]
+},
+{
+"name": "Changing area",
+"dex": "075",
+"type": 22,
+"parts": [
+{
+"kind": "item",
+"label": "Closet (any)",
+"count": 1,
+"item": 1333,
+"var": 1056
+},
+{
+"kind": "item",
+"label": "Mirror (Large)",
+"count": 1,
+"item": 1697,
+"var": 2997
+}
+]
+},
+{
+"name": "Private makeup stand",
+"dex": "076",
+"type": 74,
+"parts": [
+{
+"kind": "item",
+"label": "Closet (any)",
+"count": 1,
+"item": 1333,
+"var": 1056
+},
+{
+"kind": "item",
+"label": "Partition (any)",
+"count": 2,
+"item": 844,
+"var": 335
+},
+{
+"kind": "item",
+"label": "Dresser (any)",
+"count": 1,
+"item": 427,
+"var": 184
+}
+]
+},
+{
+"name": "Knitting station",
+"dex": "077",
+"type": 143,
+"parts": [
+{
+"kind": "item",
+"label": "Knitting Supplies",
+"count": 1,
+"item": 1861,
+"var": 2421
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Hot-spring shower",
+"dex": "078",
+"type": 157,
+"parts": [
+{
+"kind": "item",
+"label": "Shower",
+"count": 1,
+"item": 1627,
+"var": 2944
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "liquid",
+"label": "Hot-spring water",
+"count": 2,
+"block": 384
+}
+]
+},
+{
+"name": "Resort meal prep",
+"dex": "079",
+"type": 153,
+"parts": [
+{
+"kind": "item",
+"label": "Campfire",
+"count": 1,
+"item": 1280,
+"var": 80
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Large palm tree",
+"count": 1,
+"item": 1235,
+"var": 34
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "All packed up",
+"dex": "080",
+"type": 191,
+"parts": [
+{
+"kind": "item",
+"label": "Cardboard Boxes",
+"count": 2,
+"item": 1590,
+"var": 2834
+},
+{
+"kind": "item",
+"label": "Cart",
+"count": 1,
+"item": 1558,
+"var": 2791
+}
+]
+},
+{
+"name": "Full recovery",
+"dex": "081",
+"type": 138,
+"parts": [
+{
+"kind": "item",
+"label": "Plain Chest",
+"count": 1,
+"item": 1331,
+"var": 1053
+},
+{
+"kind": "item",
+"label": "First Aid Kit",
+"count": 1,
+"item": 1435,
+"var": 880
+},
+{
+"kind": "item",
+"label": "Bed (any)",
+"count": 1,
+"item": 1334,
+"var": 502
+}
+]
+},
+{
+"name": "Alarm clock sleep zone",
+"dex": "082",
+"type": 247,
+"parts": [
+{
+"kind": "item",
+"label": "Alarm clock",
+"count": 1,
+"item": 1702,
+"var": 3002
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Bed (any)",
+"count": 1,
+"item": 1334,
+"var": 502
+}
+]
+},
+{
+"name": "Vending machine break area",
+"dex": "083",
+"type": 192,
+"parts": [
+{
+"kind": "item",
+"label": "Vending Machine",
+"count": 1,
+"item": 616,
+"var": 2501
+},
+{
+"kind": "item",
+"label": "Seat (wide)",
+"count": 1,
+"item": 1339,
+"var": 1238
+}
+]
+},
+{
+"name": "Vending machine set",
+"dex": "084",
+"type": 48,
+"parts": [
+{
+"kind": "item",
+"label": "Vending Machine",
+"count": 1,
+"item": 616,
+"var": 2501
+},
+{
+"kind": "item",
+"label": "Waste Bin (any)",
+"count": 1,
+"item": 1373,
+"var": 855
+}
+]
+},
+{
+"name": "Mini Game Corner",
+"dex": "085",
+"type": 102,
+"parts": [
+{
+"kind": "item",
+"label": "Arcade Machine",
+"count": 1,
+"item": 1685,
+"var": 2966
+},
+{
+"kind": "item",
+"label": "Punching Game",
+"count": 1,
+"item": 1769,
+"var": 3089
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+}
+]
+},
+{
+"name": "Waterwheel spot",
+"dex": "086",
+"type": 196,
+"parts": [
+{
+"kind": "item",
+"label": "Waterwheel Kit",
+"count": 1,
+"item": 2909,
+"var": 2620
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 1,
+"block": 383
+},
+{
+"kind": "note",
+"label": "Waterfall",
+"count": 1,
+"note": "needs a waterfall"
+}
+]
+},
+{
+"name": "Furnace spot",
+"dex": "087",
+"type": 19,
+"parts": [
+{
+"kind": "item",
+"label": "Furnace Kit",
+"count": 1,
+"item": 2910,
+"var": 2621
+},
+{
+"kind": "item",
+"label": "Metal Drum",
+"count": 1,
+"item": 1372,
+"var": 1046
+}
+]
+},
+{
+"name": "Dock",
+"dex": "088",
+"type": 205,
+"parts": [
+{
+"kind": "item",
+"label": "Walkway",
+"count": 4,
+"item": 1375,
+"var": 1393
+},
+{
+"kind": "item",
+"label": "Streetlight (any)",
+"count": 1,
+"item": 3381,
+"var": 2911
+},
+{
+"kind": "liquid",
+"label": "Ocean water",
+"count": 2,
+"block": 389
+}
+]
+},
+{
+"name": "Spooky study",
+"dex": "089",
+"type": 14,
+"parts": [
+{
+"kind": "item",
+"label": "Plain Table",
+"count": 1,
+"item": 1324,
+"var": 1128
+},
+{
+"kind": "item",
+"label": "Chic Sofa",
+"count": 1,
+"item": 1586,
+"var": 2830
+},
+{
+"kind": "item",
+"label": "Bookcase",
+"count": 1,
+"item": 1507,
+"var": 2650
+},
+{
+"kind": "item",
+"label": "Slender Candle",
+"count": 1,
+"item": 2072,
+"var": 621
+}
+]
+},
+{
+"name": "Playing pirate",
+"dex": "090",
+"type": 158,
+"parts": [
+{
+"kind": "note",
+"label": "Ship's Wheel",
+"count": 1,
+"note": "the editor cannot place this one"
+},
+{
+"kind": "item",
+"label": "Cannon",
+"count": 2,
+"item": 1850,
+"var": 2410
+},
+{
+"kind": "item",
+"label": "Barrel",
+"count": 2,
+"item": 2078,
+"var": 622
+}
+]
+},
+{
+"name": "Working the register",
+"dex": "091",
+"type": 23,
+"parts": [
+{
+"kind": "item",
+"label": "Cash Register",
+"count": 1,
+"item": 1325,
+"var": 1061
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 2,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Tiny atelier",
+"dex": "092",
+"type": 165,
+"parts": [
+{
+"kind": "item",
+"label": "Blank Canvas",
+"count": 1,
+"item": 1768,
+"var": 2345
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+}
+]
+},
+{
+"name": "Gourmet's altar",
+"dex": "093",
+"type": 70,
+"parts": [
+{
+"kind": "item",
+"label": "Offering dish",
+"count": 1,
+"item": 1811,
+"var": 2376
+}
+]
+},
+{
+"name": "Pikachu space",
+"dex": "094",
+"type": 96,
+"parts": [
+{
+"kind": "item",
+"label": "Pikachu Sofa",
+"count": 1,
+"item": 1835,
+"var": 2396
+},
+{
+"kind": "item",
+"label": "Pikachu Doll",
+"count": 1,
+"item": 1564,
+"var": 2802
+}
+]
+},
+{
+"name": "Cuteness overload",
+"dex": "095",
+"type": 99,
+"parts": [
+{
+"kind": "item",
+"label": "Cute Table",
+"count": 1,
+"item": 1660,
+"var": 2980
+},
+{
+"kind": "item",
+"label": "Cute Sofa",
+"count": 1,
+"item": 1659,
+"var": 2979
+},
+{
+"kind": "item",
+"label": "Cute Bed",
+"count": 1,
+"item": 1657,
+"var": 2977
+},
+{
+"kind": "item",
+"label": "Cute Dresser",
+"count": 1,
+"item": 1664,
+"var": 2982
+},
+{
+"kind": "item",
+"label": "Cute Lamp",
+"count": 1,
+"item": 1663,
+"var": 2981
+}
+]
+},
+{
+"name": "Welcoming resort",
+"dex": "096",
+"type": 223,
+"parts": [
+{
+"kind": "item",
+"label": "Resort Table",
+"count": 1,
+"item": 1345,
+"var": 901
+},
+{
+"kind": "item",
+"label": "Resort Sofa",
+"count": 1,
+"item": 1344,
+"var": 900
+},
+{
+"kind": "item",
+"label": "Resort Hammock",
+"count": 1,
+"item": 1341,
+"var": 897
+},
+{
+"kind": "item",
+"label": "Resort Light",
+"count": 1,
+"item": 1346,
+"var": 65
+}
+]
+},
+{
+"name": "Plain life",
+"dex": "097",
+"type": 227,
+"parts": [
+{
+"kind": "item",
+"label": "Plain Table",
+"count": 1,
+"item": 1324,
+"var": 1128
+},
+{
+"kind": "item",
+"label": "Plain Sofa",
+"count": 1,
+"item": 1329,
+"var": 1055
+},
+{
+"kind": "item",
+"label": "Plain Bed",
+"count": 1,
+"item": 1326,
+"var": 1047
+},
+{
+"kind": "item",
+"label": "Plain Lamp",
+"count": 1,
+"item": 1330,
+"var": 1054
+}
+]
+},
+{
+"name": "Red tall grass",
+"dex": "098",
+"type": 136,
+"parts": [
+{
+"kind": "item",
+"label": "Red Tall Grass",
+"count": 4,
+"item": 2563,
+"var": 681
+}
+]
+},
+{
+"name": "Tree-shaded red tall grass",
+"dex": "099",
+"type": 137,
+"parts": [
+{
+"kind": "item",
+"label": "Red Tall Grass",
+"count": 4,
+"item": 2563,
+"var": 681
+},
+{
+"kind": "item",
+"label": "Large Tree (any)",
+"count": 1,
+"item": 1238,
+"var": 38
+}
+]
+},
+{
+"name": "Pointy tree-shaded rocky tall grass",
+"dex": "100",
+"type": 144,
+"parts": [
+{
+"kind": "item",
+"label": "Red Tall Grass",
+"count": 4,
+"item": 2563,
+"var": 681
+},
+{
+"kind": "item",
+"label": "Pointy tree",
+"count": 1,
+"item": 1229,
+"var": 29
+},
+{
+"kind": "item",
+"label": "Large boulder",
+"count": 1,
+"item": 1323,
+"var": 123
+}
+]
+},
+{
+"name": "Hydrated red tall grass",
+"dex": "101",
+"type": 218,
+"parts": [
+{
+"kind": "item",
+"label": "Red Tall Grass",
+"count": 4,
+"item": 2563,
+"var": 681
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Elevated red tall grass",
+"dex": "102",
+"type": 44,
+"parts": [
+{
+"kind": "item",
+"label": "Red Tall Grass",
+"count": 4,
+"item": 2563,
+"var": 681
+},
+{
+"kind": "note",
+"label": "High-up location",
+"count": 1,
+"note": "needs to be up high (raise the ground first)"
+}
+]
+},
+{
+"name": "Grassy training field",
+"dex": "103",
+"type": 139,
+"parts": [
+{
+"kind": "item",
+"label": "Red Tall Grass",
+"count": 4,
+"item": 2563,
+"var": 681
+},
+{
+"kind": "item",
+"label": "Sandbags",
+"count": 2,
+"item": 1526,
+"var": 2718
+}
+]
+},
+{
+"name": "Graceful flower bed",
+"dex": "104",
+"type": 162,
+"parts": [
+{
+"kind": "item",
+"label": "Mountain Flowers",
+"count": 4,
+"item": 770,
+"var": 704
+}
+]
+},
+{
+"name": "Tree-shaded graceful flower bed",
+"dex": "105",
+"type": 41,
+"parts": [
+{
+"kind": "item",
+"label": "Mountain Flowers",
+"count": 4,
+"item": 770,
+"var": 704
+},
+{
+"kind": "item",
+"label": "Large Tree (any)",
+"count": 1,
+"item": 1238,
+"var": 38
+}
+]
+},
+{
+"name": "Hydrated graceful flower bed",
+"dex": "106",
+"type": 42,
+"parts": [
+{
+"kind": "item",
+"label": "Mountain Flowers",
+"count": 4,
+"item": 770,
+"var": 704
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Flower garden stump stage",
+"dex": "107",
+"type": 4,
+"parts": [
+{
+"kind": "item",
+"label": "Mountain Flowers",
+"count": 4,
+"item": 770,
+"var": 704
+},
+{
+"kind": "item",
+"label": "Mushroom Lamp",
+"count": 2,
+"item": 1367,
+"var": 1405
+},
+{
+"kind": "item",
+"label": "Tree stump (any)",
+"count": 1,
+"item": 1240,
+"var": 39
+}
+]
+},
+{
+"name": "Toil in the soil",
+"dex": "108",
+"type": 7,
+"parts": [
+{
+"kind": "item",
+"label": "Wheelbarrow",
+"count": 1,
+"item": 1813,
+"var": 2378
+},
+{
+"kind": "item",
+"label": "Vegetable field (any)",
+"count": 4,
+"item": 1219,
+"var": 463
+}
+]
+},
+{
+"name": "Uplifting duckweed",
+"dex": "109",
+"type": 147,
+"parts": [
+{
+"kind": "item",
+"label": "Duckweed",
+"count": 4,
+"item": 1221,
+"var": 678
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Mossy rest spot",
+"dex": "110",
+"type": 5,
+"parts": [
+{
+"kind": "item",
+"label": "Moss",
+"count": 4,
+"item": 1289,
+"var": 126
+}
+]
+},
+{
+"name": "Mossy boulder",
+"dex": "111",
+"type": 226,
+"parts": [
+{
+"kind": "item",
+"label": "Moss",
+"count": 4,
+"item": 1289,
+"var": 126
+},
+{
+"kind": "item",
+"label": "Mossy boulder",
+"count": 1,
+"item": 1292,
+"var": 2642
+}
+]
+},
+{
+"name": "Mossy hot spring",
+"dex": "112",
+"type": 142,
+"parts": [
+{
+"kind": "item",
+"label": "Moss",
+"count": 4,
+"item": 1289,
+"var": 126
+},
+{
+"kind": "liquid",
+"label": "Hot-spring water",
+"count": 2,
+"block": 384
+}
+]
+},
+{
+"name": "Open-air bath",
+"dex": "113",
+"type": 38,
+"parts": [
+{
+"kind": "item",
+"label": "Hot-Spring Spout",
+"count": 1,
+"item": 1800,
+"var": 2365
+},
+{
+"kind": "liquid",
+"label": "Hot-spring water",
+"count": 2,
+"block": 384
+}
+]
+},
+{
+"name": "Harmonious hot spring",
+"dex": "114",
+"type": 39,
+"parts": [
+{
+"kind": "item",
+"label": "Hot-Spring Spout",
+"count": 1,
+"item": 1800,
+"var": 2365
+},
+{
+"kind": "item",
+"label": "Water Basin",
+"count": 1,
+"item": 1261,
+"var": 1171
+},
+{
+"kind": "liquid",
+"label": "Hot-spring water",
+"count": 2,
+"block": 384
+}
+]
+},
+{
+"name": "Piping-hot lava",
+"dex": "115",
+"type": 231,
+"parts": [
+{
+"kind": "item",
+"label": "Molten rock",
+"count": 1,
+"item": 1293,
+"var": 2643
+},
+{
+"kind": "liquid",
+"label": "Lava",
+"count": 2,
+"block": 386
+}
+]
+},
+{
+"name": "Digging and burning",
+"dex": "116",
+"type": 232,
+"parts": [
+{
+"kind": "item",
+"label": "Excavation Tools",
+"count": 1,
+"item": 1750,
+"var": 3069
+},
+{
+"kind": "item",
+"label": "Wheelbarrow",
+"count": 1,
+"item": 1813,
+"var": 2378
+},
+{
+"kind": "item",
+"label": "Smelting Furnace",
+"count": 1,
+"item": 1446,
+"var": 2760
+}
+]
+},
+{
+"name": "Clink-clang iron construction",
+"dex": "117",
+"type": 10,
+"parts": [
+{
+"kind": "item",
+"label": "Sandbags",
+"count": 1,
+"item": 1526,
+"var": 2718
+},
+{
+"kind": "item",
+"label": "Excavation Tools",
+"count": 1,
+"item": 1750,
+"var": 3069
+},
+{
+"kind": "item",
+"label": "Wheelbarrow",
+"count": 1,
+"item": 1813,
+"var": 2378
+},
+{
+"kind": "item",
+"label": "Iron beam or column",
+"count": 3,
+"item": 1385,
+"var": 852
+}
+]
+},
+{
+"name": "Creepy white rocks",
+"dex": "118",
+"type": 6,
+"parts": [
+{
+"kind": "item",
+"label": "Moss",
+"count": 4,
+"item": 1289,
+"var": 126
+},
+{
+"kind": "item",
+"label": "Wooden Crate",
+"count": 1,
+"item": 1425,
+"var": 52
+},
+{
+"kind": "item",
+"label": "Lantern",
+"count": 1,
+"item": 1353,
+"var": 62
+},
+{
+"kind": "item",
+"label": "Stalagmites",
+"count": 1,
+"item": 1294,
+"var": 2644
+}
+]
+},
+{
+"name": "Container snacking",
+"dex": "119",
+"type": 36,
+"parts": [
+{
+"kind": "item",
+"label": "Wooden Crate",
+"count": 1,
+"item": 1425,
+"var": 52
+},
+{
+"kind": "item",
+"label": "Barrel",
+"count": 1,
+"item": 2078,
+"var": 622
+},
+{
+"kind": "item",
+"label": "Lantern",
+"count": 1,
+"item": 1353,
+"var": 62
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Dinner table surprise",
+"dex": "120",
+"type": 73,
+"parts": [
+{
+"kind": "item",
+"label": "Party Platter",
+"count": 4,
+"item": 2077,
+"var": 575
+},
+{
+"kind": "item",
+"label": "Seat (wide)",
+"count": 2,
+"item": 1339,
+"var": 1238
+},
+{
+"kind": "item",
+"label": "Table (large)",
+"count": 1,
+"item": 1340,
+"var": 1235
+}
+]
+},
+{
+"name": "Best bread bakery",
+"dex": "121",
+"type": 95,
+"parts": [
+{
+"kind": "item",
+"label": "Counter",
+"count": 2,
+"item": 1371,
+"var": 1254
+},
+{
+"kind": "item",
+"label": "Bread Oven",
+"count": 1,
+"item": 1302,
+"var": 2762
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Mini kitchen",
+"dex": "122",
+"type": 25,
+"parts": [
+{
+"kind": "item",
+"label": "Kitchen Table",
+"count": 1,
+"item": 1776,
+"var": 2348
+},
+{
+"kind": "item",
+"label": "Modern Sink",
+"count": 1,
+"item": 1640,
+"var": 2953
+},
+{
+"kind": "item",
+"label": "Cooking Stove",
+"count": 1,
+"item": 1639,
+"var": 2952
+},
+{
+"kind": "item",
+"label": "Frying Pan",
+"count": 1,
+"item": 1304,
+"var": 2764
+}
+]
+},
+{
+"name": "House party",
+"dex": "123",
+"type": 91,
+"parts": [
+{
+"kind": "item",
+"label": "Food Counter",
+"count": 1,
+"item": 2063,
+"var": 559
+},
+{
+"kind": "item",
+"label": "Paper Party Cups",
+"count": 1,
+"item": 2066,
+"var": 563
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Lazy photo-album scrolling",
+"dex": "124",
+"type": 193,
+"parts": [
+{
+"kind": "item",
+"label": "Paper Party Cups",
+"count": 1,
+"item": 2066,
+"var": 563
+},
+{
+"kind": "item",
+"label": "Tablet",
+"count": 1,
+"item": 1743,
+"var": 2336
+}
+]
+},
+{
+"name": "Chirping recital",
+"dex": "125",
+"type": 97,
+"parts": [
+{
+"kind": "item",
+"label": "Standing Mic",
+"count": 1,
+"item": 2102,
+"var": 696
+},
+{
+"kind": "item",
+"label": "Perch",
+"count": 1,
+"item": 1541,
+"var": 2742
+}
+]
+},
+{
+"name": "Recital stage",
+"dex": "126",
+"type": 32,
+"parts": [
+{
+"kind": "item",
+"label": "Standing Mic",
+"count": 1,
+"item": 2102,
+"var": 696
+},
+{
+"kind": "item",
+"label": "Speaker",
+"count": 2,
+"item": 1754,
+"var": 3071
+},
+{
+"kind": "item",
+"label": "Small Stage",
+"count": 1,
+"item": 1434,
+"var": 879
+}
+]
+},
+{
+"name": "Box to the rhythm",
+"dex": "127",
+"type": 110,
+"parts": [
+{
+"kind": "item",
+"label": "CD Player",
+"count": 1,
+"item": 1802,
+"var": 2367
+},
+{
+"kind": "item",
+"label": "Punching Bag",
+"count": 1,
+"item": 1403,
+"var": 876
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Music and magazines",
+"dex": "128",
+"type": 93,
+"parts": [
+{
+"kind": "item",
+"label": "CD Rack",
+"count": 1,
+"item": 1678,
+"var": 2959
+},
+{
+"kind": "item",
+"label": "Magazine Rack",
+"count": 1,
+"item": 2094,
+"var": 688
+},
+{
+"kind": "item",
+"label": "CD Player",
+"count": 1,
+"item": 1802,
+"var": 2367
+}
+]
+},
+{
+"name": "Mini museum",
+"dex": "129",
+"type": 26,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Post (any)",
+"count": 3,
+"item": 1840,
+"var": 2401
+},
+{
+"kind": "note",
+"label": "Lost relic (large)",
+"count": 1,
+"note": "the editor cannot place this one"
+}
+]
+},
+{
+"name": "Refreshing locker room",
+"dex": "130",
+"type": 24,
+"parts": [
+{
+"kind": "item",
+"label": "Office Locker",
+"count": 2,
+"item": 1365,
+"var": 2661
+},
+{
+"kind": "item",
+"label": "Punching Game",
+"count": 1,
+"item": 1769,
+"var": 3089
+},
+{
+"kind": "item",
+"label": "Seat (wide)",
+"count": 1,
+"item": 1339,
+"var": 1238
+},
+{
+"kind": "item",
+"label": "Potted Plant (any)",
+"count": 1,
+"item": 1530,
+"var": 2726
+}
+]
+},
+{
+"name": "Bronze landmark",
+"dex": "131",
+"type": 72,
+"parts": [
+{
+"kind": "item",
+"label": "Moonlight Dance Statue Kit",
+"count": 1,
+"item": 2937,
+"var": 141
+},
+{
+"kind": "item",
+"label": "Sign",
+"count": 1,
+"item": 673,
+"var": 1193
+},
+{
+"kind": "item",
+"label": "Hedge (any)",
+"count": 4,
+"item": 2560,
+"var": 2788
+}
+]
+},
+{
+"name": "Railroad crossing",
+"dex": "132",
+"type": 21,
+"parts": [
+{
+"kind": "item",
+"label": "Railway Track",
+"count": 1,
+"item": 1463,
+"var": 2877
+},
+{
+"kind": "item",
+"label": "Crossing Gate",
+"count": 1,
+"item": 1466,
+"var": 2880
+}
+]
+},
+{
+"name": "Chef's kitchen",
+"dex": "133",
+"type": 30,
+"parts": [
+{
+"kind": "item",
+"label": "Plain Table",
+"count": 1,
+"item": 1324,
+"var": 1128
+},
+{
+"kind": "item",
+"label": "Modern Sink",
+"count": 1,
+"item": 1640,
+"var": 2953
+},
+{
+"kind": "item",
+"label": "Cooking Stove",
+"count": 1,
+"item": 1639,
+"var": 2952
+},
+{
+"kind": "item",
+"label": "Cutting Board",
+"count": 1,
+"item": 1301,
+"var": 2761
+},
+{
+"kind": "item",
+"label": "Stylish Cooking Pot",
+"count": 1,
+"item": 2075,
+"var": 571
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Absolute luxury",
+"dex": "134",
+"type": 115,
+"parts": [
+{
+"kind": "item",
+"label": "Luxury Table",
+"count": 1,
+"item": 1358,
+"var": 1501
+},
+{
+"kind": "item",
+"label": "Luxury Sofa",
+"count": 1,
+"item": 1357,
+"var": 1498
+},
+{
+"kind": "item",
+"label": "Luxury Bed",
+"count": 1,
+"item": 1355,
+"var": 1496
+},
+{
+"kind": "item",
+"label": "Luxury Lamp",
+"count": 1,
+"item": 1359,
+"var": 1499
+}
+]
+},
+{
+"name": "Heavy iron",
+"dex": "135",
+"type": 225,
+"parts": [
+{
+"kind": "item",
+"label": "Iron Table",
+"count": 1,
+"item": 1352,
+"var": 2655
+},
+{
+"kind": "item",
+"label": "Iron Chair",
+"count": 1,
+"item": 1350,
+"var": 2656
+},
+{
+"kind": "item",
+"label": "Iron Bed",
+"count": 1,
+"item": 1349,
+"var": 2658
+},
+{
+"kind": "item",
+"label": "Lantern",
+"count": 1,
+"item": 1353,
+"var": 62
+}
+]
+},
+{
+"name": "Modern living",
+"dex": "136",
+"type": 228,
+"parts": [
+{
+"kind": "item",
+"label": "Industrial Desk",
+"count": 1,
+"item": 1650,
+"var": 2970
+},
+{
+"kind": "item",
+"label": "Industrial Chair",
+"count": 1,
+"item": 1648,
+"var": 2968
+},
+{
+"kind": "item",
+"label": "Industrial Bed",
+"count": 1,
+"item": 1647,
+"var": 2967
+}
+]
+},
+{
+"name": "Pink tall grass",
+"dex": "137",
+"type": 146,
+"parts": [
+{
+"kind": "item",
+"label": "Pink Tall Grass",
+"count": 4,
+"item": 2564,
+"var": 682
+}
+]
+},
+{
+"name": "Tree-shaded pink tall grass",
+"dex": "138",
+"type": 27,
+"parts": [
+{
+"kind": "item",
+"label": "Pink Tall Grass",
+"count": 4,
+"item": 2564,
+"var": 682
+},
+{
+"kind": "item",
+"label": "Large Tree (any)",
+"count": 1,
+"item": 1238,
+"var": 38
+}
+]
+},
+{
+"name": "Hydrated pink tall grass",
+"dex": "139",
+"type": 154,
+"parts": [
+{
+"kind": "item",
+"label": "Pink Tall Grass",
+"count": 4,
+"item": 2564,
+"var": 682
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Elevated pink tall grass",
+"dex": "140",
+"type": 8,
+"parts": [
+{
+"kind": "item",
+"label": "Pink Tall Grass",
+"count": 4,
+"item": 2564,
+"var": 682
+},
+{
+"kind": "note",
+"label": "High-up location",
+"count": 1,
+"note": "needs to be up high (raise the ground first)"
+}
+]
+},
+{
+"name": "Concrete pipe secret base",
+"dex": "141",
+"type": 34,
+"parts": [
+{
+"kind": "item",
+"label": "Concrete Pipe",
+"count": 3,
+"item": 1641,
+"var": 349
+},
+{
+"kind": "item",
+"label": "Tall Grass (any)",
+"count": 4,
+"item": 1201,
+"var": 1
+}
+]
+},
+{
+"name": "Fluffy flower bed",
+"dex": "142",
+"type": 45,
+"parts": [
+{
+"kind": "item",
+"label": "Skyland Flowers",
+"count": 4,
+"item": 765,
+"var": 713
+}
+]
+},
+{
+"name": "Tree-shaded fluffy flower bed",
+"dex": "143",
+"type": 46,
+"parts": [
+{
+"kind": "item",
+"label": "Skyland Flowers",
+"count": 4,
+"item": 765,
+"var": 713
+},
+{
+"kind": "item",
+"label": "Large Tree (any)",
+"count": 1,
+"item": 1238,
+"var": 38
+}
+]
+},
+{
+"name": "Hydrated fluffy flower bed",
+"dex": "144",
+"type": 47,
+"parts": [
+{
+"kind": "item",
+"label": "Skyland Flowers",
+"count": 4,
+"item": 765,
+"var": 713
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Waterside dinghy",
+"dex": "145",
+"type": 233,
+"parts": [
+{
+"kind": "item",
+"label": "Canoe",
+"count": 1,
+"item": 1416,
+"var": 2906
+},
+{
+"kind": "item",
+"label": "Duckweed",
+"count": 2,
+"item": 1221,
+"var": 678
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+},
+{
+"kind": "note",
+"label": "High-up Location",
+"count": 1,
+"note": "needs to be up high (raise the ground first)"
+}
+]
+},
+{
+"name": "Illuminated waterfall",
+"dex": "146",
+"type": 239,
+"parts": [
+{
+"kind": "item",
+"label": "Torch",
+"count": 2,
+"item": 1278,
+"var": 78
+},
+{
+"kind": "item",
+"label": "Stepping Stones",
+"count": 3,
+"item": 1519,
+"var": 2673
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 3,
+"block": 383
+},
+{
+"kind": "note",
+"label": "Waterfall",
+"count": 1,
+"note": "needs a waterfall"
+}
+]
+},
+{
+"name": "Birdsong garden",
+"dex": "147",
+"type": 12,
+"parts": [
+{
+"kind": "item",
+"label": "Stylish Hedge",
+"count": 1,
+"item": 778,
+"var": 743
+},
+{
+"kind": "item",
+"label": "Wooden Birdhouse",
+"count": 1,
+"item": 1814,
+"var": 2379
+}
+]
+},
+{
+"name": "Simple bathroom",
+"dex": "148",
+"type": 54,
+"parts": [
+{
+"kind": "item",
+"label": "Shower",
+"count": 1,
+"item": 1627,
+"var": 2944
+},
+{
+"kind": "item",
+"label": "Bathtub",
+"count": 1,
+"item": 1626,
+"var": 2943
+}
+]
+},
+{
+"name": "Cycling rest stop",
+"dex": "149",
+"type": 13,
+"parts": [
+{
+"kind": "item",
+"label": "Vending Machine",
+"count": 1,
+"item": 616,
+"var": 2501
+},
+{
+"kind": "item",
+"label": "Bike",
+"count": 1,
+"item": 1475,
+"var": 2946
+}
+]
+},
+{
+"name": "Fireplace nap spot",
+"dex": "150",
+"type": 58,
+"parts": [
+{
+"kind": "item",
+"label": "Stone Fireplace",
+"count": 1,
+"item": 1723,
+"var": 3092
+},
+{
+"kind": "item",
+"label": "Seat (wide)",
+"count": 1,
+"item": 1339,
+"var": 1238
+}
+]
+},
+{
+"name": "Surging psychic power",
+"dex": "151",
+"type": 170,
+"parts": [
+{
+"kind": "item",
+"label": "Simple Cushion",
+"count": 1,
+"item": 2071,
+"var": 568
+},
+{
+"kind": "item",
+"label": "Crystal Ball",
+"count": 1,
+"item": 1816,
+"var": 2381
+}
+]
+},
+{
+"name": "Fortune-teller's table",
+"dex": "152",
+"type": 92,
+"parts": [
+{
+"kind": "item",
+"label": "Crystal Ball",
+"count": 1,
+"item": 1816,
+"var": 2381
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 2,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Trash site TV",
+"dex": "153",
+"type": 86,
+"parts": [
+{
+"kind": "item",
+"label": "Television",
+"count": 1,
+"item": 1633,
+"var": 1513
+},
+{
+"kind": "item",
+"label": "Garbage Bags",
+"count": 2,
+"item": 1388,
+"var": 856
+}
+]
+},
+{
+"name": "Oversized dumping ground",
+"dex": "154",
+"type": 112,
+"parts": [
+{
+"kind": "item",
+"label": "Microwave Oven",
+"count": 1,
+"item": 1630,
+"var": 1511
+},
+{
+"kind": "item",
+"label": "Tires",
+"count": 1,
+"item": 1767,
+"var": 3134
+},
+{
+"kind": "item",
+"label": "Waste Bin (any)",
+"count": 1,
+"item": 1373,
+"var": 855
+},
+{
+"kind": "item",
+"label": "Iron beam or column",
+"count": 3,
+"item": 1385,
+"var": 852
+}
+]
+},
+{
+"name": "Interrogation desk",
+"dex": "155",
+"type": 75,
+"parts": [
+{
+"kind": "item",
+"label": "Industrial Desk",
+"count": 1,
+"item": 1650,
+"var": 2970
+},
+{
+"kind": "item",
+"label": "Folding Chair",
+"count": 2,
+"item": 1774,
+"var": 3145
+},
+{
+"kind": "item",
+"label": "Arcanine Doll",
+"count": 1,
+"item": 1689,
+"var": 2989
+},
+{
+"kind": "item",
+"label": "Desk Light",
+"count": 1,
+"item": 2101,
+"var": 695
+}
+]
+},
+{
+"name": "Sewer-hole inspection",
+"dex": "156",
+"type": 2,
+"parts": [
+{
+"kind": "item",
+"label": "Traffic Cone",
+"count": 1,
+"item": 1791,
+"var": 3199
+},
+{
+"kind": "item",
+"label": "Sewer-Hole Cover",
+"count": 1,
+"item": 1635,
+"var": 1515
+},
+{
+"kind": "item",
+"label": "Excavation Tools",
+"count": 1,
+"item": 1750,
+"var": 3069
+},
+{
+"kind": "item",
+"label": "Iron Pipes",
+"count": 1,
+"item": 1792,
+"var": 2358
+}
+]
+},
+{
+"name": "Spotless washing station",
+"dex": "157",
+"type": 59,
+"parts": [
+{
+"kind": "item",
+"label": "Wall Mirror",
+"count": 1,
+"item": 1788,
+"var": 2356
+},
+{
+"kind": "item",
+"label": "Sink",
+"count": 1,
+"item": 1787,
+"var": 3095
+},
+{
+"kind": "item",
+"label": "Towel Rack",
+"count": 1,
+"item": 1789,
+"var": 3152
+}
+]
+},
+{
+"name": "Home theater",
+"dex": "158",
+"type": 57,
+"parts": [
+{
+"kind": "item",
+"label": "Television",
+"count": 1,
+"item": 1633,
+"var": 1513
+},
+{
+"kind": "item",
+"label": "Speaker",
+"count": 2,
+"item": 1754,
+"var": 3071
+},
+{
+"kind": "item",
+"label": "Stand (any)",
+"count": 1,
+"item": 1545,
+"var": 2684
+}
+]
+},
+{
+"name": "Study area",
+"dex": "159",
+"type": 51,
+"parts": [
+{
+"kind": "item",
+"label": "Pencil Holder",
+"count": 1,
+"item": 1796,
+"var": 3083
+},
+{
+"kind": "item",
+"label": "Bookcase",
+"count": 1,
+"item": 1507,
+"var": 2650
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Rhythmic living room",
+"dex": "160",
+"type": 100,
+"parts": [
+{
+"kind": "item",
+"label": "Television",
+"count": 2,
+"item": 1633,
+"var": 1513
+},
+{
+"kind": "item",
+"label": "Speaker",
+"count": 2,
+"item": 1754,
+"var": 3071
+},
+{
+"kind": "item",
+"label": "Music Mat (any)",
+"count": 4,
+"item": 1578,
+"var": 2819
+}
+]
+},
+{
+"name": "Squeaky clean",
+"dex": "161",
+"type": 101,
+"parts": [
+{
+"kind": "item",
+"label": "Cleaning Supplies",
+"count": 1,
+"item": 1785,
+"var": 2355
+},
+{
+"kind": "item",
+"label": "Bathtub",
+"count": 1,
+"item": 1626,
+"var": 2943
+}
+]
+},
+{
+"name": "Moisturizing makeup stand",
+"dex": "162",
+"type": 56,
+"parts": [
+{
+"kind": "item",
+"label": "Humidifier",
+"count": 1,
+"item": 1699,
+"var": 2999
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Dresser (any)",
+"count": 1,
+"item": 427,
+"var": 184
+}
+]
+},
+{
+"name": "Mini library",
+"dex": "163",
+"type": 106,
+"parts": [
+{
+"kind": "item",
+"label": "Bookcase",
+"count": 2,
+"item": 1507,
+"var": 2650
+},
+{
+"kind": "item",
+"label": "Step Stool",
+"count": 1,
+"item": 1797,
+"var": 3084
+},
+{
+"kind": "item",
+"label": "Lighting (any)",
+"count": 1,
+"item": 292,
+"var": 643
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Game Corner battle zone",
+"dex": "164",
+"type": 61,
+"parts": [
+{
+"kind": "item",
+"label": "Arcade Machine",
+"count": 2,
+"item": 1685,
+"var": 2966
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 2,
+"item": 1335,
+"var": 1391
+}
+]
+},
+{
+"name": "Playland",
+"dex": "165",
+"type": 103,
+"parts": [
+{
+"kind": "item",
+"label": "Slide",
+"count": 1,
+"item": 2055,
+"var": 551
+},
+{
+"kind": "item",
+"label": "Toy (any)",
+"count": 1,
+"item": 1274,
+"var": 109
+}
+]
+},
+{
+"name": "Work desk",
+"dex": "166",
+"type": 55,
+"parts": [
+{
+"kind": "item",
+"label": "Office Desk",
+"count": 1,
+"item": 1366,
+"var": 1788
+},
+{
+"kind": "item",
+"label": "Office Chair",
+"count": 1,
+"item": 1361,
+"var": 1786
+},
+{
+"kind": "item",
+"label": "Mug",
+"count": 1,
+"item": 1566,
+"var": 2804
+},
+{
+"kind": "item",
+"label": "Laptop",
+"count": 1,
+"item": 1675,
+"var": 2956
+}
+]
+},
+{
+"name": "Office storeroom",
+"dex": "167",
+"type": 53,
+"parts": [
+{
+"kind": "item",
+"label": "Office Shelf",
+"count": 1,
+"item": 1364,
+"var": 1787
+},
+{
+"kind": "item",
+"label": "Step Stool",
+"count": 1,
+"item": 1797,
+"var": 3084
+},
+{
+"kind": "item",
+"label": "Cardboard Boxes",
+"count": 1,
+"item": 1590,
+"var": 2834
+}
+]
+},
+{
+"name": "Experiment space",
+"dex": "168",
+"type": 111,
+"parts": [
+{
+"kind": "item",
+"label": "Papers",
+"count": 1,
+"item": 1687,
+"var": 2987
+},
+{
+"kind": "item",
+"label": "Microscope",
+"count": 1,
+"item": 1798,
+"var": 3085
+},
+{
+"kind": "item",
+"label": "Science Experiment",
+"count": 1,
+"item": 2091,
+"var": 589
+}
+]
+},
+{
+"name": "Professor's apprentice program",
+"dex": "169",
+"type": 206,
+"parts": [
+{
+"kind": "item",
+"label": "Laptop",
+"count": 1,
+"item": 1675,
+"var": 2956
+},
+{
+"kind": "item",
+"label": "Jumbled Cords",
+"count": 1,
+"item": 1780,
+"var": 2351
+},
+{
+"kind": "item",
+"label": "Whiteboard",
+"count": 1,
+"item": 1854,
+"var": 2414
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Researcher's desk",
+"dex": "170",
+"type": 151,
+"parts": [
+{
+"kind": "item",
+"label": "Computer",
+"count": 1,
+"item": 1632,
+"var": 3219
+},
+{
+"kind": "item",
+"label": "Science Experiment",
+"count": 1,
+"item": 2091,
+"var": 589
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 2,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Public reading material",
+"dex": "171",
+"type": 213,
+"parts": [
+{
+"kind": "item",
+"label": "Newspaper",
+"count": 1,
+"item": 1739,
+"var": 2332
+},
+{
+"kind": "item",
+"label": "Magazine Rack",
+"count": 1,
+"item": 2094,
+"var": 688
+}
+]
+},
+{
+"name": "Heart-pounding surprise box",
+"dex": "172",
+"type": 183,
+"parts": [
+{
+"kind": "item",
+"label": "Big Drum",
+"count": 1,
+"item": 1763,
+"var": 3133
+},
+{
+"kind": "item",
+"label": "Boo-In-The-Box",
+"count": 1,
+"item": 1760,
+"var": 3079
+},
+{
+"kind": "item",
+"label": "Spotlight",
+"count": 2,
+"item": 1381,
+"var": 848
+}
+]
+},
+{
+"name": "Prank button",
+"dex": "173",
+"type": 125,
+"parts": [
+{
+"kind": "item",
+"label": "Boo-In-The-Box",
+"count": 1,
+"item": 1760,
+"var": 3079
+},
+{
+"kind": "item",
+"label": "Floor Switch",
+"count": 1,
+"item": 1758,
+"var": 2344
+}
+]
+},
+{
+"name": "Picturesque photo cutout board",
+"dex": "174",
+"type": 214,
+"parts": [
+{
+"kind": "item",
+"label": "Photo Cutout Board",
+"count": 1,
+"item": 2068,
+"var": 565
+},
+{
+"kind": "item",
+"label": "Spotlight",
+"count": 2,
+"item": 1381,
+"var": 848
+},
+{
+"kind": "note",
+"label": "High-up location",
+"count": 1,
+"note": "needs to be up high (raise the ground first)"
+}
+]
+},
+{
+"name": "Tire park",
+"dex": "175",
+"type": 235,
+"parts": [
+{
+"kind": "item",
+"label": "Tire Toy",
+"count": 2,
+"item": 2073,
+"var": 569
+},
+{
+"kind": "item",
+"label": "Slide",
+"count": 1,
+"item": 2055,
+"var": 551
+},
+{
+"kind": "item",
+"label": "Tires",
+"count": 1,
+"item": 1767,
+"var": 3134
+}
+]
+},
+{
+"name": "Nature's market",
+"dex": "176",
+"type": 221,
+"parts": [
+{
+"kind": "item",
+"label": "Cash Register",
+"count": 1,
+"item": 1325,
+"var": 1061
+},
+{
+"kind": "item",
+"label": "Large Tree (any)",
+"count": 1,
+"item": 1238,
+"var": 38
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Large boulder",
+"count": 1,
+"item": 1323,
+"var": 123
+}
+]
+},
+{
+"name": "Construction-site generator",
+"dex": "177",
+"type": 203,
+"parts": [
+{
+"kind": "item",
+"label": "Furnace Kit",
+"count": 1,
+"item": 2910,
+"var": 2621
+},
+{
+"kind": "item",
+"label": "Iron Pipes",
+"count": 1,
+"item": 1792,
+"var": 2358
+},
+{
+"kind": "item",
+"label": "Iron Scaffold",
+"count": 2,
+"item": 1817,
+"var": 2382
+}
+]
+},
+{
+"name": "Dojo training",
+"dex": "178",
+"type": 159,
+"parts": [
+{
+"kind": "item",
+"label": "Hanging Scroll",
+"count": 2,
+"item": 2095,
+"var": 689
+},
+{
+"kind": "item",
+"label": "Strength rock",
+"count": 2,
+"item": 1320,
+"var": 124
+}
+]
+},
+{
+"name": "Evil organization HQ",
+"dex": "179",
+"type": 62,
+"parts": [
+{
+"kind": "item",
+"label": "Luxury Sofa",
+"count": 1,
+"item": 1357,
+"var": 1498
+},
+{
+"kind": "item",
+"label": "Team Rocket Wall Hanging",
+"count": 1,
+"item": 1691,
+"var": 2991
+},
+{
+"kind": "item",
+"label": "Potted Plant (any)",
+"count": 2,
+"item": 1530,
+"var": 2726
+}
+]
+},
+{
+"name": "Nine flames",
+"dex": "180",
+"type": 98,
+"parts": [
+{
+"kind": "item",
+"label": "Firepit",
+"count": 9,
+"item": 1778,
+"var": 774
+}
+]
+},
+{
+"name": "Plush central",
+"dex": "181",
+"type": 50,
+"parts": [
+{
+"kind": "item",
+"label": "Eevee Doll",
+"count": 1,
+"item": 1565,
+"var": 2803
+},
+{
+"kind": "item",
+"label": "Pikachu Doll",
+"count": 1,
+"item": 1564,
+"var": 2802
+},
+{
+"kind": "item",
+"label": "Arcanine Doll",
+"count": 1,
+"item": 1689,
+"var": 2989
+},
+{
+"kind": "item",
+"label": "Dragonite Doll",
+"count": 1,
+"item": 1682,
+"var": 2963
+}
+]
+},
+{
+"name": "Gamer's paradise",
+"dex": "182",
+"type": 118,
+"parts": [
+{
+"kind": "item",
+"label": "Gaming Fridge",
+"count": 1,
+"item": 1553,
+"var": 2703
+},
+{
+"kind": "item",
+"label": "Gaming Chair",
+"count": 1,
+"item": 1552,
+"var": 2702
+},
+{
+"kind": "item",
+"label": "Gaming Bed",
+"count": 1,
+"item": 1551,
+"var": 2701
+},
+{
+"kind": "item",
+"label": "Gaming PC",
+"count": 1,
+"item": 1676,
+"var": 2957
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Top pop",
+"dex": "183",
+"type": 224,
+"parts": [
+{
+"kind": "item",
+"label": "Pop Art Table",
+"count": 1,
+"item": 1655,
+"var": 2975
+},
+{
+"kind": "item",
+"label": "Pop Art Sofa",
+"count": 1,
+"item": 1654,
+"var": 2974
+},
+{
+"kind": "item",
+"label": "Pop Art Bed",
+"count": 1,
+"item": 1652,
+"var": 2972
+}
+]
+},
+{
+"name": "Fishing pond",
+"dex": "184",
+"type": 65,
+"parts": [
+{
+"kind": "item",
+"label": "Fishing Rod",
+"count": 1,
+"item": 1815,
+"var": 2380
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 1,
+"block": 383
+}
+]
+},
+{
+"name": "Ocean fishing spot",
+"dex": "185",
+"type": 66,
+"parts": [
+{
+"kind": "item",
+"label": "Fishing Rod",
+"count": 1,
+"item": 1815,
+"var": 2380
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "liquid",
+"label": "Ocean water",
+"count": 1,
+"block": 389
+}
+]
+},
+{
+"name": "Marsh fishing spot",
+"dex": "186",
+"type": 67,
+"parts": [
+{
+"kind": "item",
+"label": "Fishing Rod",
+"count": 1,
+"item": 1815,
+"var": 2380
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "liquid",
+"label": "Muddy Water",
+"count": 1,
+"block": 388
+}
+]
+},
+{
+"name": "Hot-spring fishing spot",
+"dex": "187",
+"type": 68,
+"parts": [
+{
+"kind": "item",
+"label": "Fishing Rod",
+"count": 1,
+"item": 1815,
+"var": 2380
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "liquid",
+"label": "Hot-spring water",
+"count": 1,
+"block": 384
+}
+]
+},
+{
+"name": "Magma fishing spot",
+"dex": "188",
+"type": 69,
+"parts": [
+{
+"kind": "item",
+"label": "Fishing Rod",
+"count": 1,
+"item": 1815,
+"var": 2380
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "liquid",
+"label": "Lava",
+"count": 1,
+"block": 386
+}
+]
+},
+{
+"name": "Amped rock stage",
+"dex": "189",
+"type": 119,
+"parts": [
+{
+"kind": "item",
+"label": "Standing Mic",
+"count": 1,
+"item": 2102,
+"var": 696
+},
+{
+"kind": "item",
+"label": "Cool Electric Guitar",
+"count": 1,
+"item": 1734,
+"var": 3138
+},
+{
+"kind": "item",
+"label": "Speaker",
+"count": 2,
+"item": 1754,
+"var": 3071
+},
+{
+"kind": "item",
+"label": "Small Stage",
+"count": 1,
+"item": 1434,
+"var": 879
+}
+]
+},
+{
+"name": "Low-key rock stage",
+"dex": "190",
+"type": 120,
+"parts": [
+{
+"kind": "item",
+"label": "Standing Mic",
+"count": 1,
+"item": 2102,
+"var": 696
+},
+{
+"kind": "item",
+"label": "Cool Bass Guitar",
+"count": 1,
+"item": 1735,
+"var": 3139
+},
+{
+"kind": "item",
+"label": "Speaker",
+"count": 1,
+"item": 1754,
+"var": 3071
+},
+{
+"kind": "item",
+"label": "Small Stage",
+"count": 1,
+"item": 1434,
+"var": 879
+}
+]
+},
+{
+"name": "Malicious knight's shrine",
+"dex": "191",
+"type": 126,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Malicious Armor",
+"count": 1,
+"item": 1680,
+"var": 2961
+},
+{
+"kind": "item",
+"label": "Firepit",
+"count": 2,
+"item": 1778,
+"var": 774
+},
+{
+"kind": "item",
+"label": "Stepping Stones",
+"count": 2,
+"item": 1519,
+"var": 2673
+}
+]
+},
+{
+"name": "Auspicious knight's shrine",
+"dex": "192",
+"type": 127,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Auspicious Armor",
+"count": 1,
+"item": 1679,
+"var": 2960
+},
+{
+"kind": "item",
+"label": "Firepit",
+"count": 2,
+"item": 1778,
+"var": 774
+},
+{
+"kind": "item",
+"label": "Stepping Stones",
+"count": 2,
+"item": 1519,
+"var": 2673
+}
+]
+},
+{
+"name": "Wing Fossil display",
+"dex": "193",
+"type": 85,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Wing Fossil (Head)",
+"count": 1,
+"item": 1901,
+"var": 3048
+},
+{
+"kind": "item",
+"label": "Wing Fossil (Right Wing)",
+"count": 1,
+"item": 1902,
+"var": 3049
+},
+{
+"kind": "item",
+"label": "Wing Fossil (Left Wing)",
+"count": 1,
+"item": 1903,
+"var": 3050
+},
+{
+"kind": "item",
+"label": "Wing Fossil (Body)",
+"count": 1,
+"item": 1904,
+"var": 3051
+},
+{
+"kind": "item",
+"label": "Wing Fossil (Tail)",
+"count": 1,
+"item": 1905,
+"var": 3052
+}
+]
+},
+{
+"name": "Skull Fossil display",
+"dex": "194",
+"type": 79,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Skull Fossil",
+"count": 1,
+"item": 1667,
+"var": 1507
+}
+]
+},
+{
+"name": "Headbutt Fossil display",
+"dex": "195",
+"type": 80,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Headbutt Fossil (Head)",
+"count": 1,
+"item": 1906,
+"var": 3102
+},
+{
+"kind": "item",
+"label": "Headbutt Fossil (Body)",
+"count": 1,
+"item": 1907,
+"var": 3103
+},
+{
+"kind": "item",
+"label": "Headbutt Fossil (Tail)",
+"count": 1,
+"item": 1908,
+"var": 3104
+}
+]
+},
+{
+"name": "Armor Fossil display",
+"dex": "196",
+"type": 77,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Armor Fossil",
+"count": 1,
+"item": 1666,
+"var": 1506
+}
+]
+},
+{
+"name": "Shield Fossil display",
+"dex": "197",
+"type": 78,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 2,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Shield Fossil (Head)",
+"count": 1,
+"item": 1710,
+"var": 2809
+},
+{
+"kind": "item",
+"label": "Shield Fossil (Body)",
+"count": 1,
+"item": 1711,
+"var": 3037
+},
+{
+"kind": "item",
+"label": "Shield Fossil (Tail)",
+"count": 1,
+"item": 1712,
+"var": 3038
+}
+]
+},
+{
+"name": "Jaw Fossil display",
+"dex": "198",
+"type": 81,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Jaw Fossil",
+"count": 1,
+"item": 1668,
+"var": 1508
+}
+]
+},
+{
+"name": "Despot Fossil display",
+"dex": "199",
+"type": 82,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Despot Fossil (Head)",
+"count": 1,
+"item": 1713,
+"var": 2810
+},
+{
+"kind": "item",
+"label": "Despot Fossil (Body)",
+"count": 1,
+"item": 1714,
+"var": 3039
+},
+{
+"kind": "item",
+"label": "Despot Fossil (Legs)",
+"count": 1,
+"item": 1715,
+"var": 3040
+},
+{
+"kind": "item",
+"label": "Despot Fossil (Tail)",
+"count": 1,
+"item": 1716,
+"var": 3041
+}
+]
+},
+{
+"name": "Sail Fossil display",
+"dex": "200",
+"type": 83,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Sail Fossil",
+"count": 1,
+"item": 1669,
+"var": 1509
+}
+]
+},
+{
+"name": "Tundra Fossil display",
+"dex": "201",
+"type": 84,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 1,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Tundra Fossil (Head)",
+"count": 1,
+"item": 1717,
+"var": 2811
+},
+{
+"kind": "item",
+"label": "Tundra Fossil (Body)",
+"count": 1,
+"item": 1718,
+"var": 3042
+},
+{
+"kind": "item",
+"label": "Tundra Fossil (Tail)",
+"count": 1,
+"item": 1719,
+"var": 3043
+}
+]
+},
+{
+"name": "Boundless blue beverage",
+"dex": "202",
+"type": 150,
+"parts": [
+{
+"kind": "item",
+"label": "Soda Float",
+"count": 1,
+"item": 1825,
+"var": 2386
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Electrifying potatoes",
+"dex": "203",
+"type": 149,
+"parts": [
+{
+"kind": "item",
+"label": "Fried Potatoes",
+"count": 1,
+"item": 1820,
+"var": 546
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Burning-hot spice",
+"dex": "204",
+"type": 148,
+"parts": [
+{
+"kind": "item",
+"label": "Pizza",
+"count": 1,
+"item": 1819,
+"var": 2384
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Elegant daytime treats",
+"dex": "205",
+"type": 230,
+"parts": [
+{
+"kind": "item",
+"label": "Afternoon Tea Set",
+"count": 1,
+"item": 1826,
+"var": 2387
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Dark-chocolate cookies",
+"dex": "206",
+"type": 229,
+"parts": [
+{
+"kind": "item",
+"label": "Chocolate Cookies",
+"count": 1,
+"item": 1827,
+"var": 2388
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Leafy greens sandwich",
+"dex": "207",
+"type": 135,
+"parts": [
+{
+"kind": "item",
+"label": "Sandwiches",
+"count": 1,
+"item": 1828,
+"var": 2389
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Chilly shaved ice",
+"dex": "208",
+"type": 134,
+"parts": [
+{
+"kind": "item",
+"label": "Shaved Ice",
+"count": 1,
+"item": 1829,
+"var": 2390
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Lovely ribbon cake",
+"dex": "209",
+"type": 132,
+"parts": [
+{
+"kind": "item",
+"label": "Ribbon Cake",
+"count": 1,
+"item": 1830,
+"var": 2391
+},
+{
+"kind": "item",
+"label": "Seat (any)",
+"count": 1,
+"item": 1335,
+"var": 1391
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+}
+]
+},
+{
+"name": "Basin tall grass",
+"dex": "D1-001",
+"type": 271,
+"parts": [
+{
+"kind": "item",
+"label": "Seabed Tall Grass",
+"count": 4,
+"item": 499,
+"var": 500
+}
+]
+},
+{
+"name": "Basin tall grass and coral",
+"dex": "D1-002",
+"type": 272,
+"parts": [
+{
+"kind": "item",
+"label": "Seabed Tall Grass",
+"count": 4,
+"item": 499,
+"var": 500
+},
+{
+"kind": "item",
+"label": "Small Coral",
+"count": 1,
+"item": 440,
+"var": 200
+},
+{
+"kind": "item",
+"label": "Tall Coral",
+"count": 1,
+"item": 442,
+"var": 202
+}
+]
+},
+{
+"name": "Swaying flower bed",
+"dex": "D1-003",
+"type": 273,
+"parts": [
+{
+"kind": "item",
+"label": "Seabed Flowers",
+"count": 4,
+"item": 439,
+"var": 199
+}
+]
+},
+{
+"name": "Swaying flower bed and coral",
+"dex": "D1-004",
+"type": 274,
+"parts": [
+{
+"kind": "item",
+"label": "Colorful Corals",
+"count": 1,
+"item": 441,
+"var": 201
+},
+{
+"kind": "item",
+"label": "Seabed Flowers",
+"count": 4,
+"item": 439,
+"var": 199
+}
+]
+},
+{
+"name": "Swaying flower bed and seaweed",
+"dex": "D1-005",
+"type": 275,
+"parts": [
+{
+"kind": "item",
+"label": "Seabed Flowers",
+"count": 4,
+"item": 439,
+"var": 199
+},
+{
+"kind": "item",
+"label": "Chimney Rocks",
+"count": 1,
+"item": 504,
+"var": 501
+},
+{
+"kind": "item",
+"label": "Lush Seaweed",
+"count": 2,
+"item": 505,
+"var": 503
+}
+]
+},
+{
+"name": "Seaweed and netting",
+"dex": "D1-006",
+"type": 279,
+"parts": [
+{
+"kind": "item",
+"label": "Netting",
+"count": 4,
+"item": 603,
+"var": 1092
+},
+{
+"kind": "item",
+"label": "Lush Seaweed",
+"count": 2,
+"item": 505,
+"var": 503
+}
+]
+},
+{
+"name": "Coral congregation",
+"dex": "D1-007",
+"type": 288,
+"parts": [
+{
+"kind": "item",
+"label": "Small Coral",
+"count": 1,
+"item": 440,
+"var": 200
+},
+{
+"kind": "item",
+"label": "Tall Coral",
+"count": 1,
+"item": 442,
+"var": 202
+},
+{
+"kind": "item",
+"label": "Colorful Corals",
+"count": 1,
+"item": 441,
+"var": 201
+}
+]
+},
+{
+"name": "Sandy basin tall grass",
+"dex": "D1-008",
+"type": 280,
+"parts": [
+{
+"kind": "item",
+"label": "Seabed Tall Grass",
+"count": 4,
+"item": 499,
+"var": 500
+},
+{
+"kind": "item",
+"label": "Sandpile",
+"count": 1,
+"item": 507,
+"var": 505
+}
+]
+},
+{
+"name": "Sandy digging spot",
+"dex": "D1-009",
+"type": 281,
+"parts": [
+{
+"kind": "item",
+"label": "Sandpile",
+"count": 1,
+"item": 507,
+"var": 505
+},
+{
+"kind": "item",
+"label": "Sand Toys",
+"count": 1,
+"item": 544,
+"var": 526
+}
+]
+},
+{
+"name": "Sandy speech",
+"dex": "D1-010",
+"type": 282,
+"parts": [
+{
+"kind": "item",
+"label": "Tabletop Mic",
+"count": 1,
+"item": 1755,
+"var": 3072
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Sandpile",
+"count": 1,
+"item": 507,
+"var": 505
+}
+]
+},
+{
+"name": "Biteable punching bag",
+"dex": "D1-011",
+"type": 283,
+"parts": [
+{
+"kind": "item",
+"label": "Gold Teeth",
+"count": 1,
+"item": 1258,
+"var": 810
+},
+{
+"kind": "item",
+"label": "Punching Bag",
+"count": 1,
+"item": 1403,
+"var": 876
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Sandpile",
+"count": 1,
+"item": 507,
+"var": 505
+}
+]
+},
+{
+"name": "Marine mossy rest spot",
+"dex": "D1-012",
+"type": 277,
+"parts": [
+{
+"kind": "item",
+"label": "Sea Moss",
+"count": 4,
+"item": 547,
+"var": 529
+}
+]
+},
+{
+"name": "Molten mossy rest spot",
+"dex": "D1-013",
+"type": 306,
+"parts": [
+{
+"kind": "item",
+"label": "Molten Rock",
+"count": 1,
+"item": 1293,
+"var": 2643
+},
+{
+"kind": "item",
+"label": "Sea Moss",
+"count": 4,
+"item": 547,
+"var": 529
+}
+]
+},
+{
+"name": "Creepy chimney rocks",
+"dex": "D1-014",
+"type": 278,
+"parts": [
+{
+"kind": "item",
+"label": "Barrel",
+"count": 1,
+"item": 2078,
+"var": 622
+},
+{
+"kind": "item",
+"label": "Lantern",
+"count": 1,
+"item": 1353,
+"var": 62
+},
+{
+"kind": "item",
+"label": "Chimney Rocks",
+"count": 1,
+"item": 504,
+"var": 501
+},
+{
+"kind": "item",
+"label": "Sea Moss",
+"count": 4,
+"item": 547,
+"var": 529
+}
+]
+},
+{
+"name": "Chimney rocks dig site",
+"dex": "D1-015",
+"type": 276,
+"parts": [
+{
+"kind": "item",
+"label": "Traffic Cone",
+"count": 1,
+"item": 1791,
+"var": 3199
+},
+{
+"kind": "item",
+"label": "Excavation Tools",
+"count": 1,
+"item": 1750,
+"var": 3069
+},
+{
+"kind": "item",
+"label": "Wheelbarrow",
+"count": 1,
+"item": 1813,
+"var": 2378
+},
+{
+"kind": "item",
+"label": "Chimney Rocks",
+"count": 1,
+"item": 504,
+"var": 501
+}
+]
+},
+{
+"name": "Discarded treasure",
+"dex": "D1-016",
+"type": 284,
+"parts": [
+{
+"kind": "item",
+"label": "Garbage Bags",
+"count": 1,
+"item": 1388,
+"var": 856
+},
+{
+"kind": "item",
+"label": "Waste Bin (any)",
+"count": 1,
+"item": 1373,
+"var": 855
+},
+{
+"kind": "item",
+"label": "Big Treasure Chest",
+"count": 1,
+"item": 543,
+"var": 525
+}
+]
+},
+{
+"name": "Playing sailor",
+"dex": "D1-017",
+"type": 285,
+"parts": [
+{
+"kind": "note",
+"label": "Ship's Wheel",
+"count": 1,
+"note": "the editor cannot place this one"
+},
+{
+"kind": "item",
+"label": "Wooden Crate",
+"count": 1,
+"item": 1425,
+"var": 52
+},
+{
+"kind": "item",
+"label": "Big Treasure Chest",
+"count": 1,
+"item": 543,
+"var": 525
+},
+{
+"kind": "item",
+"label": "Bottled Ship",
+"count": 1,
+"item": 659,
+"var": 1179
+}
+]
+},
+{
+"name": "Treasure chest and sparkling jewels",
+"dex": "D1-018",
+"type": 286,
+"parts": [
+{
+"kind": "item",
+"label": "Lantern",
+"count": 1,
+"item": 1353,
+"var": 62
+},
+{
+"kind": "item",
+"label": "Big Treasure Chest",
+"count": 1,
+"item": 543,
+"var": 525
+},
+{
+"kind": "item",
+"label": "Sparkling Jewelry",
+"count": 1,
+"item": 542,
+"var": 524
+}
+]
+},
+{
+"name": "Ocean rest spot",
+"dex": "D1-019",
+"type": 289,
+"parts": [
+{
+"kind": "item",
+"label": "Small Coral",
+"count": 1,
+"item": 440,
+"var": 200
+},
+{
+"kind": "item",
+"label": "Lampion",
+"count": 1,
+"item": 449,
+"var": 223
+},
+{
+"kind": "item",
+"label": "Seashell Seat",
+"count": 1,
+"item": 541,
+"var": 471
+}
+]
+},
+{
+"name": "Marine shop",
+"dex": "D1-020",
+"type": 290,
+"parts": [
+{
+"kind": "item",
+"label": "Cash Register",
+"count": 1,
+"item": 1325,
+"var": 1061
+},
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 2,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 1,
+"block": 383
+}
+]
+},
+{
+"name": "Ocean treasures",
+"dex": "D1-021",
+"type": 287,
+"parts": [
+{
+"kind": "item",
+"label": "Sparkling Jewelry",
+"count": 1,
+"item": 542,
+"var": 524
+},
+{
+"kind": "item",
+"label": "Bottled Ship",
+"count": 1,
+"item": 659,
+"var": 1179
+},
+{
+"kind": "item",
+"label": "Marine Chest",
+"count": 1,
+"item": 462,
+"var": 240
+}
+]
+},
+{
+"name": "Smoothie-making spot",
+"dex": "D1-022",
+"type": 291,
+"parts": [
+{
+"kind": "item",
+"label": "Table (any)",
+"count": 1,
+"item": 1336,
+"var": 1392
+},
+{
+"kind": "item",
+"label": "Blender",
+"count": 1,
+"item": 528,
+"var": 255
+},
+{
+"kind": "item",
+"label": "Plated food",
+"count": 1,
+"item": 1828,
+"var": 2389
+}
+]
+},
+{
+"name": "Fluffy relaxation",
+"dex": "D1-023",
+"type": 292,
+"parts": [
+{
+"kind": "item",
+"label": "Lighting (any)",
+"count": 1,
+"item": 292,
+"var": 643
+},
+{
+"kind": "item",
+"label": "Doll (any)",
+"count": 1,
+"item": 1564,
+"var": 2802
+},
+{
+"kind": "item",
+"label": "Cushion Bed",
+"count": 1,
+"item": 655,
+"var": 1164
+}
+]
+},
+{
+"name": "Canoe dock",
+"dex": "D1-024",
+"type": 293,
+"parts": [
+{
+"kind": "item",
+"label": "Canoe",
+"count": 1,
+"item": 1416,
+"var": 2906
+},
+{
+"kind": "item",
+"label": "Floating Logs",
+"count": 2,
+"item": 531,
+"var": 258
+},
+{
+"kind": "liquid",
+"label": "Water",
+"count": 2,
+"block": 383
+}
+]
+},
+{
+"name": "Muddy playtime",
+"dex": "D1-025",
+"type": 294,
+"parts": [
+{
+"kind": "item",
+"label": "Towel Rack",
+"count": 1,
+"item": 1789,
+"var": 3152
+},
+{
+"kind": "item",
+"label": "Windup Inkay",
+"count": 1,
+"item": 601,
+"var": 1090
+},
+{
+"kind": "item",
+"label": "Floating Logs",
+"count": 1,
+"item": 531,
+"var": 258
+},
+{
+"kind": "liquid",
+"label": "Muddy water",
+"count": 2,
+"block": 388
+}
+]
+},
+{
+"name": "Muddy spa",
+"dex": "D1-026",
+"type": 295,
+"parts": [
+{
+"kind": "item",
+"label": "Bathtime Set",
+"count": 1,
+"item": 2096,
+"var": 690
+},
+{
+"kind": "item",
+"label": "Seat (wide)",
+"count": 1,
+"item": 1339,
+"var": 1238
+},
+{
+"kind": "item",
+"label": "Gyarados Fountain",
+"count": 1,
+"item": 611,
+"var": 1103
+},
+{
+"kind": "liquid",
+"label": "Muddy water",
+"count": 2,
+"block": 388
+}
+]
+},
+{
+"name": "Topsy-turvy",
+"dex": "D1-027",
+"type": 296,
+"parts": [
+{
+"kind": "item",
+"label": "Lampion",
+"count": 3,
+"item": 449,
+"var": 223
+}
+]
+},
+{
+"name": "Bubbly bathtub",
+"dex": "D1-028",
+"type": 298,
+"parts": [
+{
+"kind": "item",
+"label": "Bathtub",
+"count": 1,
+"item": 1626,
+"var": 2943
+},
+{
+"kind": "item",
+"label": "Bubble Machine",
+"count": 1,
+"item": 517,
+"var": 515
+}
+]
+},
+{
+"name": "Bubbly stage",
+"dex": "D1-029",
+"type": 299,
+"parts": [
+{
+"kind": "item",
+"label": "Small Stage",
+"count": 1,
+"item": 1434,
+"var": 879
+},
+{
+"kind": "item",
+"label": "Bubble Machine",
+"count": 2,
+"item": 517,
+"var": 515
+}
+]
+},
+{
+"name": "Glowing stage for three",
+"dex": "D1-030",
+"type": 300,
+"parts": [
+{
+"kind": "item",
+"label": "Standing Mic",
+"count": 3,
+"item": 2102,
+"var": 696
+},
+{
+"kind": "item",
+"label": "Wireless Power-Transmitter Post",
+"count": 3,
+"item": 605,
+"var": 1094
+}
+]
+},
+{
+"name": "Elegant concert",
+"dex": "D1-031",
+"type": 301,
+"parts": [
+{
+"kind": "item",
+"label": "Shell Lamp",
+"count": 2,
+"item": 1622,
+"var": 1503
+},
+{
+"kind": "item",
+"label": "Marine Chair",
+"count": 1,
+"item": 460,
+"var": 238
+},
+{
+"kind": "item",
+"label": "Harp",
+"count": 1,
+"item": 660,
+"var": 1180
+}
+]
+},
+{
+"name": "Maritime teatime",
+"dex": "D1-032",
+"type": 297,
+"parts": [
+{
+"kind": "item",
+"label": "Push Cart",
+"count": 1,
+"item": 1623,
+"var": 2935
+},
+{
+"kind": "item",
+"label": "Chic Table",
+"count": 1,
+"item": 1688,
+"var": 2988
+},
+{
+"kind": "item",
+"label": "Chic Chair",
+"count": 2,
+"item": 1681,
+"var": 2962
+},
+{
+"kind": "item",
+"label": "Tea Set",
+"count": 1,
+"item": 2064,
+"var": 560
+},
+{
+"kind": "item",
+"label": "Bottled Ship",
+"count": 1,
+"item": 659,
+"var": 1179
+}
+]
+},
+{
+"name": "Nostalgia zone",
+"dex": "D1-033",
+"type": 305,
+"parts": [
+{
+"kind": "item",
+"label": "Antique Chest",
+"count": 1,
+"item": 1513,
+"var": 2665
+},
+{
+"kind": "item",
+"label": "Photo Frame",
+"count": 1,
+"item": 2086,
+"var": 583
+},
+{
+"kind": "item",
+"label": "Wooden Crate",
+"count": 1,
+"item": 1425,
+"var": 52
+},
+{
+"kind": "item",
+"label": "Lantern",
+"count": 1,
+"item": 1353,
+"var": 62
+},
+{
+"kind": "item",
+"label": "Sea Moss",
+"count": 2,
+"item": 547,
+"var": 529
+},
+{
+"kind": "item",
+"label": "Music Box",
+"count": 1,
+"item": 600,
+"var": 1089
+}
+]
+},
+{
+"name": "Marine makeup stand",
+"dex": "D1-034",
+"type": 302,
+"parts": [
+{
+"kind": "item",
+"label": "Marine Closet",
+"count": 1,
+"item": 463,
+"var": 241
+},
+{
+"kind": "item",
+"label": "Marine Dresser",
+"count": 1,
+"item": 461,
+"var": 239
+},
+{
+"kind": "item",
+"label": "Marine Chair",
+"count": 1,
+"item": 460,
+"var": 238
+}
+]
+},
+{
+"name": "Gorgeous sleeping area",
+"dex": "D1-035",
+"type": 303,
+"parts": [
+{
+"kind": "item",
+"label": "Ornate Partition",
+"count": 1,
+"item": 468,
+"var": 246
+},
+{
+"kind": "item",
+"label": "Ornate Bed",
+"count": 1,
+"item": 464,
+"var": 242
+},
+{
+"kind": "item",
+"label": "Ornate Stand",
+"count": 1,
+"item": 467,
+"var": 245
+}
+]
+},
+{
+"name": "Mermaid's Gym",
+"dex": "D1-036",
+"type": 304,
+"parts": [
+{
+"kind": "item",
+"label": "Exhibition Stand",
+"count": 6,
+"item": 1528,
+"var": 755
+},
+{
+"kind": "item",
+"label": "Marine Sofa",
+"count": 1,
+"item": 458,
+"var": 236
+},
+{
+"kind": "item",
+"label": "Decorative Great Ball",
+"count": 1,
+"item": 2581,
+"var": 1226
+},
+{
+"kind": "item",
+"label": "Decorative Heal Ball",
+"count": 1,
+"item": 2582,
+"var": 1227
+},
+{
+"kind": "item",
+"label": "Decorative Dive Ball",
+"count": 1,
+"item": 2584,
+"var": 1229
+},
+{
+"kind": "item",
+"label": "Decorative Net Ball",
+"count": 1,
+"item": 2585,
+"var": 1230
+},
+{
+"kind": "item",
+"label": "Decorative Lure Ball",
+"count": 1,
+"item": 2586,
+"var": 1231
+},
+{
+"kind": "item",
+"label": "Decorative Quick Ball",
+"count": 1,
+"item": 2583,
+"var": 1228
+}
+]
+},
+{
+"name": "Yellow carpet",
+"dex": "E-001",
+"type": 236,
+"parts": [
+{
+"kind": "item",
+"label": "Dandy Flowers",
+"count": 4,
+"item": 310,
+"var": 821
+}
+]
+},
+{
+"name": "Field-trip friends",
+"dex": "E-002",
+"type": 212,
+"parts": [
+{
+"kind": "item",
+"label": "Lunch Box",
+"count": 1,
+"item": 303,
+"var": 803
+},
+{
+"kind": "item",
+"label": "Hoppip Water Bottle",
+"count": 1,
+"item": 301,
+"var": 801
+},
+{
+"kind": "item",
+"label": "Flower Backpack",
+"count": 1,
+"item": 307,
+"var": 817
+}
+]
+},
+{
+"name": "Dandelion lunchtime",
+"dex": "E-003",
+"type": 199,
+"parts": [
+{
+"kind": "item",
+"label": "Flower Cushion",
+"count": 1,
+"item": 302,
+"var": 802
+},
+{
+"kind": "item",
+"label": "Flowery Table Setting",
+"count": 1,
+"item": 306,
+"var": 816
+},
+{
+"kind": "item",
+"label": "Lunch Box",
+"count": 1,
+"item": 303,
+"var": 803
+},
+{
+"kind": "item",
+"label": "Dandy Flowers",
+"count": 1,
+"item": 310,
+"var": 821
+}
+]
+},
+{
+"name": "Treasure-hunting set",
+"dex": "E-004",
+"type": 94,
+"parts": [
+{
+"kind": "item",
+"label": "Adventure Kit",
+"count": 1,
+"item": 320,
+"var": 88
+},
+{
+"kind": "item",
+"label": "Map and Compass",
+"count": 1,
+"item": 319,
+"var": 87
+},
+{
+"kind": "item",
+"label": "Treasure (Outdoor Item)",
+"count": 1,
+"item": 543,
+"var": 525
+}
+]
+},
+{
+"name": "Surrounded by stars",
+"dex": "E-005",
+"type": 240,
+"parts": [
+{
+"kind": "item",
+"label": "Star Closet",
+"count": 1,
+"item": 428,
+"var": 185
+},
+{
+"kind": "item",
+"label": "Cloud Table",
+"count": 1,
+"item": 425,
+"var": 182
+},
+{
+"kind": "item",
+"label": "Starry-Sky Bed",
+"count": 1,
+"item": 426,
+"var": 183
+},
+{
+"kind": "item",
+"label": "Jirachi Lamp",
+"count": 1,
+"item": 423,
+"var": 180
+}
+]
+},
+{
+"name": "Exciting beach",
+"dex": "E-006",
+"type": 311,
+"parts": [
+{
+"kind": "item",
+"label": "Sand Bed",
+"count": 1,
+"item": 445,
+"var": 206
+},
+{
+"kind": "item",
+"label": "Big Swim Ring",
+"count": 1,
+"item": 444,
+"var": 790
+}
+]
+},
+{
+"name": "Marine leisure activities",
+"dex": "E-007",
+"type": 312,
+"parts": [
+{
+"kind": "item",
+"label": "Cooler",
+"count": 1,
+"item": 448,
+"var": 222
+},
+{
+"kind": "item",
+"label": "Swim Ring",
+"count": 1,
+"item": 443,
+"var": 532
+},
+{
+"kind": "item",
+"label": "Beach Volleyball Set",
+"count": 1,
+"item": 447,
+"var": 219
+}
+]
+}
+]

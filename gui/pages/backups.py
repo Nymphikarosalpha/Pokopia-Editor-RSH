@@ -135,7 +135,7 @@ class BackupsPage(Page):
                 'undone by the game\'s next save. Restore anyway?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No) != QMessageBox.Yes:
             return
         msg = (f'Replace the whole save folder\n{app.save.folder}\n\nwith backup "{e["name"]}" ({e["when"]:%d %b %Y %H:%M})?'
-               + ('\n\nUnsaved edits in the editor are discarded.' if self.c.edited else ''))
+               + ('\n\nUnsaved edits in the editor are discarded.' if app.save.edited else ''))
         box = QMessageBox(QMessageBox.Question, 'Restore backup', msg, QMessageBox.Yes | QMessageBox.No, self)
         box.setDefaultButton(QMessageBox.No)
         keep = QCheckBox('Back up the current save first')
@@ -148,8 +148,8 @@ class BackupsPage(Page):
             safety = px.restore_backup(e['path'], app.save.folder, safety=keep.isChecked())
         except Exception as ex:
             return QMessageBox.critical(self, 'Not restored', str(ex))
-        app.load(app.save.folder, quiet=True)
-        self.refresh()
+        app.load(app.save.folder, quiet=True)      # every page, the islands and the photos are read again
+        app.show_page('Overview')
         app.toast(f'Restored. The previous save is in {safety}' if safety else 'Restored. The previous save was not backed up.')
 
     def delete(self):

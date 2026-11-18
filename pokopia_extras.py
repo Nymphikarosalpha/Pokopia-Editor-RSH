@@ -498,6 +498,43 @@ def _walk_for_saves(root, max_depth=8):
         dirs[:] = [d for d in dirs if d not in ('G00', 'B00', 'S00') and not d.startswith('.')]
 
 
+RECOMPIA_SAVE = os.path.join('Recomp Library', 'recompia', 'save', 'account')
+
+
+def _drives():
+    """Fixed and removable drive roots on Windows (no CD drives); the home folder elsewhere."""
+    if sys.platform != 'win32':
+        return [os.path.expanduser('~')]
+    import ctypes
+    out = []
+    try:
+        mask = ctypes.windll.kernel32.GetLogicalDrives()
+        for i in range(26):
+            if mask >> i & 1:
+                root = f'{chr(65 + i)}:\\'
+                if ctypes.windll.kernel32.GetDriveTypeW(root) in (2, 3):   # removable, fixed
+                    out.append(root)
+    except Exception:
+        pass
+    return out
+
+
+def recompia_saves():
+    """(folder, account) for every Recompia save: <drive>\\Recomp Library\\recompia\\save\\account\\<account>."""
+    out = []
+    for d in _drives():
+        base = os.path.join(d, RECOMPIA_SAVE)
+        try:
+            names = os.listdir(base)
+        except OSError:
+            continue
+        for n in names:
+            f = os.path.join(base, n)
+            if os.path.isdir(os.path.join(f, 'G00')):
+                out.append((f, n))
+    return out
+
+
 def find_saves(extra_roots=(), defaults=True):
     """Every Pokopia save folder found in the default emulator locations (and inside extra_roots), newest first.
     Returns dicts: folder, emulator, profile, saved (datetime), supported (bool)."""
@@ -514,6 +551,8 @@ def find_saves(extra_roots=(), defaults=True):
     for root in _data_roots('Ryujinx') if defaults else ():
         for f in glob.glob(os.path.join(root, 'bis', 'user', 'save', '*', '[01]')):
             cands.append((f, 'Ryujinx', os.path.basename(os.path.dirname(f))))
+    for f, account in recompia_saves() if defaults else ():
+        cands.append((f, 'Recompia', account[-8:]))
     for root in extra_roots:
         for f in _walk_for_saves(root):
             cands.append((f, 'Custom', ''))
@@ -533,9 +572,12 @@ def find_saves(extra_roots=(), defaults=True):
     return out
 
 
-def default_save():
-    """The most recently saved supported Pokopia save, or None."""
-    return next((e['folder'] for e in find_saves() if e['supported']), None)
+def default_save(source='emulator'):
+    """The most recently saved supported save from an emulator ('emulator') or Recompia ('recompia'), falling back
+    to the other kind, or None."""
+    rows = [e for e in find_saves() if e['supported']]
+    mine = [e for e in rows if (e['emulator'] == 'Recompia') == (source == 'recompia')]
+    return next((e['folder'] for e in mine + rows), None)
 
 
 # ---------------------------------------------------------------- emulator check

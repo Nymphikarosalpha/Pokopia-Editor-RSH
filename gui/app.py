@@ -48,10 +48,10 @@ def page_classes():
     from gui.pages.backups import BackupsPage
     from gui.pages.advanced import AdvancedPage
     from gui.pages.mods import ModsPage
-    return [('Save', [OverviewPage]),
+    return [('Save', [OverviewPage, BackupsPage]),
             ('Edit', [BagPage, CatalogPage, ResidentsPage, MovesPage, WardrobePage, CollectionPage]),
-            ('Explore', [MapPage, PhotosPage]),
-            ('Tools', [BackupsPage, ModsPage, AdvancedPage])]
+            ('Explore', [PhotosPage]),
+            ('Tools', [MapPage, ModsPage, AdvancedPage])]
 
 
 class App(QMainWindow):
@@ -76,7 +76,9 @@ class App(QMainWindow):
         self.emu_timer = QTimer(self, interval=20000, timeout=self.check_emulators)
         self.emu_timer.start()
         last = self.settings.get('last_folder')
-        start = folder or (last if last and px.save_header(last) else None) or px.default_save()
+        last = last if last and px.save_header(last) else None
+        pref = self.settings.get('start_with', 'emulator')
+        start = folder or (last if pref == 'last' else None) or px.default_save(pref if pref != 'last' else 'emulator') or last
         if start:
             self.load(start, quiet=True)
             if self.save and start != last and not folder:
@@ -368,13 +370,13 @@ class App(QMainWindow):
 
     def update_chrome(self):
         c = self.save.common if self.save else None
-        edited = bool(c and c.edited)
+        edited = bool(self.save and self.save.edited)
         self.setWindowTitle(('● ' if edited else '') + 'Pokopia Editor' + (f'  —  {c.player_name}' if c else ''))
-        n = len(c.history) if c else 0
+        n = len(self.save.order) if self.save else 0
         self.b_save.setEnabled(edited)
         self.b_save.setText(f'Save  ·  {n}' if edited and n else 'Save')
-        self.b_undo.setEnabled(bool(c and c.history))
-        self.b_redo.setEnabled(bool(c and c.can_redo))
+        self.b_undo.setEnabled(bool(self.save and self.save.order))
+        self.b_redo.setEnabled(bool(self.save and self.save.redo_order))
         self.b_saveas.setEnabled(bool(c))
         if not c:
             self.st_state.setText('No save open')
@@ -432,6 +434,8 @@ class App(QMainWindow):
             for n in ('Overview', 'Photos'):
                 self.pages[n].dirty = True
             self.show_page(self.current)
+        elif kind == 'recipes':
+            self.pages['Island Map'].recipes_loaded(key, result, err)
         elif kind == 'emu':
             if result != self.emus:
                 self.emus = result
@@ -467,7 +471,7 @@ class App(QMainWindow):
             return
         self.check_emulators()
         if self.save and self.save.changed_on_disk():
-            if self.save.common.edited:
+            if self.save.edited:
                 self.toast('The game saved again while you had unsaved edits. Reload (F5) before overwriting.', 'err')
             else:
                 self.load(self.save.folder, quiet=True)
@@ -493,20 +497,28 @@ class App(QMainWindow):
             self.data_changed()
             return False
         if c.commit(label):
+            self.save.note_commit('c')
             self.toast(label, 'info')
         self.data_changed()
         return True
 
     def undo(self):
-        label = self.save and self.save.common.undo()
-        if label:
-            self.toast(f'Undone: {label}', 'info')
-            self.data_changed()
+        r = self.save and self.save.undo()
+        if r:
+            self.toast(f'Undone: {r[1]}', 'info')
+            self.after_history(r[0])
 
     def redo(self):
-        label = self.save and self.save.common.redo()
-        if label:
-            self.toast(f'Redone: {label}', 'info')
+        r = self.save and self.save.redo()
+        if r:
+            self.toast(f'Redone: {r[1]}', 'info')
+            self.after_history(r[0])
+
+    def after_history(self, key):
+        if key != 'c':
+            self.pages['Island Map'].island_changed(key)
+            self.update_chrome()
+        else:
             self.data_changed()
 
     # ---------- files ----------
@@ -523,7 +535,7 @@ class App(QMainWindow):
             self.load(self.save.folder)
 
     def discard_ok(self):
-        if self.save and self.save.common.edited:
+        if self.save and self.save.edited:
             r = QMessageBox.question(self, 'Unsaved edits', 'You have edits that are not saved. Discard them?',
                                      QMessageBox.Discard | QMessageBox.Cancel, QMessageBox.Cancel)
             return r == QMessageBox.Discard
@@ -535,6 +547,9 @@ class App(QMainWindow):
         except Exception as ex:
             QMessageBox.critical(self, 'Cannot open', str(ex))
             return
+        # islands are read again from disk for the newly opened save
+        for k in [k for k in self.map_cache if os.path.normcase(k[0]) == os.path.normcase(self.save.folder)]:
+            del self.map_cache[k]
         self.load_album()
         for p in self.pages.values():
             if hasattr(p, 'save_changed'):
@@ -550,13 +565,13 @@ class App(QMainWindow):
         if not self.need():
             return False
         from gui.dialogs import ChangesDialog
-        lines = self.save.common.pending_changes()
+        lines = self.save.pending_changes()
         return ChangesDialog(self, 'Changes to be written' if confirm else 'Pending changes', lines, confirm).run()
 
     def save_new(self):
         if not self.need():
             return
-        if not self.save.common.edited and QMessageBox.question(
+        if not self.save.edited and QMessageBox.question(
                 self, 'No edits', 'Nothing has been changed. Write an identical copy anyway?') != QMessageBox.Yes:
             return
         d = QFileDialog.getExistingDirectory(self, 'Choose an EMPTY folder for the edited save')
@@ -571,7 +586,7 @@ class App(QMainWindow):
     def save_inplace(self):
         if not self.need():
             return
-        if not self.save.common.edited:
+        if not self.save.edited:
             return self.toast('Nothing to save.', 'info')
         self.emus = px.running_emulators()
         if self.emus and QMessageBox.warning(

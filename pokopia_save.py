@@ -1056,6 +1056,60 @@ class SaveFolder:
             raise FormatError('Pick the save folder that contains G00 (and S00), e.g. ...\\0400A3A01EE4C000')
         self.folder = folder
         self.common = CommonSave(os.path.join(folder, self.REL))
+        self.islands = {}            # area -> pokopia_island.Island opened for editing
+        self.order, self.redo_order = [], []   # undo history across CMNDAT ('c') and islands (area numbers)
+
+    # ---------- one undo history for the common save and the islands ----------
+    @property
+    def edited(self):
+        return self.common.edited or any(i.edited for i in self.islands.values())
+
+    def edited_islands(self):
+        return [i for i in self.islands.values() if i.edited]
+
+    def note_commit(self, key):
+        """Record that an edit was committed to the common save ('c') or to island `key`."""
+        self.order.append(key)
+        self.redo_order.clear()
+        self.common._redo.clear()
+        for isl in self.islands.values():
+            isl._redo.clear()
+
+    def undo(self):
+        """Undo the most recent edit anywhere. Returns (key, label) or None."""
+        while self.order:
+            key = self.order.pop()
+            label = self.common.undo() if key == 'c' else (self.islands[key].undo() if key in self.islands else None)
+            if label:
+                self.redo_order.append(key)
+                return key, label
+        return None
+
+    def redo(self):
+        while self.redo_order:
+            key = self.redo_order.pop()
+            label = self.common.redo() if key == 'c' else (self.islands[key].redo() if key in self.islands else None)
+            if label:
+                self.order.append(key)
+                return key, label
+        return None
+
+    def history(self):
+        """Labels of every edit not saved yet, oldest first."""
+        seen, out = {}, []
+        for key in self.order:
+            n = seen.get(key, 0)
+            seen[key] = n + 1
+            h = self.common.history if key == 'c' else (self.islands[key].history if key in self.islands else [])
+            lab = h[n] if n < len(h) else '?'
+            out.append(lab if key == 'c' else f'{self.islands[key].name}: {lab}')
+        return out
+
+    def pending_changes(self):
+        lines = self.common.pending_changes() if self.common.edited else []
+        for isl in self.edited_islands():
+            lines += isl.summary()
+        return lines
 
     def game_backup(self):
         """The game's own previous save (B00), or None."""
@@ -1080,12 +1134,14 @@ class SaveFolder:
         return p if os.path.isfile(p) else None
 
     def changed_on_disk(self):
-        """True if the game (or anything else) rewrote CMNDAT.BIN since this save was opened."""
+        """True if the game (or anything else) rewrote CMNDAT.BIN, or an island being edited, since it was opened."""
         try:
             with open(self.common.path, 'rb') as f:
-                return f.read() != self.common.original
+                if f.read() != self.common.original:
+                    return True
         except OSError:
             return True
+        return any(isl.changed_on_disk() for isl in self.edited_islands())
 
     def write(self, out_folder=None, in_place=False, backup_root=None):
         """Write to a new folder (default) or in place after an automatic backup. Returns (path, backup)."""
@@ -1094,6 +1150,11 @@ class SaveFolder:
         new_bytes = self.common.to_bytes()
         # validate what we are about to write
         _validate_bytes(new_bytes, bytes(self.common.data))
+        island_bytes = []
+        for isl in self.edited_islands():
+            blob = isl.to_bytes()
+            isl.validate(blob)
+            island_bytes.append((isl, blob))
         backup = None
         if in_place:
             ts = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -1120,6 +1181,14 @@ class SaveFolder:
         again = CommonSave(dst)
         if bytes(again.data) != bytes(self.common.data):
             raise FormatError('Verification after write failed')
+        for isl, blob in island_bytes:
+            dst = os.path.join(target, 'G00', os.path.basename(isl.path))
+            tmpf = dst + '.tmp'
+            with open(tmpf, 'wb') as f:
+                f.write(blob)
+            os.replace(tmpf, dst)
+            with open(dst, 'rb') as f:
+                isl.validate(f.read())
         return target, backup
 
 

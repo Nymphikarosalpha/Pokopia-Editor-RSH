@@ -1,8 +1,9 @@
 import datetime, os
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
+from PySide6.QtWidgets import (QButtonGroup, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
                                QVBoxLayout, QWidget)
 
+import pokopia_extras as px
 import pokopia_save as ps
 from gui import theme as T
 from gui import widgets as W
@@ -100,8 +101,28 @@ class OverviewPage(Page):
         sf.body.addWidget(self.ver)
         self.emu = W.Pill('')
         sf.body.addWidget(self.emu, 0, Qt.AlignLeft)
-        sf.body.addLayout(W.hbox(W.button('Open in Explorer', T.G['folder'], self.open_folder),
+        sf.body.addLayout(W.hbox(W.button('Open a save…', T.G['open'], a.open_dialog),
+                                 W.button('Open in Explorer', T.G['folder'], self.open_folder),
                                  W.button('Reload from disk', T.G['refresh'], a.reload), None))
+        sf.body.addWidget(W.label('WHEN THE EDITOR STARTS, OPEN', 'caps'))
+        srow = QHBoxLayout()
+        srow.setSpacing(6)
+        self.start_btns = {}
+        grp = QButtonGroup(self)
+        for key, text, tip in (('emulator', 'Emulator save', 'The newest save from Eden, Ryujinx or another emulator'),
+                               ('recompia', 'Recompia save', 'The newest save in <drive>\\Recomp Library\\recompia\\save\\account'),
+                               ('last', 'Last opened', 'Whatever save you opened last, wherever it is')):
+            b = W.chip(text)
+            b.setToolTip(tip)
+            b.clicked.connect(lambda _=False, k=key: self.set_start(k))
+            grp.addButton(b)
+            srow.addWidget(b)
+            self.start_btns[key] = b
+        grp.setExclusive(True)
+        srow.addStretch(1)
+        sf.body.addLayout(srow)
+        self.start_note = W.label('', 'small', wrap=True)
+        sf.body.addWidget(self.start_note)
         left.addWidget(sf)
         left.addStretch(1)
         row.addLayout(left, 1)
@@ -124,6 +145,21 @@ class OverviewPage(Page):
         if self.app.need():
             self.app.do('Rename player', lambda: setattr(self.c, 'player_name', self.name.text()))
 
+    def set_start(self, key):
+        self.app.settings['start_with'] = key
+        self.app.write_settings()
+        self.show_start()
+
+    def show_start(self):
+        key = self.app.settings.get('start_with', 'emulator')
+        self.start_btns[key].setChecked(True)
+        if key == 'last':
+            self.start_note.setText('Opens the save you used last time.')
+            return
+        f = px.default_save(key)
+        kind = 'Recompia' if key == 'recompia' else 'emulator'
+        self.start_note.setText(f'Next start: {f}' if f else f'No {kind} save found; the other kind or the last save opens instead.')
+
     def open_folder(self):
         if self.app.save:
             os.startfile(self.app.save.folder)
@@ -145,6 +181,7 @@ class OverviewPage(Page):
 
     def refresh(self):
         c, app = self.c, self.app
+        self.show_start()
         if not c:
             return
         self.name.setText(c.player_name)
@@ -174,13 +211,13 @@ class OverviewPage(Page):
                                  'in the album' if a is not None else app.album_state)
         self.tiles['Play time'].set(ps.fmt_playtime(pt) if pt is not None else '-', 'read from the save')
         self.folder.setText(app.save.folder.replace(os.sep, os.sep + '​'))
-        self.ver.setText(f'Game save version {ps.VERSION:#010x} (Pokopia 2.0.x). Only G00\\CMNDAT.BIN is ever written; '
-                         'islands, photos and the game\'s own backup slot are copied untouched.')
+        self.ver.setText(f'Game save version {ps.VERSION:#010x} (Pokopia 2.0.x). Only G00\\CMNDAT.BIN and islands you '
+                         'edit on the Island Map are written; photos and the game\'s own backup slot are copied untouched.')
         if app.emus:
             self.emu.set(f'●  {", ".join(app.emus)} is running. Close it before overwriting the save.', 'pillwarn')
         else:
             self.emu.set('●  No emulator running. Safe to overwrite.', 'pillok')
-        h = c.history
+        h = app.save.history()
         self.hist.clear()
         for n, lbl in enumerate(h, 1):
             it = QListWidgetItem(f'{n}.   {lbl}')
