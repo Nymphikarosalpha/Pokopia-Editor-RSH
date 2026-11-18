@@ -10,7 +10,7 @@
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![Pokopia](https://img.shields.io/badge/Pokopia-2.0.x-e74c3c?style=for-the-badge)
 
-<img src="docs/screenshots/catalog.png" width="49%" alt="The Item Catalog page">
+<img src="docs/screenshots/island-map.png" width="49%" alt="The Island Map editor">
 <img src="docs/charizard_fly.gif" width="49%" alt="Play as Pokemon: flying around town as Charizard">
 
 </div>
@@ -51,11 +51,11 @@ If your save isn't found, click **Open → Browse for a folder**.
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/island-map.png" alt="Island Map"></td>
+    <td><img src="docs/screenshots/catalog.png" alt="Item Catalog"></td>
     <td><img src="docs/screenshots/wardrobe.png" alt="Wardrobe"></td>
   </tr>
   <tr>
-    <td align="center"><b>Island Map</b></td>
+    <td align="center"><b>Item Catalog</b></td>
     <td align="center"><b>Wardrobe</b></td>
   </tr>
   <tr>
