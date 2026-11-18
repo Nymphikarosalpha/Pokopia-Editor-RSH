@@ -4,7 +4,7 @@
 
 # Pokopia Editor
 
-**Edit your Pokopia save: bag, residents, moves, emotes, wardrobe and collection. View your islands and photos. Install game mods.**
+**Edit your Pokopia save: bag, residents, moves, emotes, wardrobe, collection and your islands. Install game mods.**
 
 [![Download](https://img.shields.io/github/v/release/cycalo/Pokopia-Editor?label=Download&style=for-the-badge&color=2ecc71)](https://github.com/cycalo/Pokopia-Editor/releases/latest)
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
@@ -25,7 +25,7 @@
 
 Supported emulators: **Eden · Yuzu · Suyu · Sudachi · Citron · Torzu · Ryujinx**.
 If your save isn't found, click **Open → Browse for a folder**.
-[Recompia](https://github.com/Dittobyte/Recompia) is supported too.
+[Recompia](https://github.com/Dittobyte/Recompia) saves are found automatically too; choose which one opens at start on the Overview page.
 
 > [!NOTE]
 > If Windows shows *"Windows protected your PC"*, click **More info → Run anyway**.
@@ -44,7 +44,7 @@ If your save isn't found, click **Open → Browse for a folder**.
 | ✨ | **Moves & Emotes** | Learn or unlearn with a click, then set up your move and emote wheels |
 | 👕 | **Wardrobe** | Unlock any outfit or hairstyle, or all of them at once, including the Expansion Pass ones |
 | ⭐ | **Collection** | Complete the Pokédex, Habitat Dex, recipes, item list, Human Records, Ancient Artifacts, Highlight Reel, and photo frames and filters, one at a time or all at once. Turn on upgrades and set your Life Coins |
-| 🗺️ | **Island Map** | See each island from above with everything you've placed. Export it as a PNG |
+| 🗺️ | **Island Map** | Edit your islands: move, place and delete objects, paint paths, raise or flatten the ground, and build any of 252 habitats in one click. Export as PNG |
 | 📷 | **Photos** | Browse your in-game album and export full-size photos |
 | 🛟 | **Backups** | Make, compare, restore and delete backups |
 | 🧩 | **Mods** | Install game mods: Play as Pokemon, Unlimited Crafting Storage Range |

@@ -174,18 +174,19 @@ class ChangesDialog(Dialog):
 class WhatsNew(Dialog):
     """Shown once, the first time a new version is opened."""
 
-    def __init__(self, app, version, items):
+    def __init__(self, app, version, items, page=None):
         super().__init__(app, "What's new", 560, 10)
-        self.open_mods = False
+        self.open_page = None
+        self.page = page
         self.lay.addWidget(W.label(f"What's new in Pokopia Editor {version}", 'h2'))
         for title, text in items:
             self.lay.addWidget(W.label(f'<b>{html.escape(title)}</b><br>{html.escape(text)}', wrap=True))
         self.lay.addSpacing(6)
         row = W.hbox(None, W.button('Close', slot=self.accept))
-        if app.save:
-            row.addWidget(W.button('Open Mods', T.G['layers'], self.go_mods, accent=True))
+        if app.save and page:
+            row.addWidget(W.button(f'Open {page}', T.G.get('map' if page == 'Island Map' else 'layers'), self.go, accent=True))
         self.lay.addLayout(row)
 
-    def go_mods(self):
-        self.open_mods = True
+    def go(self):
+        self.open_page = self.page
         self.accept()
