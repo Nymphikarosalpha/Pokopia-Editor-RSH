@@ -105,6 +105,8 @@ Turn into Ditto or any other Pokémon. Flying Pokémon can fly; Grow, Burn, Wate
 
 **Recompia:** copy `recompia_play_as_pokemon-1.5.0.pkmod` into Recompia's `mods` folder. F3 or ZL + R3 opens the Pokémon list; ZR or ZL + D-pad Down uses the Pokémon's ability (Grow, Burn, Water, Generate). [Install steps](recompia/play-as-pokemon/README.md).
 
+If the camera judders while flying, turn off Running jump keeps speed (Settings > Game > Gameplay).
+
 More details: [mods/play-as-pokemon](mods/play-as-pokemon/).
 
 ### Unlimited Crafting Storage Range
