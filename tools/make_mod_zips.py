@@ -1,10 +1,11 @@
-"""Build the standalone mod downloads for a release: dist/z-<Mod>-emulator.zip and dist/z-<Mod>-SD-card.zip.
+"""Build the standalone mod downloads for a release: dist/z-<Mod>-emulator-<version>.zip and dist/z-<Mod>-SD-card-<version>.zip
+(version from the mod's mod.json, written as three numbers, e.g. 1.5 -> 1.5.0).
 
 Usage:  py tools\\make_mod_zips.py
 Each zip holds the mod's files in that layout (default option) plus its README: README-standalone.md when the
 mod has one (written for people without the editor), otherwise README.md.
 """
-import os, sys, tempfile, zipfile
+import json, os, sys, tempfile, zipfile
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
@@ -15,7 +16,10 @@ os.makedirs(DIST, exist_ok=True)
 for mod in pm.list_mods():
     for layout, tag in (('emulator', 'emulator'), ('sd', 'SD-card')):
         camel = ''.join(w[:1].upper() + w[1:] for w in mod.name.split())  # "Play as Pokemon" -> PlayAsPokemon
-        out = os.path.join(DIST, f'z-{camel}-{tag}.zip')
+        with open(os.path.join(mod.folder, 'mod.json'), encoding='utf-8') as f:
+            ver = str(json.load(f).get('version', '1.0'))
+        ver = '.'.join((ver.split('.') + ['0', '0'])[:3])
+        out = os.path.join(DIST, f'z-{camel}-{tag}-{ver}.zip')
         with tempfile.TemporaryDirectory() as tmp, zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
             for path in mod.write(tmp, layout):
                 z.write(path, os.path.relpath(path, tmp).replace(os.sep, '/'))

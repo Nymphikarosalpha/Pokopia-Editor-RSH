@@ -76,8 +76,8 @@ The easiest way is the Pokopia Editor's **Mods** page, which installs it straigh
 
 Without the editor, download a ready-made zip from the [latest release](https://github.com/cycalo/Pokopia-Editor/releases/latest). Each zip includes a short README ([README-standalone.md](README-standalone.md)) that explains how to install it and change the Pokémon.
 
-- [**`z-PlayAsPokemon-emulator.zip`**](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-emulator.zip): unzip into your emulator's `load` folder
-- [**`z-PlayAsPokemon-SD-card.zip`**](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-SD-card.zip): unzip onto the root of the SD card
+- **`z-PlayAsPokemon-emulator-<version>.zip`**: unzip into your emulator's `load` folder
+- **`z-PlayAsPokemon-SD-card-<version>.zip`**: unzip onto the root of the SD card
 
 To copy the files by hand instead, use these paths.
 

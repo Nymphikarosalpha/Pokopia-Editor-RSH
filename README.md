@@ -101,7 +101,7 @@ Turn into Ditto or any other Pokémon. Flying Pokémon can fly; Grow, Burn, Wate
 - **Transform** on the Mods page needs the emulator on the same PC. On a console, pick the Pokémon before installing.
 - **Experimental forms**, below the Pokémon list, turn you into things like the Master Ball.
 
-**Without the editor:** [emulator zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-emulator.zip) (unzip into the emulator's `load` folder) or [SD card zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-PlayAsPokemon-SD-card.zip) (Atmosphère, untested). You start as Ditto; [how to start as another Pokémon](mods/play-as-pokemon/README-standalone.md#change-the-pokémon).
+**Without the editor:** `z-PlayAsPokemon-emulator-<version>.zip` from the [latest release](https://github.com/cycalo/Pokopia-Editor/releases/latest) (unzip into the emulator's `load` folder) or `z-PlayAsPokemon-SD-card-<version>.zip` (Atmosphère, untested). You start as Ditto; [how to start as another Pokémon](mods/play-as-pokemon/README-standalone.md#change-the-pokémon).
 
 **Recompia:** copy `recompia_play_as_pokemon-1.5.0.pkmod` into Recompia's `mods` folder. F3 or ZL + R3 opens the Pokémon list; ZR or ZL + D-pad Down uses the Pokémon's ability (Grow, Burn, Water, Generate). [Install steps](recompia/play-as-pokemon/README.md).
 
@@ -119,7 +119,7 @@ Crafting stations use the items in every storage box, chest and crate you have p
 - **Only for Pokopia 2.0.0** (update 655360). Works together with Play as Pokemon.
 - Not tested in multiplayer.
 
-**Without the editor:** [emulator zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-UnlimitedCraftingStorageRange-emulator.zip) or [SD card zip](https://github.com/cycalo/Pokopia-Editor/releases/latest/download/z-UnlimitedCraftingStorageRange-SD-card.zip) (Atmosphère, untested).
+**Without the editor:** `z-UnlimitedCraftingStorageRange-emulator-<version>.zip` from the [latest release](https://github.com/cycalo/Pokopia-Editor/releases/latest) or `z-UnlimitedCraftingStorageRange-SD-card-<version>.zip` (Atmosphère, untested).
 
 **Recompia:** copy `recompia_unlimited_crafting_storage_range-1.0.0.pkmod` into Recompia's `mods` folder. Windows and Linux. [Install steps](recompia/unlimited-crafting-storage-range/README.md).
 
