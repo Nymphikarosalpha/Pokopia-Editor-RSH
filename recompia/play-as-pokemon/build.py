@@ -51,12 +51,10 @@ HOOKS = [
 ]
 
 DESCRIPTION = (
-    "Turn into Ditto or any other Pokémon and walk around as it, even one that doesn't live in your town. "
-    "ZL + L3 (left stick click) turns you into the chosen Pokémon and back, ZL + D-pad Left / Right picks "
-    "the previous / next Pokémon while playing, F3 or ZL + R3 opens a list of all of them. Flying Pokémon can fly: ZR takes off and rises, ZL descends and lands, "
-    "ZL + ZR drops. Pokémon abilities: ZR, or ZL + D-pad Down, uses Grow, Burn, Water or Generate on what is in front of you. "
-    "In Link Play the other players see your Pokémon (everyone needs the mod). "
-    "The Pokopia Editor's Play as Pokemon mod, made for Recompia.")
+    "Play as any Pokémon, even one that doesn't live in your town. "
+    "ZL + L3: transform / turn back • ZL + D-pad Left / Right: previous / next Pokémon • F3 or ZL + R3: list of all Pokémon • "
+    "ZR / ZL: fly up / down • ZR or ZL + D-pad Down: use the Pokémon's ability. "
+    "Link Play: everyone needs the mod.")
 
 
 def ascii_name(n):
