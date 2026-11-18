@@ -3,7 +3,7 @@ id = "play_as_pokemon"
 name = "Play as Pokemon"
 version = "1.5.0"
 authors = ["cycalo"]
-description = "Play as any Pokémon: ZL + L3 transforms you and back, F3 lists them all. Camera judders while flying? Turn off Running jump keeps speed in Recompia's settings."
+description = "Play as any Pokémon: ZL + L3 transforms you and back, ZL + R3 (or F3) lists them all. Camera judders while flying? Turn off Running jump keeps speed in Recompia's settings."
 license = "GPL-3.0-or-later"
 homepage = "https://github.com/cycalo/Pokopia-Editor"
 loader = ">=0.6.0 <1.0.0"

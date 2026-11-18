@@ -51,7 +51,7 @@ HOOKS = [
 ]
 
 DESCRIPTION = (
-    "Play as any Pokémon: ZL + L3 transforms you and back, F3 lists them all. "
+    "Play as any Pokémon: ZL + L3 transforms you and back, ZL + R3 (or F3) lists them all. "
     "Camera judders while flying? Turn off Running jump keeps speed in Recompia's settings.")
 
 
