@@ -171,6 +171,7 @@ def write_mod_toml(a_l, m_z, exp):
         'type = "bool"',
         'default = true',
         'label = "Flying Pokémon can fly (ZR up, ZL down, ZL + ZR drop)"',
+        'description = "If the camera judders while flying, turn off Running jump keeps speed in Recompia (Settings > Game > Gameplay)."',
         '',
         '[[settings]]',
         'key = "fly_speed"',
