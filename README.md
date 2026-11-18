@@ -51,11 +51,11 @@ If your save isn't found, click **Open → Browse for a folder**.
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/catalog.png" alt="Item Catalog"></td>
+    <td><img src="docs/screenshots/island-map.png" alt="Island Map"></td>
     <td><img src="docs/screenshots/wardrobe.png" alt="Wardrobe"></td>
   </tr>
   <tr>
-    <td align="center"><b>Item Catalog</b></td>
+    <td align="center"><b>Island Map</b></td>
     <td align="center"><b>Wardrobe</b></td>
   </tr>
   <tr>
@@ -67,10 +67,12 @@ If your save isn't found, click **Open → Browse for a folder**.
     <td align="center"><b>Moves & Emotes</b></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><img src="docs/screenshots/collection.png" width="50%" alt="Collection"></td>
+    <td><img src="docs/screenshots/catalog.png" alt="Item Catalog"></td>
+    <td><img src="docs/screenshots/collection.png" alt="Collection"></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><b>Collection</b></td>
+    <td align="center"><b>Item Catalog</b></td>
+    <td align="center"><b>Collection</b></td>
   </tr>
 </table>
 
