@@ -51,10 +51,8 @@ HOOKS = [
 ]
 
 DESCRIPTION = (
-    "Play as any Pokémon, even one that doesn't live in your town. "
-    "ZL + L3: transform / turn back • ZL + D-pad Left / Right: previous / next Pokémon • F3 or ZL + R3: list of all Pokémon • "
-    "ZR / ZL: fly up / down • ZR or ZL + D-pad Down: use the Pokémon's ability. "
-    "Link Play: everyone needs the mod.")
+    "Play as any Pokémon: ZL + L3 transforms you and back, F3 lists them all. "
+    "Camera judders while flying? Turn off Running jump keeps speed in Recompia's settings.")
 
 
 def ascii_name(n):
