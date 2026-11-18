@@ -172,7 +172,7 @@ The exe stores its settings in `%APPDATA%\Pokopia Editor`.
 </details>
 
 <div align="center">
-<sub>Built with data from <a href="https://github.com/berichan/PokoHex">PokoHex</a>
+<sub>Save edditor built with data from <a href="https://github.com/berichan/PokoHex">PokoHex</a>
 </div>
 <div align="center">
 <sub>Released under the <a href="LICENSE">GNU General Public License v3.0</a>. Pokémon names, icons and other game assets belong to Nintendo, Game Freak and The Pokémon Company. Fan-made tool, not affiliated with them.</sub>
