@@ -6,7 +6,7 @@ VERSION = (1, 7, 0)
 VERSION_STR = '.'.join(map(str, VERSION))
 
 WHATS_NEW = [
-    ('Pokémon abilities', 'Press ZR (or ZL + D-pad Down) as a Pokémon to use Grow, Burn, Water or Generate. '
-                          'Update Play as Pokemon on the Mods page.'),
-    ('Recompia', 'Play as Pokemon 1.4.0 has the abilities too, and other Link Play players now see your Pokémon.'),
+    ('Play as Pokemon 1.5', 'Abilities (ZR or ZL + D-pad Down: Grow, Burn, Water, Generate), talking while transformed, '
+                            'Link Play (others see your Pokémon), smoother flying. Update it on the Mods page.'),
+    ('Recompia', 'Play as Pokemon 1.5.0 has the same, and fixes ending a Link Play session while transformed.'),
 ]

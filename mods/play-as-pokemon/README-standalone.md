@@ -13,12 +13,12 @@ Turn into any Pokémon in Pokopia. Only works on **Pokopia 2.0.0, update 655360*
 |---|---|
 | ZL + L3 (left stick click) | Turn into the Pokémon; press again to turn back |
 | ZL + D-pad Left / Right | Pick the previous / next Pokémon (A to Z) |
-| ZR (as a flying Pokémon) | Take off, hold to rise |
-| ZL (while flying) | Go down. Keep holding on the ground to land |
+| ZR (as a flying Pokémon) | Take off. Tap to rise a little, hold to keep rising faster |
+| ZL (while flying) | Go down the same way. Keep holding on the ground to land |
 | ZL + ZR (while flying) | Drop out of the air |
 | ZR (Pokémon that can't fly) or ZL + D-pad Down | Use the Pokémon's ability: Grow, Burn, Water or Generate, on what is in front of you |
 
-Press a combo for a moment rather than tapping it: the emulator only checks the buttons about 12 times a second.
+Talking to a Pokémon turns you back into your character for the conversation; walk off afterwards and you turn back into your Pokémon. In Link Play everyone needs the mod, and then the others see your Pokémon (with its animations) and you see theirs.
 
 ## Change the Pokémon
 

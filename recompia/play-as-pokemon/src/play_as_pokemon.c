@@ -20,6 +20,7 @@
  *   player_tick    the player's update: buttons, binding the animations (and rebuilding the model once), flying, the
  *                  Pokemon's ability (Grow, Burn, Water), and turning the player back into the Pokemon when the game changed
  *                  the form some other way (talking to a Pokemon)
+ *   motion_reset   the world reset's "release every motion set" (1.5): the mod forgets the animations it had loaded
  *
  * Every hook acts on the player's own character only. In Link Play the other players are characters of the same kind, and
  * RequestState runs for every character, so without that check a transformed player's game would also keep the others from
@@ -37,7 +38,7 @@
 #include <string.h>
 #ifdef _WIN32
 #include <windows.h>
-#else
+#elif !defined(PAP_SWITCH)
 #include <time.h>
 #endif
 
@@ -69,6 +70,7 @@ MT_DECLARE_MOD()
 #define P_REQ_GO      0x378C   /* u8 request */
 #define TRANSFORM_ANIM 0x3B2
 #define HUMAN 1
+#define HUMAN_RES 1    /* the human model's animation resource: the game's own, never loaded or released by the mod */
 #define FORM_MAX 1000  /* the player update applies a pending state 1..1000 */
 
 /* player entity (flying) */
@@ -115,14 +117,27 @@ static const MtHost *H;
 static MtMod *M;
 static uint64_t MAIN;
 
+#ifdef PAP_SWITCH
+/* The Switch / emulator build (mods/play-as-pokemon/src/build_emulator.py) keeps these two where the Pokopia Editor's live controls
+   and the Pokemon-choice cheat find them: u16 main+0x3D14C00 the form held, u16 main+0x3D14C06 the chosen Pokemon (0: the default). */
+extern _Atomic uint16_t pap_form, pap_selected;
+#define g_form pap_form
+#define g_selected pap_selected
+#else
 static _Atomic uint16_t g_form;        /* read by hooks on any game thread */
+#endif
 static uint16_t g_requested, g_acquired; /* the player's own threads only (model setup, update) */
 static int g_built_unbound;            /* the model of g_requested was built while its motion set had no animations bound */
+#ifndef PAP_SWITCH
 static _Atomic uint16_t g_selected = DEFAULT_FORM;   /* what the combo turns the player into */
+#endif
 static _Atomic int g_settings_changed;
 static _Atomic int g_fly = 1, g_cycle = 1, g_messages = 1;
+static _Atomic int g_fly_top = 400;   /* the top climbing / descending speed, cm per second (setting fly_speed) */
 enum { AB_GROW, AB_BURN, AB_WATER, AB_GENERATE, AB_KINDS };
+#ifndef PAP_SWITCH
 static const char *const AB_NAMES[] = {"Grow", "Burn", "Water", "Generate"};
+#endif
 static _Atomic int g_abilities = 1, g_ability = -1;   /* -1: the Pokemon's own (ABILITY_OF) */
 static uint32_t g_prev_buttons;
 static int g_prev_key_on, g_prev_key_off, g_prev_key_ability;
@@ -154,19 +169,26 @@ static float g_ref_y;
 static uint64_t g_wrong_since, g_revert_window;   /* keep_form */
 static int g_reverts;
 
-static uint64_t now_ms(void) {
+static uint64_t now_us(void) {
 #ifdef _WIN32
     static LARGE_INTEGER f;
     LARGE_INTEGER c;
     if (!f.QuadPart) QueryPerformanceFrequency(&f);
     QueryPerformanceCounter(&c);
-    return (uint64_t)(c.QuadPart / f.QuadPart) * 1000 + (uint64_t)(c.QuadPart % f.QuadPart) * 1000 / (uint64_t)f.QuadPart + 1;
+    return (uint64_t)(c.QuadPart / f.QuadPart) * 1000000 + (uint64_t)(c.QuadPart % f.QuadPart) * 1000000 / (uint64_t)f.QuadPart + 1;
+#elif defined(PAP_SWITCH)
+    uint64_t c, f;
+    __asm__ volatile("mrs %0, cntpct_el0" : "=r"(c));
+    __asm__ volatile("mrs %0, cntfrq_el0" : "=r"(f));
+    if (!f) f = 19200000;
+    return c / f * 1000000 + c % f * 1000000 / f + 1;
 #else
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
-    return (uint64_t)t.tv_sec * 1000 + (uint64_t)t.tv_nsec / 1000000 + 1;
+    return (uint64_t)t.tv_sec * 1000000 + (uint64_t)t.tv_nsec / 1000 + 1;
 #endif
 }
+static uint64_t now_ms(void) { return now_us() / 1000 + 1; }
 
 /* ---------------------------------------------------------------- guest memory */
 static int rd(uint64_t a, void *out, size_t n) { return a && H->mem_read(a, out, n) == MT_OK; }
@@ -231,6 +253,7 @@ static int built_unbound(uint16_t res) {
 }
 
 /* ---------------------------------------------------------------- forms */
+#ifndef PAP_SWITCH   /* names: for the log, the messages and the menu, which a Switch does not have */
 static const char *form_name(uint16_t id) {
     for (int i = 0; i < FORM_COUNT; i++)
         if (FORMS[i].id == id) return FORMS[i].name;
@@ -241,11 +264,22 @@ static int form_by_name(const char *name) {
         if (!strcmp(FORMS[i].name, name)) return FORMS[i].id;
     return -1;
 }
+#endif
+#ifdef PAP_SWITCH
+#define say(fmt, a) ((void)0)   /* no message box */
+#else
 static void say(const char *fmt, const char *a) {
     if (!atomic_load(&g_messages) || !MT_HOST_HAS(H, notify) || !H->notify) return;
     char t[160];
     snprintf(t, sizeof t, fmt, a);
     H->notify(M, t, 2.5);
+}
+#endif
+
+/* The Pokemon the combo turns the player into (on a Switch the choice cheat may not have set one yet). */
+static uint16_t selected(void) {
+    uint16_t f = atomic_load(&g_selected);
+    return f ? f : DEFAULT_FORM;
 }
 
 static void request(uint64_t P, uint16_t state) {
@@ -308,12 +342,18 @@ static void apply_wanted(uint64_t P) {
 }
 
 /* ---------------------------------------------------------------- settings */
+#ifdef PAP_SWITCH
+/* No settings on a Switch: everything on, each Pokemon's own ability, Normal flying speed. The Pokemon comes from the cheat. */
+static void read_settings(void) {}
+#else
 static void read_settings(void) {
     const char *list = H->config_string(M, "list");
     const char *key = list && !strcmp(list, LIST_M_Z) ? "pokemon_m_z" : list && !strcmp(list, LIST_EXPERIMENTAL) ? "experimental" : "pokemon_a_l";
     int id = form_by_name(H->config_string(M, key));
     atomic_store(&g_selected, (uint16_t)(id > 0 ? id : DEFAULT_FORM));
     atomic_store(&g_fly, H->config_bool(M, "fly"));
+    const char *speed = H->config_string(M, "fly_speed");
+    atomic_store(&g_fly_top, speed && !strcmp(speed, "Slow") ? 250 : speed && !strcmp(speed, "Fast") ? 600 : 400);
     atomic_store(&g_cycle, H->config_bool(M, "cycle"));
     atomic_store(&g_messages, H->config_bool(M, "messages"));
     atomic_store(&g_abilities, H->config_bool(M, "abilities"));
@@ -328,10 +368,11 @@ static void on_config(MtMod *mod, const char *key, void *user) {
     read_settings();
     atomic_store(&g_settings_changed, 1);   /* the player's next update applies it (game thread) */
 }
+#endif
 
 /* ZL + D-pad Right / Left: the next / previous Pokemon in the A-Z list (experimental forms are left out). */
 static void cycle(int dir) {
-    uint16_t cur = atomic_load(&g_selected);
+    uint16_t cur = selected();
     int at = -1;
     for (int i = 0; i < POKEMON_COUNT; i++)
         if (FORMS[i].id == cur) at = i;
@@ -370,6 +411,12 @@ static void block(uint32_t buttons, int sticks) {
     H->pad_block(M, 0, buttons || sticks ? &m : NULL);
 }
 
+#ifdef PAP_SWITCH
+/* No message box on a Switch, so no list: the cheat and ZL + D-pad Left / Right pick the Pokemon. */
+static int g_menu, g_prev_key_menu;
+static void menu_open(void) {}
+static void menu_tick(const MtPad *pad, uint32_t was, int key_menu) { (void)pad, (void)was, (void)key_menu; }
+#else
 /* ---------------------------------------------------------------- the menu
  * Modtopia has no drawing for mods, so the menu is its message box: a list of a few lines around the cursor, shown again
  * whenever it changes. While it is open the game gets no input from the player. Entry 0 is the player's own character,
@@ -480,6 +527,8 @@ static void menu_tick(const MtPad *pad, uint32_t was, int key_menu) {
     } else if (now - g_menu_shown >= 1000) menu_show();   /* keep the message up */
 }
 
+#endif
+
 static void buttons(uint64_t P) {
     MtPad pad;
     memset(&pad, 0, sizeof pad);
@@ -506,8 +555,8 @@ static void buttons(uint64_t P) {
     block((b & MT_PAD_ZL) ? MT_PAD_LSTICK | MT_PAD_RSTICK : 0, 0);
     int transformed = atomic_load(&g_form) || g_want > 0;
     if (key_menu || combo(b, was, MT_PAD_RSTICK)) menu_open();
-    else if (combo(b, was, MT_PAD_LSTICK)) want(transformed ? 0 : atomic_load(&g_selected), 0);   /* ZL + L3: there and back */
-    else if (key_on) want(atomic_load(&g_selected), 0);
+    else if (combo(b, was, MT_PAD_LSTICK)) want(transformed ? 0 : selected(), 0);   /* ZL + L3: there and back */
+    else if (key_on) want(selected(), 0);
     else if (key_off) want(0, 0);
     else if (atomic_load(&g_cycle) && combo(b, was, MT_PAD_RIGHT)) cycle(1);
     else if (atomic_load(&g_cycle) && combo(b, was, MT_PAD_LEFT)) cycle(-1);
@@ -608,7 +657,13 @@ static int h_char_setup(MtHookCtx *c, void *u) {   /* strh w8, [x25, #0xe94]: w8
         if (P) remote_model(c, H->reg_get(c, 19), (uint16_t)H->reg_get(c, 8));
         return MT_CONTINUE;
     }
-    uint16_t res = (uint16_t)H->reg_get(c, 8), form = atomic_load(&g_form), now = form ? res : 0, old = g_requested;
+    /* The model being built is of the current form (vfunc 0x1D0). While transformed the game can still build the human
+       (talking, the end of a Link Play session): its animations are the game's own and always bound, so they are never
+       acquired or released here. Before 1.5 they were, and after a world reset (see h_motion_reset) that release took the
+       game's own hold on the human animations away: the human model stayed broken until a restart. */
+    uint16_t res = (uint16_t)H->reg_get(c, 8), form = atomic_load(&g_form), cur = 0, old = g_requested;
+    r16(P + P_FORM_NOW, &cur);
+    uint16_t now = form && cur != HUMAN && res != HUMAN_RES ? res : 0;
     if (now == old) return MT_CONTINUE;
     g_requested = now;
     g_built_unbound = built_unbound(now);
@@ -634,23 +689,72 @@ static int h_char_setup(MtHookCtx *c, void *u) {   /* strh w8, [x25, #0xe94]: w8
     return MT_CONTINUE;
 }
 
-/* ---------------------------------------------------------------- flying (v0.7)
+/* ---------------------------------------------------------------- flying (v0.7, controls 1.5)
  * Species whose motion 7 is a flying motion (info byte 0x22) can fly: ZR on foot starts the native hover (no gravity),
  * ZR while flying rises, ZL descends and lands once the height stops changing, ZL + ZR drops. A held D-pad direction or stick click
- * belongs to the combos. */
+ * belongs to the combos.
+ *
+ * 1.5: climbing and descending speed up and slow down like a ship instead of jumping straight to one speed: a press starts at
+ * FLY_START of the top speed (setting fly_speed), holding speeds up to the top in FLY_RAMP_S, letting go slows to a hover in
+ * FLY_BRAKE_S, and the other trigger first slows down. So a tap moves a little and holding goes far. All of it is in centimetres
+ * per second of real time: up to 1.4 the mod wrote one fixed vertical speed (7) every frame, and the game's step changes with the
+ * frame rate in Recompia (each frame counts as 1/60 s at 60 fps or less, shorter above), so how far a press took you depended on the
+ * frame rate. How far one unit of the game's vertical speed (E_VY) moves the player in a second is measured in flight (g_fly_unit),
+ * so the speeds hold whether the game scales it by its step or not. */
+#define FLY_START   0.30f   /* a press starts at this part of the top speed */
+#define FLY_RAMP_S  0.50f   /* holding: from there to the top speed in this many seconds */
+#define FLY_BRAKE_S 0.25f   /* letting go: from the top speed to a hover in this many seconds */
+#define FLY_HOP_CMS 240.0f  /* the landing hop */
+#define FLY_UNIT_MIN 15.0f  /* the measured unit is kept within these (cm/s): beyond them a measurement is a bump or a block */
+#define FLY_UNIT_MAX 400.0f
+static float g_fly_vy;               /* the climbing speed the mod flies at (cm/s, + up) */
+static float g_fly_unit = 60.0f;     /* cm/s one unit of E_VY moves the player (60: the game's step is 1/60 s per frame) */
+static float g_fly_wrote, g_fly_y;   /* the speed written last frame (0: none) and the height then */
+static uint64_t g_fly_us;
+static int g_fly_samples;
+static float g_fly_logged;
+
+static float approach(float v, float to, float step) {
+    if (v < to) return v + step > to ? to : v + step;
+    return v - step < to ? to : v - step;
+}
+/* The climbing speed for this frame, from the triggers (target: +1 up, -1 down, 0 hover), dt seconds after the last one. */
+static void fly_speed(int target, float dt) {
+    float top = (float)atomic_load(&g_fly_top), start = top * FLY_START, accel = (top - start) / FLY_RAMP_S, brake = top / FLY_BRAKE_S;
+    if (target > 0 && g_fly_vy >= 0) g_fly_vy = g_fly_vy < start ? start : approach(g_fly_vy, top, accel * dt);
+    else if (target < 0 && g_fly_vy <= 0) g_fly_vy = g_fly_vy > -start ? -start : approach(g_fly_vy, -top, accel * dt);
+    else g_fly_vy = approach(g_fly_vy, 0.0f, brake * dt);   /* let go, or the other trigger: slow down first */
+}
+/* The last frame wrote a speed: how far the player moved since tells what one unit of E_VY is worth. */
+static void fly_measure(float wrote, float dy, float dt) {
+    if (wrote > -0.3f && wrote < 0.3f) return;
+    float unit = dy / dt / wrote;
+    if (unit < FLY_UNIT_MIN || unit > FLY_UNIT_MAX) return;   /* blocked (a ceiling, the ground) or pushed */
+    g_fly_unit += 0.15f * (unit - g_fly_unit);
+    g_fly_samples++;
+    float change = g_fly_unit / (g_fly_logged > 0 ? g_fly_logged : 1.0f);
+    if (g_fly_samples >= 30 && (g_fly_logged == 0 || change > 1.25f || change < 0.8f)) {
+        g_fly_logged = g_fly_unit;
+        mt_logf(H, M, MT_LOG_INFO, "flying: one unit of vertical speed moves %.0f cm a second (frames of %.1f ms)", g_fly_unit, dt * 1000.0f);
+    }
+}
 static void fly(uint64_t P) {
     (void)P;
     /* The emulator version saw the buttons about 12 times a second; here they are read every frame, so a few frames of
        both triggers down while changing direction, or of ZR alone while letting go after a drop, must not count as a drop
        or a take-off: a drop needs both held for DROP_HOLD_MS, and after a drop or a landing only a new press of ZR
        takes off. */
-    uint64_t now = now_ms();
+    uint64_t now = now_ms(), us = now_us();
     uint32_t b = g_prev_buttons;
     int zr = (b & MT_PAD_ZR) != 0, zl = (b & MT_PAD_ZL) != 0, zr_pressed = zr && !g_zr_was, descending = 0;
     uint64_t t, E, set, recs, hover, info, cur, ci, idle;
     uint32_t count = 0;
     uint8_t kind = 0, motion = 0;
-    float y = 0, d;
+    float y = 0, d, dt = g_fly_us && us > g_fly_us ? (float)(us - g_fly_us) / 1e6f : 0.0f, wrote = g_fly_wrote, last_y = g_fly_y;
+    int timed = dt >= 0.002f && dt <= 0.05f;   /* a normal frame, not the first one or one after a pause */
+    if (dt < 0.001f) dt = 0.001f;
+    if (dt > 0.05f) dt = 0.05f;
+    g_fly_us = us, g_fly_wrote = 0;
     g_zr_was = zr;
     if (!zr) g_takeoff = 0;
     else if (zr_pressed && !zl) g_takeoff = 1;
@@ -658,43 +762,46 @@ static void fly(uint64_t P) {
 
     t = r64(MAIN + ENTITY_TABLE), E = t ? r64(t + 0x58) : 0;
     set = E ? r64(E + E_MSET) : 0;
-    if (!set || !rd(set + 0xD0, &count, 4) || count < MOTION_HOVER + 1) goto out;
+    if (!set || !rd(set + 0xD0, &count, 4) || count < MOTION_HOVER + 1) goto still;
     recs = r64(set + 0xC8), hover = recs ? r64(recs + 8 * MOTION_HOVER) : 0, info = hover ? r64(hover + 8) : 0;
-    if (!info || !rd(info, &kind, 1) || kind != INFO_FLYING) goto out;   /* this species cannot fly */
+    if (!info || !rd(info, &kind, 1) || kind != INFO_FLYING) goto still;   /* this species cannot fly */
+    rd(E + E_Y, &y, 4);
+    g_fly_y = y;
     if (g_hop_until) {   /* the landing hop: a moment up so the game plays its own fall and landing */
         if (now < g_hop_until) {
-            wf(E + E_VY, 4.0f);
-            goto out;
+            wf(E + E_VY, FLY_HOP_CMS / g_fly_unit);
+            goto still;
         }
         g_hop_until = 0;
     }
     if (b & (MT_PAD_LEFT | MT_PAD_UP | MT_PAD_RIGHT | MT_PAD_DOWN | MT_PAD_LSTICK | MT_PAD_RSTICK)) {
         g_both_since = 0;
-        goto out;
+        goto still;
     }
     cur = r64(E + E_MOTION), ci = cur ? r64(cur + 8) : 0, idle = r64(recs + 8 * MOTION_IDLE);
-    if (!ci || !rd(ci, &motion, 1)) goto out;
+    if (!ci || !rd(ci, &motion, 1)) goto still;
     if (motion != INFO_FLYING) {   /* on foot or falling: ZR pressed (not just still held) takes off */
         if (g_takeoff && !zl) w64(E + E_MOTION, hover);
-        goto out;
+        goto still;
     }
-    if (zr && zl) {   /* drop, once both are really held; until then hover */
+    if (timed) fly_measure(wrote, y - last_y, dt);
+    if (zr && zl) {   /* drop, once both are really held; until then slow to a hover */
         if (!g_both_since) g_both_since = now;
         if (now - g_both_since >= DROP_HOLD_MS && idle) {
             w64(E + E_MOTION, idle);
             g_takeoff = 0;
             g_both_since = 0;
+            goto still;
         }
-        goto out;
     }
-    if (zr) {   /* rise */
-        wf(E + E_VY, 7.0f);
-        goto out;
+    float was = g_fly_vy;
+    fly_speed(zr && !zl ? 1 : zl && !zr ? -1 : 0, dt);
+    if (g_fly_vy != 0.0f || was != 0.0f) {   /* moving, or just stopped: once more, so the hover holds the height */
+        g_fly_wrote = g_fly_vy / g_fly_unit;
+        wf(E + E_VY, g_fly_wrote);
     }
-    if (!zl) goto out;   /* hover */
-    wf(E + E_VY, -7.0f);   /* descend; land once standing on something */
-    descending = 1;
-    rd(E + E_Y, &y, 4);
+    if (!zl || zr) goto out;
+    descending = 1;   /* descending: land once standing on something */
     d = y - g_ref_y;
     if (d < 0) d = -d;
     if (!g_descending || d >= 1.0f) {
@@ -705,7 +812,11 @@ static void fly(uint64_t P) {
         g_hop_until = now + HOP_MS;
         g_takeoff = 0;
         descending = 0;
+        g_fly_vy = 0, g_fly_wrote = 0;
     }
+    goto out;
+still:   /* not flying (or not under the mod's control): no speed carried into the next flight */
+    g_fly_vy = 0, g_fly_wrote = 0;
 out:
     g_descending = descending;
 }
@@ -747,9 +858,13 @@ static uint64_t vfunc(uint64_t obj, uint32_t off) {
     uint64_t vt = r64(obj);
     return vt ? r64(vt + off) : 0;
 }
+#ifdef PAP_SWITCH
+#define tell(text) ((void)0)
+#else
 static void tell(const char *text) {
     if (atomic_load(&g_messages) && MT_HOST_HAS(H, notify) && H->notify) H->notify(M, text, 2.5);
 }
+#endif
 
 /* The cell in front of the player, as main+0x2E19A0 finds it: position (vfunc 0x140) and yaw (vfunc 0x18) from the game, the
    cell = (x + 102400) / 100, y / 100, (z + 102400) / 100, plus one step in the facing quarter (0 = +z, 1 = +x, 2 = -z, 3 = -x). */
@@ -930,9 +1045,11 @@ static void ability_start(uint64_t P, uint64_t now) {
         for (int i = 0; i < ABILITY_COUNT; i++)
             if (ABILITY_OF[i].id == form) kind = ABILITY_OF[i].ability;
         if (kind < 0) {
+#ifndef PAP_SWITCH
             char m[120];
             snprintf(m, sizeof m, "%s has no ability this mod can use yet", form_name(form));
             tell(m);
+#endif
             return;
         }
     }
@@ -1247,6 +1364,27 @@ static void remote_tick(uint64_t ch) {
     remote_request(R, ch, want, now);
 }
 
+/* main+0x8D12C0 (x0 = the animation package manager), entry: releases every motion set at once, down to no uses, so they lose
+   their animations (each set: FN_MSET_REL(resource, 1)); right after it main+0x8CFE40 unloads the animation packages. The game
+   calls it only from its world reset (main+0xB6320), which also runs when a Link Play session ends. The holds this mod took (the
+   player's form and the other players') are gone with it, so it forgets them, without releasing anything: a release now would
+   come out of the next world's own holds. Before 1.5 it did not, and after the session:
+   - a Pokemon the player was turned into still counted as loaded, so turning into it again skipped loading its animations
+     (the host's broken model until it changed Pokemon), and
+   - a hold taken on the human animations while the game had turned the player human (the session's end message) was released
+     after the reset from the game's own: the human model broke until a restart (the guest). char_setup no longer takes it. */
+static int h_motion_reset(MtHookCtx *c, void *u) {
+    (void)c, (void)u;
+    int others = 0;
+    for (int i = 0; i < REMOTE_MAX; i++)
+        if (atomic_load(&g_remote[i].ch)) remote_free(i), others++;
+    mt_logf(H, M, MT_LOG_INFO, "the game reset every Pokemon's animations (a new world: the end of a Link Play session, a reload): "
+            "forgetting the player's (resource %u) and %d other player(s)'", g_requested, others);
+    g_requested = g_acquired = 0;
+    g_built_unbound = 0;
+    return MT_CONTINUE;
+}
+
 static int h_player_tick(MtHookCtx *c, void *u) {   /* blr x8 near the top of the player's update: x0 = the character */
     (void)u;
     uint64_t P = player(), ch = H->reg_get(c, 0);
@@ -1257,7 +1395,9 @@ static int h_player_tick(MtHookCtx *c, void *u) {   /* blr x8 near the top of th
     buttons(P);
     bind_animations(P);
     keep_form(P);
+#ifndef PAP_SWITCH
     test_slot(P);
+#endif
     if (!g_menu && atomic_load(&g_form) && atomic_load(&g_fly)) fly(P);
     if (!g_menu && atomic_load(&g_form) && atomic_load(&g_abilities)) abilities(P);
     else g_ab_phase = 0;
@@ -1330,6 +1470,7 @@ static int h_probe(MtHookCtx *c, void *u) {
 }
 
 /* ---------------------------------------------------------------- entry */
+#ifndef PAP_SWITCH
 MT_EXPORT int mod_init(const MtHost *host, MtMod *mod) {
     H = host, M = mod;
     MAIN = H->module_base("main");
@@ -1341,6 +1482,7 @@ MT_EXPORT int mod_init(const MtHost *host, MtMod *mod) {
         {"form_get", h_form_get},       {"form_set", h_form_set}, {"request_state", h_request_state},
         {"probe", h_probe},
         {"char_setup", h_char_setup},   {"player_tick", h_player_tick}, {"to_human", h_to_human},
+        {"motion_reset", h_motion_reset},
     };
     for (size_t i = 0; i < sizeof hooks / sizeof hooks[0]; i++) {
         int rc = H->hook(M, hooks[i].point, hooks[i].fn, NULL);
@@ -1356,3 +1498,24 @@ MT_EXPORT int mod_init(const MtHost *host, MtMod *mod) {
             atomic_load(&g_ability) < 0 ? "the Pokemon's own" : AB_NAMES[atomic_load(&g_ability)], atomic_load(&g_abilities) ? "" : ", off");
     return MT_OK;
 }
+#else
+/* ---------------------------------------------------------------- Switch entry points
+ * build_emulator.py puts a branch to a trampoline at each hook point (the same game instructions as mod.toml's); the trampoline saves
+ * every register, calls pap_hook_<point>(registers) and then, for MT_CONTINUE, runs the game's own instruction and goes on, or for
+ * MT_HANDLED returns from the game's function. switch_host.c sets everything up at the first stop and calls pap_mod_start. */
+int pap_ready(void);
+void pap_mod_start(const MtHost *host) {
+    H = host, M = 0;
+    MAIN = H->module_base("main");
+    read_settings();
+}
+#define PAP_POINT(name, fn)     int pap_hook_##name(MtHookCtx *c) { return pap_ready() && MAIN ? fn(c, NULL) : MT_CONTINUE; }
+PAP_POINT(form_get, h_form_get)
+PAP_POINT(form_set, h_form_set)
+PAP_POINT(request_state, h_request_state)
+PAP_POINT(probe, h_probe)
+PAP_POINT(char_setup, h_char_setup)
+PAP_POINT(player_tick, h_player_tick)
+PAP_POINT(to_human, h_to_human)
+PAP_POINT(motion_reset, h_motion_reset)
+#endif

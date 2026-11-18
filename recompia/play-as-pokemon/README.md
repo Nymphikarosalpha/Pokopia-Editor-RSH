@@ -11,8 +11,8 @@ The [Play as Pokemon](../../mods/play-as-pokemon/README.md) mod for [Recompia](h
 | **ZL + L3** (left stick click) | Turn into the chosen Pokémon; press again to turn back |
 | **F3** or **ZL + R3** | Open the list of all Pokémon and forms: Up / Down move, Left / Right move by 10, L / R jump to the next letter, A or Enter chooses, B or Esc closes |
 | **ZL + D-pad Left / Right** | Pick the previous / next Pokémon (A to Z). While transformed you change as soon as you stop flicking through |
-| **ZR** as a flying Pokémon | Take off, hold to rise |
-| **ZL** while flying | Descend; keep holding it on the ground to land |
+| **ZR** as a flying Pokémon | Take off; tap to rise a little, hold to keep rising faster |
+| **ZL** while flying | Descend the same way; keep holding it on the ground to land |
 | **ZL + ZR** held while flying | Drop out of the air (press ZR again to take off) |
 | **ZR** (Pokémon that can't fly) or **ZL + D-pad Down** (any) | Use the Pokémon's ability on what is in front of you |
 
@@ -20,11 +20,11 @@ Keyboard players can also set a key for "turn into", "turn back" and the ability
 
 ## Install
 
-1. Copy `recompia_play_as_pokemon-1.4.0.pkmod` into Recompia's `mods` folder (on Windows, next to `pkp.exe`), and remove an older version of it.
+1. Copy `recompia_play_as_pokemon-1.5.0.pkmod` into Recompia's `mods` folder (on Windows, next to `pkp.exe`), and remove an older version of it.
 2. Open `PokopiaLauncher.exe`, go to **Mods**, and allow the new mod's code when it asks.
-3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from 1.1.x or 1.2.0-1.2.1 rebuilds once more, because 1.2.2 changes the hook points (1.3.0 and 1.4.0 keep 1.2.2's). Then press **Play**.
+3. The first time these hook points are installed, the launcher rebuilds the game once before the next start (a few minutes). Updating from any older version rebuilds once more: 1.5.0 adds a hook point (`motion_reset`). Then press **Play**.
 
-The game log (`pkp.log`) should show `play_as_pokemon 1.4.0 started` and `[play_as_pokemon] ready: ZL + L3 turns into Ditto and back, ...`.
+The game log (`pkp.log`) should show `play_as_pokemon 1.5.0 started` and `[play_as_pokemon] ready: ZL + L3 turns into Ditto and back, ...`.
 
 ## Choosing the Pokémon
 
@@ -37,6 +37,14 @@ In the launcher's **Mods** page, or in game with **F1 → Mods**:
 A change made in F1 while you are transformed turns you into the new Pokémon at once. The list and ZL + D-pad Left / Right pick one for this session only: the settings stay as they are.
 
 The other settings switch flying, the Left / Right picking and the name message off.
+
+## Flying
+
+Since 1.5.0 climbing and descending handle like a ship: a tap of **ZR** (or **ZL**) moves you up (or down) a little, about a quarter of a block; holding it speeds up to the top speed; letting go slows you down to a hover. Pressing the other trigger first slows you down, then turns you round. The setting **Flying: top speed up and down** is `Normal` (4 blocks a second) by default, or `Slow` (2.5) or `Fast` (6).
+
+The speeds are now the same at any frame rate. Up to 1.4.0 the mod gave the game one fixed speed every frame, and Recompia shortens the game's step above 60 fps, so how far a press took you changed with the frame rate. The mod now measures in flight how far the game moves you for a given speed and works from that; `pkp.log` notes it (`flying: one unit of vertical speed moves N cm a second`).
+
+**Camera judder while flying:** Recompia's own **Running jump keeps speed** option (Settings > Game > Gameplay, on by default) treats the whole flight as a running jump. After you take off from a run it speeds up your flying steps by up to two times, by a factor it works out again every frame, so the camera jerks. Taking off while standing still doesn't trigger it, which is why it comes and goes. To fly smoothly, switch that option off (or set `[pkp] jump_momentum = 0` in `pkp.ini`; it applies on the next start).
 
 ## Abilities
 
@@ -75,7 +83,9 @@ Since 1.4.0 the other players see your Pokémon, walking and moving with its own
 
 Why: the game does send your chosen form to the other players, but a game only changes another player's form by playing that form's transformation, and only the game's own forms (Ditto and its move forms) have one. So the Pokémon arrived and was never shown, and the movements the others received were played for a Pokémon on a human model, which stood still. Now each player's mod shows the other players' Pokémon itself, the way it shows your own: it turns their character into the Pokémon, loads that Pokémon's animations for it (a Pokémon that doesn't live in the town would be invisible otherwise) and turns them back when they do. The game's own forms, such as the Ditto blob in a small space, are still left to the game.
 
-Untested in Link Play so far: flying (the others may see you rise and sink without the hovering animation) and abilities (their animation is sent like any other movement; whether their effect, such as grown plants or a lit campfire, reaches the other players is not known yet).
+Tested in Link Play with 1.4.0: transforming, walking, running, jumping and flying, changing Pokémon, turning back, both players in the same Pokémon, pushing each other, abilities (the other player sees the animation and the result) and talking to Pokémon while transformed.
+
+**Ending a session while transformed** (fixed in 1.5.0): back in your own game, the host's Pokémon looked broken until they changed Pokémon, and the guest's own character stayed broken until a restart. When a session ends the game resets the world and unloads every Pokémon's animations, but the mod still counted the ones it had loaded as loaded, so it skipped loading them again (the host). The end-of-session message also turns the guest human, and the mod then took a hold on the human animations and let it go after the reset, which took away the game's own hold on them (the guest). 1.5.0 notices the reset (a new hook point, `motion_reset`) and forgets what it had loaded, and never touches the human animations. `pkp.log` notes the reset: `the game reset every Pokemon's animations ...`.
 
 Since 1.2.2 the mod only touches your own character's controls and form. Before, a transformed player's game could also act on the other players' characters, for example by stopping them from turning back.
 
@@ -85,9 +95,10 @@ While a Link Play session is open, `pkp.log` also gets lines for the other playe
 
 The emulator version is an IPS patch plus a cheat file. Recompia runs the game as native code, so neither works there. This version is a Modtopia code mod (`mod.dll`):
 
-- six of the IPS's eight code patches are `take_over` hook points at the same game instructions (`mod.toml` lists them with the instruction each one expects; the two small-space ground writers are not needed here since 1.2.2), plus one more (`to_human`, the game's "turn the player human for an interaction");
+- six of the IPS's eight code patches are `take_over` hook points at the same game instructions (`mod.toml` lists them with the instruction each one expects; the two small-space ground writers are not needed here since 1.2.2), plus two more (`to_human`, the game's "turn the player human for an interaction", and `motion_reset`, below);
 - the cheat's button combos and memory writes run in the player's per-frame hook, with the player's controller read through Modtopia (`pad_read`);
 - the animation loading (so non-resident Pokémon are not invisible) calls the game's own package and motion-set functions (`call_guest`), as the patch did;
+- world reset (1.5.0): the game's "release every motion set" (`main+0x8D12C0`, called only from its world reset `main+0xB6320`, which also runs when a Link Play session ends) is a hook point too; the mod forgets the animations it had loaded there, without releasing anything;
 - Link Play (1.4.0): the same update runs for the other players' characters. Each game receives the others' wanted form (`main+0x271360` stores it), but changes their form only through a form's transformation action (`main+0x2F6FCC`), which only the game's own forms have. So the mod requests the Pokémon form on their character itself, requests its animation package in their model setup and binds the motion set once loaded (then builds them once more), turns them back the same way, and keeps the stand-up stretch off them in the probe hook;
 - abilities: the residents' specialty actions (Burn 700, Water 703, Bubble 705, Grow 706, Generate 709) only animate when the player asks for them, because the game applies their effect for residents only. So the mod plays the action for the animation and calls the effect itself on the cell in front of the player (found as the game finds the target of the player's own moves): Grow `main+0x1F1200`, Burn and Generate `main+0x77CEA0` (the object at the cell, as a town Pokémon), Bubble the handler of action 705, the Water Gun's hit `main+0x3694C0`.
 
