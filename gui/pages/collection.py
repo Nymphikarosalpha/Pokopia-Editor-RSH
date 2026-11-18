@@ -106,8 +106,8 @@ class CollectionPage(Page):
         up.body.addLayout(g)
         self.up_all = W.button('Switch all on', T.G['unlock'], self.all_upgrades)
         up.actions.addWidget(self.up_all)
-        up.body.addWidget(W.label('These are story switches the game normally sets itself. Their meaning comes from PokoHex '
-                                  'and has not been checked in game by this editor: keep a backup, and switch one off '
+        up.body.addWidget(W.label('These are story switches the game normally sets itself. Their meaning has not '
+                                  'been checked in game by this editor: keep a backup, and switch one off '
                                   'again if something looks wrong.', 'small', wrap=True))
         lay.addWidget(up)
 
