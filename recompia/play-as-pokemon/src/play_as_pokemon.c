@@ -7,8 +7,8 @@
  *
  * The state the IPS kept in the game's memory (main+0x3D14C00..) lives in this library instead:
  *   g_form       the form the player is turned into (a character-definition ID, 0 = not transformed)
- *   g_requested  the animation resource the player's model asked for while transformed (0 = none)
- *   g_acquired   the one whose motion set this mod acquired
+ *   g_holds      the animation packages and motion sets this mod holds for the player's forms (1.6, see "holds")
+ *   g_load       the form whose animations are loading: it is requested once they are (1.6)
  *
  * Hook points (see mod.toml and re/build/build_v06.py / build_v07.py for the original patches):
  *   form_get       desired-form getter: returns g_form while transformed
@@ -16,10 +16,11 @@
  *   request_state  RequestState: drops the request for state 1 (human) while transformed
  *   probe          animation condition 0x56 (wall probe): true for the player while transformed (no stretch / flashing)
  *   to_human       the game's "turn the player human for an interaction" (talking): noted, the player turns back after it
- *   char_setup     the character's model setup: requests / releases the form's animation package for the player
- *   player_tick    the player's update: buttons, binding the animations (and rebuilding the model once), flying, the
- *                  Pokemon's ability (Grow, Burn, Water), and turning the player back into the Pokemon when the game changed
- *                  the form some other way (talking to a Pokemon)
+ *   char_setup     the character's model setup: a player's model in one of this mod's forms is built only once the form's
+ *                  animations are loaded (1.6), else as the human for the moment
+ *   player_tick    the player's update: buttons, loading a form's animations before asking for it, flying, the Pokemon's
+ *                  ability (Grow, Burn, Water), and turning the player back into the Pokemon when the game changed the form
+ *                  some other way (talking to a Pokemon)
  *   motion_reset   the world reset's "release every motion set" (1.5): the mod forgets the animations it had loaded
  *
  * Every hook acts on the player's own character only. In Link Play the other players are characters of the same kind, and
@@ -68,10 +69,19 @@ MT_DECLARE_MOD()
 #define P_REQ_STATE   0x3788   /* u16 pending state */
 #define P_REQ_ANIM    0x378A   /* u16 transition animation */
 #define P_REQ_GO      0x378C   /* u8 request */
+#define P_ISDITTO     0x378D   /* u8 set by the game for every form but the human */
 #define TRANSFORM_ANIM 0x3B2
 #define HUMAN 1
 #define HUMAN_RES 1    /* the human model's animation resource: the game's own, never loaded or released by the mod */
 #define FORM_MAX 1000  /* the player update applies a pending state 1..1000 */
+
+/* character definitions (1.6): the record of a form, as the model setup (main+0x27CAD0) and main+0x276764 find it */
+#define DB_GLOBAL     0x35618F0ull   /* [main+this] = the game's data tables: +0x2B70 how many, table i at +0x10 + 8 * i */
+#define DEF_TABLE     0x7B0          /* the character definitions, table 0xF6 (the game takes table 0 when there are fewer) */
+#define DEF_DEFAULT   0x35B63C0ull   /* main+this = the data of a record that has none of its own (record +8 = 0) */
+#define DEF_MODEL_PKG 0xC6           /* u16 the model's package: the model build (main+0x69DBE0) builds nothing until it is loaded */
+#define DEF_RES       0xD8           /* u16 the animation resource (motion set) */
+#define PKG_MAX       0x3FF          /* package ids 1..0x3FF */
 
 /* player entity (flying) */
 #define E_MOTION 0x228   /* current motion record */
@@ -126,8 +136,8 @@ extern _Atomic uint16_t pap_form, pap_selected;
 #else
 static _Atomic uint16_t g_form;        /* read by hooks on any game thread */
 #endif
-static uint16_t g_requested, g_acquired; /* the player's own threads only (model setup, update) */
-static int g_built_unbound;            /* the model of g_requested was built while its motion set had no animations bound */
+static uint16_t g_load;                /* the player's own thread only (update, model setup): the form waiting for its animations */
+static uint64_t g_load_since;
 #ifndef PAP_SWITCH
 static _Atomic uint16_t g_selected = DEFAULT_FORM;   /* what the combo turns the player into */
 #endif
@@ -224,6 +234,33 @@ static uint64_t call(uint64_t fn, uint64_t x0, uint64_t x1, uint64_t x2) {
     if (H->call_guest(MAIN + fn, &c) != MT_OK) return 0;
     return c.x[0];
 }
+static uint64_t call_at(uint64_t addr, uint64_t x0, uint64_t x1) {   /* a guest function by its address (a vfunc) */
+    MtCall c;
+    memset(&c, 0, sizeof c);
+    c.x[0] = x0, c.x[1] = x1;
+    if (!addr || H->call_guest(addr, &c) != MT_OK) return 0;
+    return c.x[0];
+}
+static uint64_t vfunc(uint64_t obj, uint32_t off) {
+    uint64_t vt = r64(obj);
+    return vt ? r64(vt + off) : 0;
+}
+/* The game's animation package and motion set functions keep plain counts. The mod calls them from several game threads at once
+   (each player's update and model setup can run on its own worker), so its calls go one at a time. */
+static atomic_flag g_game_lock = ATOMIC_FLAG_INIT;
+static void spin_pause(void) {
+#if defined(__x86_64__) || defined(__i386__)
+    __builtin_ia32_pause();
+#elif defined(__aarch64__)
+    __asm__ volatile("yield");
+#endif
+}
+static uint64_t game_call(uint64_t fn, uint64_t x0, uint64_t x1, uint64_t x2) {
+    while (atomic_flag_test_and_set_explicit(&g_game_lock, memory_order_acquire)) spin_pause();
+    uint64_t r = call(fn, x0, x1, x2);
+    atomic_flag_clear_explicit(&g_game_lock, memory_order_release);
+    return r;
+}
 /* The motion set of a resource as FN_MSET_ACQ finds it (0 when it has none). */
 static uint64_t motion_set(uint16_t res) {
     uint64_t dat = r64(MAIN + MOTION_DAT);
@@ -239,17 +276,26 @@ static uint64_t motion_set(uint16_t res) {
     }
     return 0;
 }
-static int motion_set_uses(uint64_t set) {
+static int motion_set_uses(uint64_t set) {   /* -1: no set, or not loaded (FN_MSET_ACQ / REL then do nothing) */
     uint8_t loaded = 0;
     uint16_t count = 0;
     if (!set || !rd(set + 0x1076, &loaded, 1) || !loaded || !r16(set + 0x1074, &count)) return -1;
     return count;
 }
-/* At a model setup: 1 when the resource has a motion set that is not loaded or has no animations bound (no one uses it), so
-   the model is built without animations and must be built again once the set is bound. */
-static int built_unbound(uint16_t res) {
-    uint64_t set = res ? motion_set(res) : 0;
-    return set && motion_set_uses(set) <= 0;
+
+/* A form's definition record, found as the game's model setup finds it: vfunc 0x38(0) of the definitions table, then its
+   vfunc 0x30(form). 0 when the tables are not up. */
+static uint64_t def_record(uint16_t form) {
+    uint64_t db = r64(MAIN + DB_GLOBAL), tbl, sub;
+    uint32_t n = 0;
+    if ((uint16_t)(form - 1) >= FORM_MAX || !db || !rd(db + 0x2B70, &n, 4)) return 0;
+    tbl = r64(db + (n < 0xF7 ? 0 : DEF_TABLE) + 0x10);
+    sub = tbl ? call_at(vfunc(tbl, 0x38), tbl, 0) : 0;
+    return sub ? call_at(vfunc(sub, 0x30), sub, form) : 0;
+}
+static uint64_t def_data(uint64_t rec) {
+    uint64_t d = r64(rec + 8);
+    return d ? d : MAIN + DEF_DEFAULT;
 }
 
 /* ---------------------------------------------------------------- forms */
@@ -282,6 +328,153 @@ static uint16_t selected(void) {
     return f ? f : DEFAULT_FORM;
 }
 
+/* The game's own player forms: human, Ditto, and the move forms. The game keeps their animations loaded and changes into them itself. */
+static int game_form(uint16_t f) { return f == HUMAN || f == 0x1F || f == 0x46 || f == 0x99 || f == 0xCE || f == 0x128; }
+static int mod_form(uint16_t f) { return f > HUMAN && f <= FORM_MAX && !game_form(f); }
+
+/* ---------------------------------------------------------------- holds: the forms' animations (1.6)
+ * A model can only be built while its form's package is loaded. The model setup (main+0x27CAD0) first destroys the character's
+ * model (main+0x69D0E0), and the model build (main+0x69DBE0) then returns without building anything when the package (definition
+ * +0xC6) is not loaded. The model slot keeps its pointer to the destroyed model (slot +0xC40; the count, +0xC48, is 0), and the
+ * model parameter job (main+0x6A10E0, run for the four players by main+0x7187C0) reads and writes the model through it every frame
+ * without checking the count. Once the deferred release has freed that model and the memory is used again, the job reads a wild
+ * pointer: the Link Play crashes of 1.5 (access violation "reading address 0xffffffffffffffff" in f_71006a10e0, right after a
+ * player changed into a Pokemon, before its animations were loaded).
+ * Up to 1.5 every change into a Pokemon whose animations were not loaded went through that window: the form was requested first,
+ * the package when the model setup asked for it, and the model was built a second time once it had loaded. With three or four
+ * players each game sees every other player's changes, so it happened far more often. Since 1.6 the form's packages are
+ * requested and its motion set acquired BEFORE the form is requested (as the game does for the town's Pokemon), so the model is
+ * built once, at once, with its animations. The holds stay while the character is in the form, going into it, or left it less
+ * than RELEASE_MS ago: the old model is only freed (deferred) after the setup that replaced it, and a talk that turns the player
+ * human for a moment no longer unloads the Pokemon. char_setup checks every model setup of a player in one of this mod's forms
+ * anyway: one whose animations are not loaded (the game rebuilt the model by itself) is built as the human instead.
+ * A world reset (h_motion_reset) releases every package and motion set: holds taken before it (gen) are forgotten, never released. */
+#define HOLDS       4
+#define RELEASE_MS  3000    /* a form's holds are given back this long after the character left it */
+#define LOAD_MAX_MS 15000   /* a form whose package has not loaded in this time is given up */
+enum { LOAD_WAIT, LOAD_READY, LOAD_FAILED };
+typedef struct {
+    uint16_t form, res, pkg[2];   /* the form, its animation resource, its packages: the animations' and the model's (0: none) */
+    uint8_t held[2], set, filled; /* package k requested by this mod; motion set acquired; res / pkg looked up */
+    uint8_t ready, pad;           /* LOAD_READY was logged */
+    uint32_t gen;                 /* g_reset_gen when taken */
+    uint32_t asked, used;         /* ms clock: packages requested; the character last in or going into the form */
+} Hold;
+typedef struct { Hold h[HOLDS]; } Holds;
+static _Atomic uint32_t g_reset_gen = 1;
+static Holds g_holds;   /* the player's own: its update and model setup only */
+
+static void hold_clear(Hold *h) { memset(h, 0, sizeof *h); }
+static void hold_release(Hold *h) {   /* gives back what this mod took for the form */
+    uint64_t mgr = pkg_mgr();
+    if (h->gen == atomic_load(&g_reset_gen) && mgr) {
+        if (h->set) game_call(FN_MSET_REL, mgr, h->res, 0);
+        for (int k = 1; k >= 0; k--)
+            if (h->held[k]) game_call(FN_PKG_REL, mgr, h->pkg[k], 0);
+    }
+    hold_clear(h);
+}
+/* Looks the form up (its record from the model setup, else def_record) and requests its packages. */
+static void hold_fill(Hold *h, uint64_t rec, uint32_t now) {
+    uint64_t mgr = pkg_mgr();
+    if (!rec) rec = def_record(h->form);
+    if (!rec || !mgr) return;   /* not yet: tried again at the next look */
+    uint64_t d = def_data(rec);
+    uint16_t res = 0, model = 0;
+    r16(d + DEF_RES, &res), r16(d + DEF_MODEL_PKG, &model);
+    h->res = res;
+    h->pkg[0] = res ? pkg_of(mgr, res) : 0;
+    h->pkg[1] = model != h->pkg[0] ? model : 0;
+    for (int k = 0; k < 2; k++) {
+        if ((uint16_t)(h->pkg[k] - 1) >= PKG_MAX) h->pkg[k] = 0;
+        else game_call(FN_PKG_REQ, mgr, h->pkg[k], 0), h->held[k] = 1;
+    }
+    h->filled = 1;
+    h->asked = now;
+    mt_logf(H, M, MT_LOG_INFO, "loading %s (form %u): animation resource %u, packages %u / %u", form_name(h->form), h->form, res,
+            h->pkg[0], h->pkg[1]);
+}
+/* The holds of a form: found, or taken now (packages requested). NULL when every hold is in use. rec: the form's definition record
+   when the caller has it (the model setup), else 0. */
+static Hold *hold_take(Holds *hs, uint16_t form, uint64_t rec, uint64_t now_full) {
+    uint32_t gen = atomic_load(&g_reset_gen), now = (uint32_t)now_full;
+    Hold *h = NULL, *free_one = NULL;
+    for (int i = 0; i < HOLDS; i++) {
+        Hold *x = &hs->h[i];
+        if (x->form && x->gen != gen) hold_clear(x);   /* taken before a world reset: the reset released it */
+        if (x->form == form) h = x;
+        else if (!x->form && !free_one) free_one = x;
+    }
+    if (!h) {
+        if (!free_one) return NULL;
+        h = free_one;
+        h->form = form, h->gen = gen, h->asked = h->used = now;
+    }
+    if (!h->filled) hold_fill(h, rec, now);
+    h->used = now;
+    return h;
+}
+/* LOAD_READY once the form's packages are loaded; then its motion set is acquired (that binds the animations to it).
+   A form whose definition could not be looked up counts as ready: the form is requested, and the model setup, which has the
+   game's own record of it, takes the holds then (building the human until they are loaded, see prepare_model). */
+static int hold_ready(Hold *h, uint64_t now_full) {
+    uint32_t now = (uint32_t)now_full;
+    uint64_t mgr = pkg_mgr();
+    if (!h->filled) {
+        static _Atomic int warned;
+        if (!atomic_exchange(&warned, 1))
+            mt_logf(H, M, MT_LOG_WARN, "cannot look up form %u's definition: its animations load at its first model setup", h->form);
+        return LOAD_READY;
+    }
+    if (!mgr) return LOAD_WAIT;
+    for (int k = 0; k < 2; k++)
+        if (h->held[k] && !(uint32_t)game_call(FN_PKG_READY, mgr, h->pkg[k], 0))
+            return now - h->asked > LOAD_MAX_MS ? LOAD_FAILED : LOAD_WAIT;
+    if (!h->set && h->res && motion_set_uses(motion_set(h->res)) >= 0) {
+        game_call(FN_MSET_ACQ, mgr, h->res, 0);
+        h->set = 1;
+    }
+    if (!h->ready) {
+        h->ready = 1;
+        mt_logf(H, M, MT_LOG_INFO, "%s (form %u) loaded in %u ms", form_name(h->form), h->form, now - h->asked);
+    }
+    return LOAD_READY;
+}
+/* Gives back the holds of forms the character left RELEASE_MS ago; a, b, c: the forms it is in or going into. */
+static void holds_tick(Holds *hs, uint16_t a, uint16_t b, uint16_t c, uint64_t now_full) {
+    uint32_t gen = atomic_load(&g_reset_gen), now = (uint32_t)now_full;
+    for (int i = 0; i < HOLDS; i++) {
+        Hold *h = &hs->h[i];
+        if (!h->form) continue;
+        if (h->gen != gen) hold_clear(h);
+        else if (h->form == a || h->form == b || h->form == c) h->used = now;
+        else if (now - h->used >= RELEASE_MS) {
+            mt_logf(H, M, MT_LOG_DEBUG, "releasing %s (form %u)", form_name(h->form), h->form);
+            hold_release(h);
+        }
+    }
+}
+/* The model setup of a player in one of this mod's forms (h_char_setup: x0 = the form's definition record, w8 = its animation
+   resource, x25 + 0xE94 = where the game stores w8 next). Returns 0 when the form's animations are ready: the game builds the model
+   with them. Otherwise 1: the human is built instead (its record, resource and current form), so the slot is never left without a
+   model; the mod asks for the form again once it has loaded. */
+static int prepare_model(MtHookCtx *c, Holds *hs, uint64_t ch, uint16_t form) {
+    uint64_t now = now_ms(), rec = H->reg_get(c, 0);
+    Hold *h = hold_take(hs, form, rec, now);
+    if (h && hold_ready(h, now) == LOAD_READY) return 0;
+    uint64_t human = def_record(HUMAN);
+    uint16_t res = HUMAN_RES;
+    if (human) {
+        r16(def_data(human) + DEF_RES, &res);
+        H->reg_set(c, 0, human);
+    }
+    H->reg_set(c, 8, res);
+    w16(H->reg_get(c, 25) + 0xE94, res);
+    w16(ch + P_FORM_NOW, HUMAN);   /* vfunc 0x1D0, which the rest of the setup asks */
+    w8(ch + P_ISDITTO, 0);
+    return 1;
+}
+
 static void request(uint64_t P, uint16_t state) {
     w16(P + P_FORM_WANT, state);
     w16(P + P_REQ_STATE, state);
@@ -290,28 +483,69 @@ static void request(uint64_t P, uint16_t state) {
     g_last_request = now_ms();
     g_settled_since = 0;
 }
+/* Asks for a form on the player once its animations are loaded (at once for the game's own forms, and when they are loaded). */
+static void request_form(uint64_t P, uint16_t form) {
+    if (mod_form(form)) {
+        uint64_t now = now_ms();
+        Hold *h = hold_take(&g_holds, form, 0, now);
+        if (!h || hold_ready(h, now) != LOAD_READY) {
+            if (g_load != form) g_load_since = now;
+            g_load = form;
+            return;
+        }
+    }
+    g_load = 0;
+    request(P, form);
+}
 static void transform(uint64_t P, uint16_t form) {
     atomic_store(&g_form, form);
-    request(P, form);
     g_wrong_since = g_revert_window = 0, g_reverts = 0;
     atomic_store(&g_interaction_at, 0);
     uint16_t id = 0;
     r16(P + 0x27FE, &id);
     mt_logf(H, M, MT_LOG_INFO, "transform: player id 0x%x into %s (form %u)", id, form_name(form), form);
     say("Play as Pokemon: %s", form_name(form));
+    request_form(P, form);
 }
 static void turn_back(uint64_t P) {
+    uint16_t cur = 0;
     atomic_store(&g_form, 0);
-    request(P, HUMAN);
+    g_load = 0;
+    if (!r16(P + P_FORM_NOW, &cur) || cur != HUMAN) request(P, HUMAN);
     g_hop_until = 0;
     g_takeoff = g_descending = 0;
     g_wrong_since = 0;
     atomic_store(&g_interaction_at, 0);
 }
+/* The player's update: the form waiting for its animations is requested once they are loaded. */
+static void load_tick(uint64_t P) {
+    uint16_t form = g_load, cur = 0;
+    if (!form) return;
+    if (atomic_load(&g_form) != form) {   /* turned back, or another form chosen meanwhile */
+        g_load = 0;
+        return;
+    }
+    uint64_t now = now_ms();
+    uint8_t go = 1;
+    Hold *h = hold_take(&g_holds, form, 0, now);
+    int st = h ? hold_ready(h, now) : now - g_load_since > LOAD_MAX_MS ? LOAD_FAILED : LOAD_WAIT;
+    if (st == LOAD_WAIT) return;
+    if (st == LOAD_READY) {   /* one form change at a time, as ever */
+        if (now - g_last_request < REQUEST_GAP_MS || !rd(P + P_REQ_GO, &go, 1) || go) return;
+        g_load = 0;
+        request(P, form);
+        return;
+    }
+    g_load = 0;
+    mt_logf(H, M, MT_LOG_WARN, "%s (form %u): its animations did not load, staying as you are", form_name(form), form);
+    say("Play as Pokemon: %s could not be loaded", form_name(form));
+    atomic_store(&g_form, 0);
+    if (r16(P + P_FORM_NOW, &cur) && cur != HUMAN) request(P, HUMAN);
+}
 
-/* A form change rebuilds the player's model over several frames, partly on the game's worker threads. A second request
-   while that is under way can free the model under a worker (the crash when switching fast), so requests are queued:
-   the newest one waits until the last change is complete and has been for a moment. */
+/* A form change rebuilds the player's model over several frames, partly on the game's worker threads. Requests are queued:
+   the newest one waits until the last change is complete (and its animations loaded) and has been for a moment. (The crash when
+   switching fast in 1.1.0 was most likely the empty model slot described under "holds", hit more often by fast changes.) */
 static void want(int form, uint64_t delay) {
     g_want = form;
     g_want_after = now_ms() + delay;
@@ -323,7 +557,7 @@ static int settled(uint64_t P, uint64_t now) {
     if (since > REQUEST_MAX_MS) return 1;
     uint16_t cur = 0, form = atomic_load(&g_form);
     uint8_t go = 1;
-    if (!r16(P + P_FORM_NOW, &cur) || !rd(P + P_REQ_GO, &go, 1) || go || cur != (form ? form : HUMAN) || g_requested != g_acquired) {
+    if (!r16(P + P_FORM_NOW, &cur) || !rd(P + P_REQ_GO, &go, 1) || go || cur != (form ? form : HUMAN) || g_load) {
         g_settled_since = 0;
         return 0;
     }
@@ -569,37 +803,6 @@ static void buttons(uint64_t P) {
     apply_wanted(P);
 }
 
-/* ---------------------------------------------------------------- the form's animations (v0.6)
- * The game attaches animation data to a species' motion set only while its animation package is loaded and the set is
- * acquired. Residents do both when they spawn; the player's form change does neither, so a species that does not live in
- * the town would be invisible. char_setup requests the package, this binds the set once it is loaded, and when that was
- * the set's first use, or the model was built while the set had no animations (char_setup notes it: another character,
- * such as another player turning into the same Pokemon at the same time, may have bound it since), it builds the form again. */
-static void bind_animations(uint64_t P) {
-    uint16_t req = g_requested;
-    if (!req || req == g_acquired) return;
-    uint64_t mgr = pkg_mgr();
-    if (!mgr) return;
-    uint16_t pkg = pkg_of(mgr, req);
-    if (pkg && !(uint32_t)call(FN_PKG_READY, mgr, pkg, 0)) return;   /* still loading */
-    uint64_t set = motion_set(req);
-    int before = motion_set_uses(set);
-    call(FN_MSET_ACQ, mgr, req, 0);
-    g_acquired = req;
-    int unbound = g_built_unbound;
-    g_built_unbound = 0;
-    if ((before == 0 && motion_set_uses(set) == 1) || unbound) {
-        uint16_t form = atomic_load(&g_form);
-        if (!form) return;
-        w16(P + P_FORM_NOW, HUMAN);   /* the current form is stale: request it again */
-        w16(P + P_REQ_STATE, form);
-        w16(P + P_REQ_ANIM, TRANSFORM_ANIM);
-        w8(P + P_REQ_GO, 1);
-        g_last_request = now_ms();
-        g_settled_since = 0;
-    }
-}
-
 /* Some of the game's form changes skip RequestState. Talking to most Pokemon turns the player human through h_to_human's
    function (the ones that comment on the transformation don't): the player stays human until the game stopped asking for
    INTERACTION_QUIET_MS and the player walks off, then turns back into the Pokemon. Any other time, a form other than the chosen
@@ -624,10 +827,10 @@ static void keep_form(uint64_t P) {
         atomic_store(&g_interaction_at, 0);
         mt_logf(H, M, MT_LOG_INFO, "the interaction is over (%llu ms): back into %s", (unsigned long long)(ia - g_interaction_start), form_name(form));
         g_interaction_start = g_walk_since = 0;
-        if (g_want < 0 && r16(P + P_FORM_NOW, &cur) && cur != form && rd(P + P_REQ_GO, &go, 1) && !go) request(P, form);
+        if (g_want < 0 && !g_load && r16(P + P_FORM_NOW, &cur) && cur != form && rd(P + P_REQ_GO, &go, 1) && !go) request_form(P, form);
         return;
     }
-    if (!form || g_want >= 0 || !gm || !rd(gm + GM_PERMISSIONS, &perms, 4) || !perms || !r16(P + P_FORM_NOW, &cur)
+    if (!form || g_want >= 0 || g_load || !gm || !rd(gm + GM_PERMISSIONS, &perms, 4) || !perms || !r16(P + P_FORM_NOW, &cur)
         || !rd(P + P_REQ_GO, &go, 1) || go || cur == form || now - g_last_request < REQUEST_GAP_MS) {
         g_wrong_since = 0;
         return;
@@ -645,7 +848,7 @@ static void keep_form(uint64_t P) {
         return;
     }
     mt_logf(H, M, MT_LOG_INFO, "the game turned the player into form %u: back into %s (form %u)", cur, form_name(form), form);
-    request(P, form);
+    request_form(P, form);
 }
 
 static void remote_model(MtHookCtx *c, uint64_t ch, uint16_t res);   /* Link Play, below */
@@ -657,34 +860,22 @@ static int h_char_setup(MtHookCtx *c, void *u) {   /* strh w8, [x25, #0xe94]: w8
         if (P) remote_model(c, H->reg_get(c, 19), (uint16_t)H->reg_get(c, 8));
         return MT_CONTINUE;
     }
-    /* The model being built is of the current form (vfunc 0x1D0). While transformed the game can still build the human
-       (talking, the end of a Link Play session): its animations are the game's own and always bound, so they are never
-       acquired or released here. Before 1.5 they were, and after a world reset (see h_motion_reset) that release took the
-       game's own hold on the human animations away: the human model stayed broken until a restart. */
-    uint16_t res = (uint16_t)H->reg_get(c, 8), form = atomic_load(&g_form), cur = 0, old = g_requested;
+    /* The model being built is of the current form (vfunc 0x1D0). The human and the game's own forms are the game's business:
+       their animations are always loaded, and the mod never takes or gives back a hold on them (before 1.5 it did, and after a
+       world reset that release took the game's own hold on the human animations away). One of this mod's forms is built only
+       with its animations loaded (prepare_model): the mod's own requests always wait for that, so this only acts when the game
+       rebuilt the model by itself. */
+    uint16_t res = (uint16_t)H->reg_get(c, 8), form = atomic_load(&g_form), cur = 0;
     r16(P + P_FORM_NOW, &cur);
-    uint16_t now = form && cur != HUMAN && res != HUMAN_RES ? res : 0;
-    if (now == old) return MT_CONTINUE;
-    g_requested = now;
-    g_built_unbound = built_unbound(now);
-    if (form) mt_logf(H, M, MT_LOG_DEBUG, "the player's model: animation resource %u (form %u)", res, form);
-    w16(H->reg_get(c, 25) + 0xE94, res);   /* the patch ran after this store: do it first (the game repeats it) */
-    uint64_t x0 = H->reg_get(c, 0);
-    if (old) {
-        if (g_acquired == old) {
-            g_acquired = 0;
-            call(FN_MSET_REL, x0, old, 0);
-        }
-        uint64_t mgr = pkg_mgr();
-        if (!mgr) return MT_CONTINUE;
-        uint16_t pkg = pkg_of(mgr, old);
-        if (pkg) call(FN_PKG_REL, mgr, pkg, 0);
-    }
-    if (now) {
-        uint64_t mgr = pkg_mgr();
-        if (!mgr) return MT_CONTINUE;
-        uint16_t pkg = pkg_of(mgr, now);
-        if (pkg) call(FN_PKG_REQ, mgr, pkg, 0);
+    w16(H->reg_get(c, 25) + 0xE94, res);   /* the store this hook point replaces, first (the game repeats it) */
+    if (!mod_form(cur)) return MT_CONTINUE;
+    mt_logf(H, M, MT_LOG_DEBUG, "the player's model: animation resource %u (form %u)", res, cur);
+    if (prepare_model(c, &g_holds, P, cur)) {
+        mt_logf(H, M, MT_LOG_INFO, "the game builds the player as %s (form %u) before its animations are loaded: as the human until they are",
+                form_name(cur), cur);
+        if (form == cur && g_load != cur) g_load = cur, g_load_since = now_ms();
+        g_last_request = now_ms();   /* the next form change no sooner than REQUEST_GAP_MS after this one */
+        g_settled_since = 0;
     }
     return MT_CONTINUE;
 }
@@ -854,10 +1045,6 @@ static float f32_at(const uint8_t *b) {
     return u.f;
 }
 static int sane(float v) { return v == v && v < 1e7f && v > -1e7f; }
-static uint64_t vfunc(uint64_t obj, uint32_t off) {
-    uint64_t vt = r64(obj);
-    return vt ? r64(vt + off) : 0;
-}
 #ifdef PAP_SWITCH
 #define tell(text) ((void)0)
 #else
@@ -1181,10 +1368,11 @@ static void trace(uint64_t P) {
  * player's form only by playing that form's transformation action (main+0x2F6FCC), and only the game's own six player forms
  * have one. So the Pokemon arrived and was never applied: the others kept seeing the human, and the actions they received,
  * which are played for the wanted form, did not fit the human model, so it stood still in its idle pose.
- * Here each game shows the other players' forms itself, as it does for its own player: it requests the form on their
- * character, loads the Pokemon's animation package for their model (char_setup), binds its motion set once loaded and then
- * builds their model once more (a Pokemon that does not live in this town would be invisible otherwise), and keeps the
- * stand-up stretch off them (probe). Turning back is requested the same way. The game's own forms are left to the game. */
+ * Here each game shows the other players' forms itself, as it does for its own player: it loads the form's animations (holds,
+ * 1.6: before asking for the form, so their model is built once, with them), requests the form on their character, and keeps
+ * the stand-up stretch off them (probe). Turning back is requested the same way. The game's own forms are left to the game.
+ * Up to 1.5 the form was requested first and the model built a second time once the animations had loaded: in between, the
+ * model slot was empty and the game crashed when it read it (see "holds"), which three or four players made far more likely. */
 #define REMOTE_MAX 4
 #define REMOTE_GONE_MS  5000   /* a character not updated for this long has left: its slot is free again */
 #define REMOTE_TRIES       5   /* requests for one form that did not take, before waiting for the next form */
@@ -1194,17 +1382,13 @@ typedef struct {
     _Atomic uint64_t seen;        /* its last update */
     uint16_t id, v[4];            /* its character id; the form fields as last logged */
     uint8_t b[3];
-    uint16_t requested, acquired; /* as g_requested / g_acquired: its model's animation resource, and the one acquired */
-    int built_unbound;            /* as g_built_unbound */
     uint16_t asked;               /* the form last requested for it here */
+    uint16_t waiting;             /* the form whose animations it waits for (logged once) */
     int tries;
     uint64_t last_request;
+    Holds holds;                  /* as g_holds: its update and model setup only */
 } Remote;
 static Remote g_remote[REMOTE_MAX];
-
-/* The game's own player forms: human, Ditto, and the move forms. The game changes these itself. */
-static int game_form(uint16_t f) { return f == HUMAN || f == 0x1F || f == 0x46 || f == 0x99 || f == 0xCE || f == 0x128; }
-static int mod_form(uint16_t f) { return f > HUMAN && f <= FORM_MAX && !game_form(f); }
 
 static int online(void) {
     uint64_t gm = r64(MAIN + GAME_MGR);
@@ -1216,12 +1400,13 @@ static int remote_slot(uint64_t ch) {
         if (atomic_load(&g_remote[i].ch) == ch) return i;
     return -1;
 }
-/* A slot is let go without releasing what it acquired: the character is gone (or the session over), and releasing a motion
-   set while a model might still use it would unbind its animations under it. The package stays loaded, that is all. */
+/* A slot is let go without releasing its holds: the character is gone (or the session over), and releasing a motion set while
+   a model might still use it would unbind its animations under it. The packages stay loaded until the world reset, that is all. */
 static void remote_free(int i) {
     Remote *R = &g_remote[i];
     atomic_store(&R->shown, 0);
-    R->id = 0, R->requested = R->acquired = R->asked = 0, R->tries = 0, R->last_request = 0, R->built_unbound = 0;
+    R->id = 0, R->asked = R->waiting = 0, R->tries = 0, R->last_request = 0;
+    memset(&R->holds, 0, sizeof R->holds);
     atomic_store(&R->ch, 0);
 }
 static int remote_claim(uint64_t ch, uint16_t id) {
@@ -1266,60 +1451,25 @@ static void remote_request(Remote *R, uint64_t ch, uint16_t form, uint64_t now) 
     R->last_request = now;
 }
 
-/* The model setup of another player's character (h_char_setup): while its current form is one of this mod's, the animation
-   package of the model's resource is requested, and the previous one released, exactly as for the player. */
+/* The model setup of another player's character (h_char_setup): as for the player, a model in one of this mod's forms is built
+   only with the form's animations loaded, else as the human until they are (remote_tick then asks for the form again). */
 static void remote_model(MtHookCtx *c, uint64_t ch, uint16_t res) {
     int i = remote_slot(ch);
     if (i < 0) return;
     Remote *R = &g_remote[i];
     uint16_t cur = 0;
     r16(ch + P_FORM_NOW, &cur);   /* the model setup builds the current form (vfunc 0x1D0) */
-    uint16_t now = mod_form(cur) ? res : 0, old = R->requested;
     mt_logf(H, M, MT_LOG_INFO, "remote model id 0x%x: animation resource %u (form %u)", R->id, res, cur);
-    if (now == old) return;
-    R->requested = now;
-    R->built_unbound = built_unbound(now);
     w16(H->reg_get(c, 25) + 0xE94, res);   /* as in h_char_setup: the store this hook point replaces, first */
-    uint64_t mgr = pkg_mgr();
-    if (!mgr) return;
-    if (old) {
-        if (R->acquired == old) {
-            R->acquired = 0;
-            call(FN_MSET_REL, mgr, old, 0);
-        }
-        uint16_t pkg = pkg_of(mgr, old);
-        if (pkg) call(FN_PKG_REL, mgr, pkg, 0);
-    }
-    if (now) {
-        uint16_t pkg = pkg_of(mgr, now);
-        if (pkg) call(FN_PKG_REQ, mgr, pkg, 0);
-    }
+    if (!mod_form(cur) || !prepare_model(c, &R->holds, ch, cur)) return;
+    mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x: %s (form %u) built before its animations were loaded: as the human until they are",
+            R->id, form_name(cur), cur);
+    R->last_request = now_ms();
 }
 
-/* As bind_animations: once the package is loaded, acquire the motion set; when that was its first use, or the model was
-   built while the set had no animations, the model has none (invisible), so the form is built again. */
-static void remote_bind(Remote *R, uint64_t ch, uint64_t now) {
-    uint16_t req = R->requested, cur = 0;
-    if (!req || req == R->acquired) return;
-    uint64_t mgr = pkg_mgr();
-    if (!mgr) return;
-    uint16_t pkg = pkg_of(mgr, req);
-    if (pkg && !(uint32_t)call(FN_PKG_READY, mgr, pkg, 0)) return;   /* still loading */
-    uint64_t set = motion_set(req);
-    int before = motion_set_uses(set);
-    call(FN_MSET_ACQ, mgr, req, 0);
-    R->acquired = req;
-    int unbound = R->built_unbound;
-    R->built_unbound = 0;
-    if (!((before == 0 && motion_set_uses(set) == 1) || unbound) || !r16(ch + P_FORM_NOW, &cur) || !mod_form(cur)) return;
-    mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x: animations of %s loaded, building it again", R->id, form_name(cur));
-    w16(ch + P_FORM_NOW, HUMAN);   /* the current form is stale: request it again */
-    remote_request(R, ch, cur, now);
-}
-
-/* Another player's update (h_player_tick): show the form that player wants when it is one of this mod's, or turn them back
-   from one. One request at a time, REQUEST_GAP_MS apart, as for the player; a form that does not take is tried REMOTE_TRIES
-   times. */
+/* Another player's update (h_player_tick): show the form that player wants when it is one of this mod's, once its animations are
+   loaded, or turn them back from one. One request at a time, REQUEST_GAP_MS apart, as for the player; a form that does not take
+   is tried REMOTE_TRIES times. */
 static void remote_tick(uint64_t ch) {
     uint16_t id = 0;
     if (!online() || !r16(ch + P_ID, &id)) return;
@@ -1349,11 +1499,29 @@ static void remote_tick(uint64_t ch) {
 
     uint16_t cur = v[0], want = v[1], pending = v[2];
     atomic_store(&R->shown, mod_form(cur) || mod_form(want));
-    remote_bind(R, ch, now);
+    holds_tick(&R->holds, cur, want, b[0] ? pending : 0, now);
     if (want != R->asked) R->tries = 0;
     if (want == cur || b[0] || (pending >= 1 && pending <= FORM_MAX)) return;   /* nothing to do, or a change under way */
     if (!mod_form(want) && !mod_form(cur)) return;                              /* the game's own forms: the game does it */
-    if (want == 0 || want > FORM_MAX || now - R->last_request < REQUEST_GAP_MS || R->tries >= REMOTE_TRIES) return;
+    if (want == 0 || want > FORM_MAX || R->tries >= REMOTE_TRIES) return;
+    if (mod_form(want)) {   /* its animations first */
+        Hold *h = hold_take(&R->holds, want, 0, now);
+        int st = h ? hold_ready(h, now) : LOAD_WAIT;
+        if (st == LOAD_FAILED) {
+            mt_logf(H, M, MT_LOG_WARN, "remote player id 0x%x: %s (form %u) did not load, not shown", R->id, form_name(want), want);
+            R->asked = want, R->tries = REMOTE_TRIES;
+            return;
+        }
+        if (st == LOAD_WAIT) {
+            if (R->waiting != want)
+                mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x wants %s (form %u): loading it first%s", R->id, form_name(want), want,
+                        h ? "" : " (every hold in use)");
+            R->waiting = want;
+            return;
+        }
+    }
+    R->waiting = 0;
+    if (now - R->last_request < REQUEST_GAP_MS) return;
     if (++R->tries == REMOTE_TRIES)
         mt_logf(H, M, MT_LOG_INFO, "remote player id 0x%x: form %u does not take, last try", R->id, want);
     R->asked = want;
@@ -1372,16 +1540,16 @@ static void remote_tick(uint64_t ch) {
    - a Pokemon the player was turned into still counted as loaded, so turning into it again skipped loading its animations
      (the host's broken model until it changed Pokemon), and
    - a hold taken on the human animations while the game had turned the player human (the session's end message) was released
-     after the reset from the game's own: the human model broke until a restart (the guest). char_setup no longer takes it. */
+     after the reset from the game's own: the human model broke until a restart (the guest). char_setup no longer takes it.
+   1.6: every hold taken before the reset carries the old g_reset_gen and is dropped, unreleased, by its owner's next look. */
 static int h_motion_reset(MtHookCtx *c, void *u) {
     (void)c, (void)u;
     int others = 0;
+    atomic_fetch_add(&g_reset_gen, 1);
     for (int i = 0; i < REMOTE_MAX; i++)
         if (atomic_load(&g_remote[i].ch)) remote_free(i), others++;
     mt_logf(H, M, MT_LOG_INFO, "the game reset every Pokemon's animations (a new world: the end of a Link Play session, a reload): "
-            "forgetting the player's (resource %u) and %d other player(s)'", g_requested, others);
-    g_requested = g_acquired = 0;
-    g_built_unbound = 0;
+            "forgetting the player's and %d other player(s)'", others);
     return MT_CONTINUE;
 }
 
@@ -1393,8 +1561,11 @@ static int h_player_tick(MtHookCtx *c, void *u) {   /* blr x8 near the top of th
     remote_sweep();
     trace(P);
     buttons(P);
-    bind_animations(P);
+    load_tick(P);
     keep_form(P);
+    uint16_t cur = 0;
+    r16(P + P_FORM_NOW, &cur);
+    holds_tick(&g_holds, cur, atomic_load(&g_form), g_load, now_ms());
 #ifndef PAP_SWITCH
     test_slot(P);
 #endif

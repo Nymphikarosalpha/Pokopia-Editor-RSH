@@ -55,7 +55,7 @@ Pokémon that hover or fly in the game (Charizard, Scyther, Noctowl, Venomoth, V
 
 Talking to most Pokémon makes the game turn you back into your character: the conversation needs it. The mod lets it, and turns you back into your Pokémon once the conversation is over and you walk off.
 
-In Link Play every player needs the mod. Then the other players see your Pokémon, walking and moving with its own animations, and you see theirs. Ending a session while transformed leaves everyone's character as it should be (fixed in 1.5).
+In Link Play every player needs the mod. Then the other players see your Pokémon, walking and moving with its own animations, and you see theirs. Ending a session while transformed leaves everyone's character as it should be (fixed in 1.5). With three or four players a game could crash right after another player changed Pokémon; 1.6 loads a Pokémon's animations before changing anyone into it, which fixes that (details in the [Recompia README](../../recompia/play-as-pokemon/README.md#link-play)).
 
 ## Abilities
 
@@ -92,7 +92,7 @@ load/0400A3A01EE4C000/Play as Pokemon/cheats/76A489F3BD3642FA.txt
 Keep **Enable GDB Stub** off, and use the combos only once you're in the world, not on the title screen. After a change, the next one waits about 0.75 s: changing form too fast can crash the game.
 
 ### Recompia (PC)
-Recompia runs the game natively, so it can't use the IPS and cheat files. Use `recompia_play_as_pokemon-1.5.0.pkmod` instead: copy it into Recompia's `mods` folder and allow it in the launcher's Mods page. It has the same buttons, plus a list of every Pokémon on F3 or ZL + R3. The Pokémon can also be picked in the mod's settings (launcher or F1 in game). See [recompia/play-as-pokemon/README.md](../../recompia/play-as-pokemon/README.md).
+Recompia runs the game natively, so it can't use the IPS and cheat files. Use `recompia_play_as_pokemon-1.6.0.pkmod` instead: copy it into Recompia's `mods` folder and allow it in the launcher's Mods page. It has the same buttons, plus a list of every Pokémon on F3 or ZL + R3. The Pokémon can also be picked in the mod's settings (launcher or F1 in game). See [recompia/play-as-pokemon/README.md](../../recompia/play-as-pokemon/README.md).
 
 ### Console with custom firmware (untested)
 ```

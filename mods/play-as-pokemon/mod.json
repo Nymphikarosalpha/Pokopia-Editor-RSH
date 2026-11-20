@@ -1,7 +1,7 @@
 {
   "id": "play-as-pokemon",
   "name": "Play as Pokemon",
-  "version": "1.5",
+  "version": "1.6",
   "status": "experimental",
   "summary": "Turn into Ditto or any other Pokémon and walk around as it. Flying Pokémon can fly; Grow, Burn, Water and Generate Pokémon can use their ability. Talking and Link Play work while transformed.",
   "controls": [

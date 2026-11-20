@@ -18,7 +18,7 @@ LISTS = os.path.join(REPO, 'mods', 'play-as-pokemon')
 DIST = os.path.join(REPO, 'dist')
 
 MOD_ID = 'play_as_pokemon'
-VERSION = '1.5.0'
+VERSION = '1.6.0'
 ABILITIES = ['Grow', 'Burn', 'Water', 'Generate']   # the order of AB_* in play_as_pokemon.c
 ABILITY_AUTO = 'Auto (the Pokémon’s own)'
 # Which Pokemon have each ability (the in-game specialty lists; the game's own table for it is not found yet). A Pokemon in none of
