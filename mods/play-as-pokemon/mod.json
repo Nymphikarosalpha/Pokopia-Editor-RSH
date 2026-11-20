@@ -3,7 +3,7 @@
   "name": "Play as Pokemon",
   "version": "1.6",
   "status": "experimental",
-  "summary": "Turn into Ditto or any other Pokémon and walk around as it. Flying Pokémon can fly; Grow, Burn, Water and Generate Pokémon can use their ability. Talking and Link Play work while transformed.",
+  "summary": "Turn into any Pokémon in Pokopia. Use their abilities: flying Pokémon can fly, and Grow, Burn, Water and Generate Pokémon can use their ability. Works in co-op / Link Play: every player needs the mod installed.",
   "controls": [
     [
       "ZL + L3 (left stick click)",

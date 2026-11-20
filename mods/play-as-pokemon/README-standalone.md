@@ -1,6 +1,8 @@
 # Play as Pokemon
 
-Turn into any Pokémon in Pokopia. Only works on **Pokopia 2.0.0, update 655360**.
+Turn into any Pokémon in Pokopia. Use their abilities: flying Pokémon can fly, and Grow, Burn, Water and Generate Pokémon can use their ability. Works in co-op / Link Play: every player needs the mod installed.
+
+Only works on **Pokopia 2.0.0, update 655360**.
 
 ## Install
 

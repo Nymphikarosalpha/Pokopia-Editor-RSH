@@ -1,6 +1,6 @@
 # Play as Pokemon (experimental)
 
-Turn into Ditto or any other Pokémon and walk around as it. It doesn't have to live in your town. Flying Pokémon can fly, and Pokémon with the Grow, Burn, Water or Generate specialty can use it.
+Turn into any Pokémon in Pokopia. Use their abilities: flying Pokémon can fly, and Grow, Burn, Water and Generate Pokémon can use their ability. Works in co-op / Link Play: every player needs the mod installed.
 
 | Press | Does |
 |---|---|

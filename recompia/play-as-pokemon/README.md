@@ -1,6 +1,6 @@
 # Play as Pokemon for Recompia
 
-The [Play as Pokemon](../../mods/play-as-pokemon/README.md) mod for [Recompia](https://github.com/Dittobyte/Recompia), the PC port of Pokopia. Turn into Ditto or any other Pokémon and walk around as it, even one that doesn't live in your town. Flying Pokémon can fly, and Pokémon with the Grow, Burn, Water or Generate specialty can use it.
+The [Play as Pokemon](../../mods/play-as-pokemon/README.md) mod for [Recompia](https://github.com/Dittobyte/Recompia), the PC port of Pokopia. Turn into any Pokémon in Pokopia. Use their abilities: flying Pokémon can fly, and Grow, Burn, Water and Generate Pokémon can use their ability. Works in co-op / Link Play: every player needs the mod installed.
 
 **Game version 2.0.1 only** (the version Recompia needs). Windows and Linux (x86-64; the Linux library needs glibc 2.17 or newer). The Linux build is untested in game so far.
 

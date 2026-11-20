@@ -84,7 +84,7 @@ If your save isn't found, click **Open → Browse for a folder**.
 
 ### Play as Pokemon <sub>(experimental)</sub>
 
-Turn into Ditto or any other Pokémon. Flying Pokémon can fly; Grow, Burn, Water and Generate Pokémon can use their ability on what is in front of them.
+Turn into any Pokémon in Pokopia. Use their abilities: flying Pokémon can fly, and Grow, Burn, Water and Generate Pokémon can use their ability. Works in co-op / Link Play: every player needs the mod installed.
 
 1. On the editor's **Mods** page, press **Install**.
 2. Restart the game and tick **Play as Pokemon** in its Properties → Add-Ons.
