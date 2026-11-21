@@ -1,5 +1,13 @@
 # RSH fork changelog
 
+## v0.2.2 — Resident Studio button and dialog fix (2026-11-21)
+
+- Restored the missing `add_dialog()` function definition. The previous release placed the entire dialog body inside an unrelated help function, so clicking the button did nothing.
+- Renamed the toolbar button to **Pokémon · Habitat · Spawn** and adjusted the window title.
+- Added a visible diagnostic message and local error log if opening the dialog fails again.
+- Kept ID−4 as an explicitly experimental, unverified encounter method; this fix does not claim that Mew/Mewtwo can spawn.
+
+
 ## v0.2.1 — Special encounter experiment and settings guidance (2026-11-21)
 
 ### Changed in the editor
