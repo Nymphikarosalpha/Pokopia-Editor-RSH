@@ -1,5 +1,14 @@
 # RSH fork changelog
 
+## v0.2.3 — Palette Town anchor selection and streamlined actions (2026-11-21)
+
+- Removed redundant resident/home removal choices from Pokémon · Habitat · Spawn. These operations remain in the Residents detail panel.
+- Exposed already registered habitat anchors for special Pokémon on Palette Town (G00/STGDAT00) and other G00 STGDAT stages, instead of incorrectly gating them all out by the STGDAT01 filename.
+- Added explicit warnings: STGDAT00 and other additional stages are **unverified** for ID−4 encounter semantics. Header/layout/slot/habitat checks and ZIP backups remain required; no Mew/Mewtwo spawn is confirmed.
+- Hid irrelevant ID−4 controls (friendship, meeting date, Pokédex registration, manual build settings).
+- Prefer exact Pokémon-name searches (typing “mew” selects Mew rather than Mewtwo).
+
+
 ## v0.2.2 — Resident Studio button and dialog fix (2026-11-21)
 
 - Restored the missing `add_dialog()` function definition. The previous release placed the entire dialog body inside an unrelated help function, so clicking the button did nothing.
