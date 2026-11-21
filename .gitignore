@@ -5,3 +5,10 @@ __pycache__/
 test_saves/
 settings.json
 bag_preset.json
+
+# RSH local build files
+PokopiaEditor.fork-build.spec
+.fork-build/
+__pycache__/
+dist/
+build/

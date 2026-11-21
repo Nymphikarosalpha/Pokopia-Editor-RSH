@@ -6,7 +6,7 @@
 
 **Edit your Pokopia save: bag, residents, moves, emotes, wardrobe, collection and your islands. Install game mods.**
 
-[![Download](https://img.shields.io/github/v/release/cycalo/Pokopia-Editor?label=Download&style=for-the-badge&color=2ecc71)](https://github.com/cycalo/Pokopia-Editor/releases/latest)
+[![Download](https://img.shields.io/github/v/release/cycalo/Pokopia-Editor?label=Upstream%20release&style=for-the-badge&color=2ecc71)](https://github.com/cycalo/Pokopia-Editor/releases/latest)
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![Pokopia](https://img.shields.io/badge/Pokopia-2.0.x-e74c3c?style=for-the-badge)
 
@@ -17,9 +17,56 @@
 
 ---
 
+<!-- RSH fork overview -->
+## About Pokopia Editor RSH
+
+**Pokopia Editor RSH (Resident · Spawn · Habitat)** is a community fork of
+[cycalo/Pokopia-Editor](https://github.com/cycalo/Pokopia-Editor).
+It retains the original save editor and adds resident, habitat and experimental
+encounter tools. The upstream Git history, original author notices and
+[GNU GPL-3.0 license](LICENSE) are preserved.
+
+### RSH additions
+
+| Feature | Description | Status |
+| --- | --- | --- |
+| Resident management | Add or update resident registry entries, friendship values and meeting dates | Preview |
+| Resident removal | Remove a resident's save registry entry and home assignment while retaining the Pokédex entry | Experimental |
+| Home assignment | Link residents to existing habitats or remove a home assignment | Preview |
+| Habitat placement | Build available habitat recipes and associate them with residents on supported islands | Preview |
+| Multiple islands | Choose among supported islands found in the loaded save; island names are read from the save | Preview |
+| Habitat matching | Additional offline species-to-habitat mappings and optional manual selection | Preview |
+| Encounter records | Optional experimental habitat-linked encounter records using an unverified ID mapping | Experimental |
+| Event habitat items | Prepare supported event items and catalog entries without playing the original distribution event | Preview |
+| Lichii integration | Recognize Lichii processes and search standard and nearby portable Lichii save locations | Preview |
+
+> [!IMPORTANT]
+> **This is a development preview, not a stable release.** A resident record or
+> habitat assignment does not guarantee that a Pokémon appears as a visible NPC.
+> Resident removal may leave separately stored world NPCs. Event item preparation
+> does **not** mark story quests or limited-time events completed. Direct spawning
+> of legendary and special Pokémon is not yet implemented or verified.
+> Always close the emulator and back up your save before using experimental tools.
+
+**Compatibility:** The editor can browse manually selected saves and looks for
+Lichii saves in standard Windows user-data directories, as well as common nearby
+portable `user/nand` layouts. Portable installations in other locations can be
+opened using **Open → Browse for a folder**. The full RSH feature set has not
+been validated on every emulator and game version.
+
+**Downloads:** RSH preview builds are intended to be distributed through this
+fork's [GitHub Actions](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/actions/workflows/build-windows-preview.yml) once
+that workflow has been uploaded and run. The original project's releases are
+upstream builds and do **not** include RSH additions.
+
+**Details:** [Feature guide and limitations](docs/FORK_FEATURES.md) ·
+[Changes](CHANGELOG_FORK.md) · [Build guide](docs/BUILD_WINDOWS.md).
+
+---
+
 ## 🚀 Getting started
 
-1. **[Download `PokopiaEditor.exe`](https://github.com/cycalo/Pokopia-Editor/releases/latest)**. There's nothing to install.
+1. **RSH preview:** Download the Windows preview build from this fork's Actions tab after a successful build. The [upstream releases](https://github.com/cycalo/Pokopia-Editor/releases/latest) do not include RSH additions.
 2. **Close your emulator.**
 3. **Double-click the exe.** It finds your save on its own.
 
