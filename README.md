@@ -120,6 +120,17 @@ The catalog covers **402 named resident records**: **350** mapped to buildable r
 <a id="which-spawn-settings"></a>
 ## 🌱 Which settings should I use for each Pokémon?
 
+> [!NOTE]
+> **Palette Town / STGDAT00:** The ID−4 special-encounter UI can now list existing
+> habitats as position anchors on G00 stages. Non-STGDAT01 stages are **new,
+> unverified research candidates**. The editor checks the island format and a
+> compatible free event row before staging the edit. This is **not evidence**
+> that the game treats that field as a Pokémon spawn reference.
+>
+> **Simpler selector:** Registry removal and home unlink are managed from the
+> **Residents** detail panel, not duplicated in the Pokémon · Habitat · Spawn dialog.
+
+
 **Choose by how the Pokémon is encountered — not by its elemental type** (Grass, Water, Psychic, etc.). The Resident + Habitat Studio shows **Recommended settings** after you select a Pokémon.
 
 | Pokémon group | Examples | Recommended mode | What to expect |
@@ -140,7 +151,7 @@ The catalog covers **402 named resident records**: **350** mapped to buildable r
 5. Confirm the verified ZIP backup, stage the change and press **Ctrl+S** to write the test save.
 6. Reload the game and check the result. It may produce no encounter or a different outcome — **the ID−4 reference has not been validated as a species-spawn field**.
 
-**Layout restriction:** only checked `G00/STGDAT01.BIN` or `B00/STGDAT01.BIN` stage layouts are candidates, and only when a compatible free 32-byte event slot exists. The island stage must pass the editor's validation. Ordinary habitat editing can still work on other islands.
+**Layout restriction:** G00/STGDAT00..99 stage files can be considered for special encounters after runtime structural checks (game version, decompressed stage layout, compatible free 32-byte slot). The event meaning is **unverified**, especially outside STGDAT01. The island stage must pass the editor's validation. Ordinary habitat editing can still work on other islands.
 
 </details>
 
@@ -153,7 +164,7 @@ The catalog covers **402 named resident records**: **350** mapped to buildable r
 - **Build event habitat on the map** — use a supported E-series recipe; event progress is not marked complete.
 - **Prepare event materials in bag only** — add missing ingredients for an event recipe; no world objects are built.
 - **Manually select an unverified habitat** — only when investigating uncertain mappings. Manual event overrides remain limited to E-series recipes.
-- **Remove an existing home assignment** and **Remove resident from save registry** — maintenance tools, **not** spawn modes.
+- **Remove home assignment** and **Remove resident** are available in the Residents detail panel, not in the spawn selector.
 
 </details>
 
