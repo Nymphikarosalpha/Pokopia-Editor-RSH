@@ -647,7 +647,7 @@ def species_mode_recommendation(idx, all_recipes, area, eligible_areas):
     if is_special_pokemon(name):
         kind = ('SPECIAL / EVENT (unique encounter)' if key in _EVENT_POKEMON
                 else 'LEGENDARY / MYTHICAL (unique encounter)')
-        test = ('ID−4 is available for a disposable test save only if an existing '
+        test = ('ID−4 is available for a separate save copy only if an existing '
                 'anchor is on this island.' if area in eligible_areas else
                 'ID−4 is disabled on this island layout; select an eligible STGDAT01 island.')
         event_note = (' A known E-series habitat may be built in Event habitat mode, '
@@ -671,7 +671,7 @@ def species_mode_recommendation(idx, all_recipes, area, eligible_areas):
         return (f'NORMAL / HABITAT-BASED — {name}. Recommended: "Build habitat + '
                 'register resident" to place a mapped habitat, or "Assign an existing '
                 'habitat" if one already exists on the island. Neither guarantees an '
-                'immediate visible encounter. ID−4 is an unverified alternative test.')
+                'immediate visible encounter. ID−4 is an unverified experimental option.')
     if matched == []:
         return (f'NO BUILDABLE HABITAT MAPPED — {name}. Recommended: Register resident '
                 'without a habitat for registry-only experiments. Do not assume any '
@@ -704,6 +704,7 @@ def species_settings_reference():
             'disposable save, close the emulator, and keep the ZIP backup.')
 
 
+def add_dialog(page, selected_index=None):
     from PySide6.QtCore import Qt, QDateTime
     from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QComboBox,
                                   QSpinBox, QDateTimeEdit, QCheckBox, QLabel, QMessageBox, QVBoxLayout, QPushButton)
@@ -712,7 +713,7 @@ def species_settings_reference():
         return app.toast('Open a save before editing residents.', 'err')
     c = app.save.common
     dlg = QDialog(page)
-    dlg.setWindowTitle('Resident + Habitat Studio  |  Experimental')
+    dlg.setWindowTitle('Pokémon · Habitat · Spawn  |  Experimental')
     dlg.resize(730, 590)
     form = QFormLayout(dlg)
     query = QLineEdit()
@@ -925,7 +926,7 @@ def species_settings_reference():
                     return
                 if matched == [] or idx <= 4:
                     hab.setEnabled(False)
-                    hinfo.setText(name+': no verified normal habitat and no supported ID−4 test. '
+                    hinfo.setText(name+': no verified normal habitat and no supported ID−4 encounter option. '
                                   'The editor will not guess a spawn recipe.')
                     return
             if matched is None and not manual_hab.isChecked() and not special:
@@ -1074,7 +1075,7 @@ def species_settings_reference():
                                        'Event modes require an E-series recipe. No changes were made.')
     if method == 'spawn':
         if idx <= 4:
-            return QMessageBox.warning(page, 'Invalid test ID',
+            return QMessageBox.warning(page, 'Invalid encounter ID',
                                        'The ID−4 hypothesis is not applicable to this resident ID.')
         if habitat_key(name) in _EVENT_POKEMON and not special:
             return QMessageBox.warning(page, 'Event Pokémon',
@@ -1083,7 +1084,7 @@ def species_settings_reference():
         if special:
             if not (isinstance(choice, tuple) and len(choice) == 2 and
                     choice[0] == 'special-anchor'):
-                return QMessageBox.warning(page, 'Missing test anchor',
+                return QMessageBox.warning(page, 'Missing position anchor',
                                            'Select an existing habitat position anchor.')
             anchor = next((h for h in read_habitats(app, area)
                            if h['uid'] == choice[1]), None)
@@ -1114,7 +1115,7 @@ def species_settings_reference():
         detail = ('Add missing event habitat materials to the bag and mark their catalog entries. '
                   'No habitat is built; no quest flags are changed.')
     elif method == 'spawn' and special:
-        detail = ('SPECIAL TEST / ID−4: Write one hypothetical encounter entry using '
+        detail = ('EXPERIMENTAL ENCOUNTER / ID−4: Write one hypothetical encounter entry using '
                   f"existing habitat UID {anchor['uid']} as position anchor. "
                   'Do not build any habitat, create a world NPC, or modify quest flags. '
                   'Actual species appearance is NOT confirmed.')
@@ -1405,7 +1406,7 @@ def _sp_run_special_pending(mp):
     mp.app.toast(
         f'Experimental entry staged: event slot {slot}, reference {ref}, '
         f'anchor UID {pending["uid"]}. Nothing is proven to spawn. '
-        'Press Ctrl+S only on a disposable test save; you can Undo first. '
+        'Press Ctrl+S only on a separate save copy; you can Undo first. '
         'Original ZIP backup: ' + pending['backup'], 'info')
 
 
@@ -1457,6 +1458,26 @@ def _sp_backup(save, stage_path):
     return str(out)
 
 
+def _rsh_open_studio(page, selected_index=None):
+    """Never swallow an exception when opening the Resident/Spawn dialog."""
+    from PySide6.QtWidgets import QMessageBox
+    try:
+        return add_dialog(page, selected_index)
+    except Exception:
+        details = traceback.format_exc()
+        try:
+            logfile = os.path.join(os.environ.get('APPDATA') or os.path.expanduser('~'),
+                                   'Pokopia_ResidentHabitat_dialog_error.txt')
+            with open(logfile, 'w', encoding='utf-8') as handle:
+                handle.write(details)
+            more = '\n\nError log: ' + logfile
+        except OSError:
+            more = ''
+        QMessageBox.critical(page, 'Pokémon / Habitat / Spawn',
+                             'The Resident Studio could not be opened. No save data was changed.\n\n'
+                             + details.splitlines()[-1] + more)
+
+
 def patch_all():
     # Process and save detection without renaming lichii.exe to yuzu.exe.
     import pokopia_extras as px
@@ -1472,10 +1493,10 @@ def patch_all():
         old_build(self)
         left = self.layout().itemAt(0).widget()
         top = left.body.itemAt(0).layout()
-        top.insertWidget(2, W.button('Pokémon + Habitat / Spawn Test', T.G['people'],
-                                     lambda: add_dialog(self), accent=True))
+        top.insertWidget(2, W.button('Pokémon · Habitat · Spawn', T.G['people'],
+                                     lambda: _rsh_open_studio(self), accent=True))
         self.home_edit_button = W.button('Assign / change home', T.G['home'],
-            lambda: add_dialog(self, self.selected()[0]) if len(self.selected()) == 1 else None)
+            lambda: _rsh_open_studio(self, self.selected()[0]) if len(self.selected()) == 1 else None)
         self.home_edit_button.setEnabled(False)
         self.detail.body.addWidget(self.home_edit_button)
         self.home_unlink_button = W.button('Remove home assignment', T.G['home'],
