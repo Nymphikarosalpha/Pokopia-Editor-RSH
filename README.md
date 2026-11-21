@@ -6,7 +6,15 @@
 
 **Edit your Pokopia save: bag, residents, moves, emotes, wardrobe, collection and your islands. Install game mods.**
 
-[![Download RSH Preview](https://img.shields.io/badge/Download-RSH%20Preview-2ecc71?style=for-the-badge)](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/tag/rsh-preview)
+<!-- RSH download button -->
+<a href="https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/download/rsh-preview/PokopiaEditor_RSH.exe" title="Download Pokopia Editor RSH for Windows">
+  <img src="docs/rsh-download.svg" alt="Download Pokopia Editor RSH for Windows (EXE preview)" width="660">
+</a>
+
+[**Release notes and previous versions**](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/tag/rsh-preview) · **Windows 10 / 11** · *Development preview*
+<!-- /RSH download button -->
+
+
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![Pokopia](https://img.shields.io/badge/Pokopia-2.0.x-e74c3c?style=for-the-badge)
 
