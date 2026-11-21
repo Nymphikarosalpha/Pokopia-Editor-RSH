@@ -7,11 +7,14 @@
 **Edit your Pokopia save: bag, residents, moves, emotes, wardrobe, collection and your islands. Install game mods.**
 
 <!-- RSH download button -->
-<a href="https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/download/rsh-preview/PokopiaEditor_RSH.exe" title="Download Pokopia Editor RSH for Windows">
-  <img src="docs/rsh-download.svg" alt="Download Pokopia Editor RSH for Windows (EXE preview)" width="660">
+<a href="https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases" title="View Pokopia Editor RSH releases and download">
+  <img src="docs/rsh-download.svg" alt="View Pokopia Editor RSH releases and download a Windows build" width="660">
 </a>
 
-[**Release notes and previous versions**](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/tag/rsh-preview) · **Windows 10 / 11** · *Development preview*
+[**All releases and downloads**](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases) · **Windows 10 / 11** · *Development preview*
+<!-- RSH changelog quick link -->
+[![Changelog](https://img.shields.io/badge/CHANGELOG-View%20Updates-FFD34E?style=for-the-badge&labelColor=22417D)](CHANGELOG.md)
+<!-- /RSH changelog quick link -->
 <!-- /RSH download button -->
 
 
@@ -55,7 +58,7 @@ The bundled catalog was audited against 402 named resident records and 252 built
 
 **Build habitat + register resident** is the default. The **Build event habitat on the map** mode places a supported E-series recipe at a chosen position. **Prepare event materials in bag only** is a separate inventory operation. The manual event override offers only E-series recipes and clearly marks the choice as unverified. Neither operation completes event quests, bypasses time-limited triggers or guarantees visible NPC spawns.
 
-See [RSH changelog](CHANGELOG_FORK.md) and [feature limitations](docs/FORK_FEATURES.md).
+See [RSH changelog](CHANGELOG.md) and [feature limitations](docs/FORK_FEATURES.md).
 <!-- RSH-EVENT-CATALOG-END -->
 
 > [!IMPORTANT]
@@ -72,20 +75,20 @@ portable `user/nand` layouts. Portable installations in other locations can be
 opened using **Open → Browse for a folder**. The full RSH feature set has not
 been validated on every emulator and game version.
 
-**Windows download:** The latest RSH preview executable is available on the
-[Pokopia Editor RSH preview release](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/tag/rsh-preview)
+**Windows download:** Download the latest available RSH preview from
+[the project Releases page](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases)
 when the release build has completed. GitHub Actions also retains a ZIP artifact
 for each successful workflow run. The original project's releases are upstream
 builds and do **not** include RSH additions.
 
 **Details:** [Feature guide and limitations](docs/FORK_FEATURES.md) ·
-[Changes](CHANGELOG_FORK.md) · [Build guide](docs/BUILD_WINDOWS.md).
+[Changes](CHANGELOG.md) · [Build guide](docs/BUILD_WINDOWS.md).
 
 ---
 
 ## 🚀 Getting started
 
-1. **RSH preview:** Download the Windows preview build from this fork's Actions tab after a successful build. The [upstream releases](https://github.com/cycalo/Pokopia-Editor/releases/latest) do not include RSH additions.
+1. **[Download Pokopia Editor RSH from Releases](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases)**. Choose the Windows EXE from the release assets.
 2. **Close your emulator.**
 3. **Double-click the exe.** It finds your save on its own.
 
