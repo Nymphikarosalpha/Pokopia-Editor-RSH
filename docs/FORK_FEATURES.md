@@ -35,6 +35,10 @@ Some cases cannot be mapped automatically: the original editor lacks a recipe fo
 
 **Not supported:** reliably marking limited-time events completed, bypassing game encounter gates, or forcibly spawning legendary/story/event NPCs. These mechanisms have not been established and are not advertised as working.
 
+### Normal and special Pokémon on non-STGDAT01 islands
+
+Starting with v0.2.4, the existing-habitat position-anchor ID−4 workflow is offered to ordinary Pokémon as well as special Pokémon on recognized G00/STGDAT## stage files. The original new-habitat+ID−4 workflow stays restricted to STGDAT01. An empty anchor list means no **registered and valid** habitat was found; it cannot be replaced by an arbitrary fabricated UID. Unknown encounter semantics are not automatically established by a matching binary layout. Close the emulator and test on a save copy only.
+
 ## Experimental encounter tool
 
 The separate ID-minus-four experiment writes an unverified stage encounter field on checked layouts. Its mapping is a hypothesis, not proof that a particular Pokémon will appear. Avoid using it on valuable saves.
