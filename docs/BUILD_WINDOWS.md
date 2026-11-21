@@ -24,3 +24,11 @@ Open **Actions > Build Windows Preview > Run workflow**. After a successful buil
 - `pokopia_gui.py` not detected in the spec: inspect upstream build changes and update `tools/build_fork.py`.
 - Python dependency missing: use the original project's README and build requirements.
 - No new controls visible: verify the launch entry is `pokopia_gui_fork.py`, not the original `pokopia_gui.py`.
+
+## Download the preview executable
+
+After a successful push to `main`, GitHub Actions builds the Windows executable
+and refreshes the [RSH preview release](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/tag/rsh-preview)
+with `PokopiaEditor_RSH.exe` as a directly downloadable release asset.
+If the release publishing step fails due to permissions, the EXE remains
+available as an artifact on the successful build run's Actions page.

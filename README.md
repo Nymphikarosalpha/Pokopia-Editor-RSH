@@ -6,7 +6,7 @@
 
 **Edit your Pokopia save: bag, residents, moves, emotes, wardrobe, collection and your islands. Install game mods.**
 
-[![Download](https://img.shields.io/github/v/release/cycalo/Pokopia-Editor?label=Upstream%20release&style=for-the-badge&color=2ecc71)](https://github.com/cycalo/Pokopia-Editor/releases/latest)
+[![Download RSH Preview](https://img.shields.io/badge/Download-RSH%20Preview-2ecc71?style=for-the-badge)](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/tag/rsh-preview)
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![Pokopia](https://img.shields.io/badge/Pokopia-2.0.x-e74c3c?style=for-the-badge)
 
@@ -54,10 +54,11 @@ portable `user/nand` layouts. Portable installations in other locations can be
 opened using **Open → Browse for a folder**. The full RSH feature set has not
 been validated on every emulator and game version.
 
-**Downloads:** RSH preview builds are intended to be distributed through this
-fork's [GitHub Actions](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/actions/workflows/build-windows-preview.yml) once
-that workflow has been uploaded and run. The original project's releases are
-upstream builds and do **not** include RSH additions.
+**Windows download:** The latest RSH preview executable is available on the
+[Pokopia Editor RSH preview release](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/tag/rsh-preview)
+when the release build has completed. GitHub Actions also retains a ZIP artifact
+for each successful workflow run. The original project's releases are upstream
+builds and do **not** include RSH additions.
 
 **Details:** [Feature guide and limitations](docs/FORK_FEATURES.md) ·
 [Changes](CHANGELOG_FORK.md) · [Build guide](docs/BUILD_WINDOWS.md).

@@ -35,10 +35,11 @@ portable `user/nand` layouts. Portable installations in other locations can be
 opened using **Open → Browse for a folder**. The full RSH feature set has not
 been validated on every emulator and game version.
 
-**Downloads:** RSH preview builds are intended to be distributed through this
-fork's [GitHub Actions](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/actions/workflows/build-windows-preview.yml) once
-that workflow has been uploaded and run. The original project's releases are
-upstream builds and do **not** include RSH additions.
+**Windows download:** The latest RSH preview executable is available on the
+[Pokopia Editor RSH preview release](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases/tag/rsh-preview)
+when the release build has completed. GitHub Actions also retains a ZIP artifact
+for each successful workflow run. The original project's releases are upstream
+builds and do **not** include RSH additions.
 
 **Details:** [Feature guide and limitations](docs/FORK_FEATURES.md) ·
 [Changes](CHANGELOG_FORK.md) · [Build guide](docs/BUILD_WINDOWS.md).
