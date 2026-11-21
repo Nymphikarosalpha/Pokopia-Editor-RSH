@@ -1,5 +1,13 @@
 # RSH fork changelog
 
+## v0.2.4 — ID−4 existing-anchor selection on all G00 stages (2026-11-21)
+
+- Fixes the remaining STGDAT01-only gating for **ordinary Pokémon**: an already registered habitat can now be selected as ID−4 position anchor on any recognized G00/STGDAT## stage.
+- Keeps the one-step **build new habitat + ID−4** research operation on its originally examined STGDAT01 stage only.
+- Uses the same non-destructive existing-anchor path for ordinary and special Pokémon, without changing resident/home or event quest flags.
+- Explains empty habitat lists and unknown stage semantics; continues strict binary layout checks and verified full-save ZIP backups.
+- No species spawn on any new island is claimed verified.
+
 ## v0.2.3 — Palette Town anchor selection and streamlined actions (2026-11-21)
 
 - Removed redundant resident/home removal choices from Pokémon · Habitat · Spawn. These operations remain in the Residents detail panel.
