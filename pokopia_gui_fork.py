@@ -242,7 +242,7 @@ def backup_common_save(save):
     return str(output)
 
 
-def event_content_bypass(c, idx, recipe, when, friendship, add_resident=False, register_dex=False):
+def event_content_bypass(c, idx, recipe, when, friendship, add_resident=False, register_dex=False, allow_unverified=False):
     """Unlock event habitat *materials* and catalog – not unknown quest/event flags.
 
     Stages and quest state are not modified. The user can build the event
@@ -250,11 +250,14 @@ def event_content_bypass(c, idx, recipe, when, friendship, add_resident=False, r
     story-event-completed flag is unknown and intentionally left untouched.
     """
     name = ps.name_of(ps.VILLAGER_NAMES, idx, 'Resident')
-    if habitat_key(name) not in _EVENT_POKEMON:
-        raise ValueError('Only supported event Pokémon are allowed in this mode.')
-    valid = matching_recipes(name, recipes()) or []
-    if not any(str(r['dex']) == str(recipe.get('dex')) and int(r['type']) == int(recipe['type']) for r in valid):
-        raise ValueError('Recipe does not match this event Pokémon.')
+    if not is_event_recipe(recipe):
+        raise ValueError('This is not a supported event habitat recipe.')
+    valid = matching_recipes(name, recipes(), idx) or []
+    verified = any(str(r['dex']) == str(recipe.get('dex')) and
+                   int(r['type']) == int(recipe['type']) for r in valid)
+    if not verified and not allow_unverified:
+        raise ValueError('Recipe does not match this event Pokémon. ' 
+                         'Use the explicit unverified-habitat option to override.')
     from collections import Counter
     need = Counter()
     for part in recipe.get('parts', []):
@@ -321,7 +324,7 @@ def unlink_home(c, idx):
 
 def species_spawn_notice(idx, recipe=None):
     """Distinguish housing/unlocking from meeting a special Pokémon."""
-    name = ps.name_of(ps.VILLAGER_NAMES, idx, 'Resident')
+    name = display_species_name(idx)
     if habitat_key(name) in _EVENT_POKEMON:
         return (f'{name}: event Pokémon. Its event habitat can be built and '
                 'assigned as a home. The first appearance may still require '
@@ -394,8 +397,19 @@ def read_habitats(app, area):
     return rows
 
 
+def display_species_name(idx):
+    """Show game-specific forms without altering the upstream resident name table.
+
+    Resident slots 143 and 266 refer to the two distinct Toxtricity forms. Their
+    original names are identical, so matching only the displayed name loses the form.
+    """
+    if idx in _FORM_HABITATS_BY_RESIDENT:
+        return _FORM_HABITATS_BY_RESIDENT[idx][0]
+    return ps.name_of(ps.VILLAGER_NAMES, idx, 'Resident')
+
+
 def species():
-    return [(i, n.strip()) for i, n in enumerate(ps.VILLAGER_NAMES)
+    return [(i, display_species_name(i)) for i, n in enumerate(ps.VILLAGER_NAMES)
             if 0 < i < ps.VIL_COUNT and n.strip()]
 
 
@@ -416,7 +430,30 @@ def recipes():
 _HABITAT_SOURCE = 'https://raw.githubusercontent.com/JEschete/PokopiaPlanning/main/reference/Pokopia.csv'
 _HABITAT_MAP = None
 _HABITAT_MAP_STATUS = None
+# Certain forms share a name in data/villager.txt but have DIFFERENT resident IDs.
+# These IDs were cross-referenced with data/catalog_residents.bin (Dex slots 278/327)
+# and the Pokopia habitat reference (#189/#190). Do not merge them into one resident.
+_FORM_HABITATS_BY_RESIDENT = {
+    143: ('Toxtricity (Amped Form)', ('Amped rock stage',)),
+    266: ('Toxtricity (Low Key Form)', ('Low-key rock stage',)),
+    229: ('Wooper (Paldean Form)', ('Marshy tall grass',)),
+    256: ('Shellos (West Sea)', ('Road Sign',)),
+    257: ('Shellos (East Sea)', ('Road Sign',)),
+    258: ('Gastrodon (West Sea)', ('Ocean fishing spot',)),
+    259: ('Gastrodon (East Sea)', ('Ocean fishing spot',)),
+    267: ('Tatsugiri (Curly Form)', ('Beach Set',)),
+    268: ('Tatsugiri (Droopy Form)', ('Beach Set',)),
+    269: ('Tatsugiri (Stretchy Form)', ('Beach Set',)),
+    584: ('Frillish (Male Form)', ('Playing sailor', 'Ocean treasures')),
+    585: ('Frillish (Female Form)', ('Playing sailor', 'Ocean treasures')),
+    586: ('Jellicent (Male Form)', ('Marine teatime',)),
+    587: ('Jellicent (Female Form)', ('Marine teatime',)),
+}
+
 _HABITAT_FALLBACK = {
+    # The generic name is intentionally inclusive; the resident-ID mapping above
+    # narrows it to the correct form in resident-specific operations.
+    'toxtricity': ('Amped rock stage', 'Low-key rock stage'),
     'suicune': (), 'raikou': (), 'entei': (), 'kyogre': (), 'volcanion': (),
     'gengar': ('Surprise in store',),
     'haunter': ('Surprise in store', 'Spooky study'),
@@ -514,6 +551,28 @@ def habitat_map():
 _EVENT_POKEMON = frozenset({'milotic', 'feebas', 'hoppip', 'skiploom',
                             'jumpluff', 'sableye', 'jirachi'})
 
+
+def is_event_recipe(recipe):
+    """Event-specific built-in recipe; this does not imply event/story completion."""
+    return bool(recipe) and str(recipe.get('dex', '')).startswith('E-')
+
+
+def permitted_habitats_for_action(all_recipes, matches, method, manual=False):
+    """Resolve dialog choices and validation with identical rules.
+
+    A manual event selection only exposes E-series recipes, never all normal
+    habitat recipes, and never modifies event story flags.
+    """
+    if method in ('event', 'event_items'):
+        event_recipes = [r for r in all_recipes if is_event_recipe(r)]
+        if manual:
+            return event_recipes
+        return [r for r in (matches or []) if is_event_recipe(r)]
+    if manual and method in ('existing', 'new'):
+        return list(all_recipes)
+    return list(matches or [])
+
+
 _SPECIAL_POKEMON = frozenset({
     'mew', 'mewtwo', 'suicune', 'raikou', 'entei', 'lugia', 'hooh',
     'articuno', 'zapdos', 'moltres', 'kyogre', 'volcanion'
@@ -525,12 +584,50 @@ def is_special_pokemon(name, matched=None):
     return habitat_key(name) in _SPECIAL_POKEMON
 
 
-def matching_recipes(pokemon_name, all_recipes):
-    """Return only buildable recipes confirmed for this Pokémon.
+# Bundled, versioned resident-ID-to-habitat-Dex crosswalk. Unlike species-name
+# matching this distinguishes forms and works even without Internet access.
+_RSH_RESIDENT_CATALOG = None
 
-    None means no mapping available; an empty list means no matching recipe,
-    e.g. Mewtwo (special encounter).
+
+def offline_resident_catalog():
+    global _RSH_RESIDENT_CATALOG
+    if _RSH_RESIDENT_CATALOG is not None:
+        return _RSH_RESIDENT_CATALOG
+    path = os.path.join(pi.DATA, 'rsh_resident_habitats.json')
+    try:
+        with open(path, encoding='utf-8') as f:
+            doc = json.load(f)
+        if doc.get('schema') != 1 or len(doc.get('recipe_ids_by_resident', {})) < 350:
+            raise ValueError('Invalid or incomplete offline habitat catalog')
+        _RSH_RESIDENT_CATALOG = doc['recipe_ids_by_resident']
+    except (OSError, ValueError, TypeError) as exc:
+        # An incomplete package must be reported as unsupported; never guess an
+        # unrelated habitat just because two forms happen to share one name.
+        _RSH_RESIDENT_CATALOG = {}
+    return _RSH_RESIDENT_CATALOG
+
+
+def matching_recipes(pokemon_name, all_recipes, resident_index=None):
+    """Return buildable habitats by Resident ID and validated Habitat Dex ID.
+
+    None: no verified relation. []: explicitly no buildable normal habitat.
+    Unknown resident IDs must NOT fall back to same-named variants' recipes.
     """
+    if resident_index is not None:
+        catalog = offline_resident_catalog()
+        keys = catalog.get(str(resident_index))
+        if keys is not None:
+            wanted = set(map(str, keys))
+            return [r for r in all_recipes if str(r.get('dex')) in wanted]
+        # Support older installations without the bundled catalog for the two
+        # independently verified Toxtricity form mappings only.
+        form = _FORM_HABITATS_BY_RESIDENT.get(resident_index)
+        if form is not None:
+            wanted = {habitat_key(x) for x in form[1]}
+            return [r for r in all_recipes if habitat_key(r.get('name')) in wanted]
+        return None
+    # Name-only requests are retained for non-resident contexts, not for
+    # resident creation where the index must be known.
     allowed, _ = habitat_map()
     names = allowed.get(habitat_key(pokemon_name))
     if names is None:
@@ -569,17 +666,22 @@ def add_dialog(page, selected_index=None):
             area_box.setCurrentIndex(pos)
     mode = QComboBox()
     mode.addItem('Assign an existing habitat', 'existing')
-    mode.addItem('Build habitat + register resident', 'new')
+    mode.addItem('Build habitat + register resident (does not force spawn)', 'new')
     mode.addItem('Experimental encounter record (ID−4)', 'spawn')
     mode.addItem('Register resident without a habitat (no spawn)', 'none')
     mode.addItem('Remove an existing home assignment', 'unlink')
     mode.addItem('Remove resident from save registry (experimental)', 'remove')
-    mode.addItem('Prepare event items without completing event quests', 'event')
+    mode.addItem('Build event habitat on the map (no quest completion)', 'event')
+    mode.addItem('Prepare event materials in bag only', 'event_items')
+    # Building is the common RSH workflow. Existing-habitat mode requires a
+    # habitat that is already registered on this island.
+    mode.setCurrentIndex(1)
     hab = QComboBox()
     hab.setMinimumWidth(350)
     manual_hab = QCheckBox('Manually select an unverified habitat')
-    manual_hab.setToolTip('Home assignment or habitat building only; Pokémon spawn is not guaranteed. '
-                          'The experimental ID−4 test remains restricted to supported habitats.')
+    manual_hab.setToolTip('Manual selection is only a habitat/home override, not a spawn. '
+                          'In event modes, only built-in E-series event recipes are offered. '
+                          'No quest or time-limited event is completed.')
     friend = QSpinBox()
     friend.setRange(0, ps.FRIENDSHIP_MAX)
     friend.setValue(20)
@@ -589,13 +691,13 @@ def add_dialog(page, selected_index=None):
     met.setDateTime(QDateTime.currentDateTime())
     dex = QCheckBox('Register Pokédex entry')
     dex.setChecked(True)
-    event_resident = QCheckBox('Also register event Pokémon as a resident (visible NPC not guaranteed)')
+    event_resident = QCheckBox('Also register event resident (does not create a visible NPC)')
     event_resident.setChecked(False)
     info = QLabel('')
     info.setWordWrap(True)
     hinfo = QLabel('')
     hinfo.setWordWrap(True)
-    caution = QLabel('A built habitat can attract Pokémon, but it does not guarantee a particular species. '
+    caution = QLabel('Building and assigning a habitat does not force an encounter or finish event quests. '
                      'Mew, Suicune and other special Pokémon may require story or Dream Island encounters. '
                      'They may be registered as residents or assigned homes; '
                      'this is NOT a visible NPC spawn. Always back up saves before experimental changes.')
@@ -631,7 +733,7 @@ def add_dialog(page, selected_index=None):
             info.setText('No matching Pokémon')
             return
         v = c.get_villager(idx) if c.villager_present(idx) else None
-        name = ps.name_of(ps.VILLAGER_NAMES, idx, 'Resident')
+        name = display_species_name(idx)
         state = ', '.join(f'{s}:{c.collection_state("dex", s)}' for s in dex_slots(idx)) or 'none'
         info.setText(f'{name} (Resident-ID {idx}) | ' +
                      ('already registered' if v else 'new') + f' | Pokédex-Slots {state}' +
@@ -666,14 +768,15 @@ def add_dialog(page, selected_index=None):
         idx = choose.currentData()
         method, area = mode.currentData(), area_box.currentData()
         is_test = method == 'spawn'
-        manual_hab.setEnabled(method in ('existing', 'new'))
+        manual_hab.setEnabled(method in ('existing', 'new', 'event', 'event_items'))
         event_resident.setEnabled(method == 'event')
-        friend.setEnabled(method not in ('spawn', 'remove', 'unlink') and
-                          (method != 'event' or event_resident.isChecked()))
-        met.setEnabled(method not in ('spawn', 'remove', 'unlink') and
-                       (method != 'event' or event_resident.isChecked()))
-        dex.setEnabled(method not in ('spawn', 'remove', 'unlink') and
-                       bool(dex_slots(idx)) if idx is not None else False)
+        friend.setEnabled(method not in ('spawn', 'remove', 'unlink', 'event_items') and
+                           (method != 'event' or event_resident.isChecked()))
+        met.setEnabled(method not in ('spawn', 'remove', 'unlink', 'event_items') and
+                        (method != 'event' or event_resident.isChecked()))
+        dex.setEnabled(method not in ('spawn', 'remove', 'unlink', 'event_items') and
+                        (method != 'event' or event_resident.isChecked()) and
+                        bool(dex_slots(idx)) if idx is not None else False)
         if method in ('none', 'unlink', 'remove'):
             hab.setEnabled(False)
             ok_button.setEnabled(idx is not None)
@@ -692,14 +795,18 @@ def add_dialog(page, selected_index=None):
         try:
             if all_recipes is None:
                 all_recipes = recipes()
-            name = ps.name_of(ps.VILLAGER_NAMES, idx, 'Resident')
-            matched = matching_recipes(name, all_recipes)
+            name = display_species_name(idx)
+            matched = matching_recipes(name, all_recipes, idx)
             special = is_special_pokemon(name, matched)
-            if method == 'event' and habitat_key(name) not in _EVENT_POKEMON:
-                hab.setEnabled(False)
-                hinfo.setText('Only supported event Pokémon such as Milotic, Feebas, Hoppip, '
-                              'Skiploom, Jumpluff, Sableye or Jirachi. Unknown story flags are not modified.')
-                return
+            if method in ('event', 'event_items') and not manual_hab.isChecked():
+                # No arbitrary event-recipe crossover: either there is a confirmed
+                # E-series recipe for this resident or the mode remains unavailable.
+                if not any(is_event_recipe(r) for r in (matched or [])):
+                    hab.setEnabled(False)
+                    hinfo.setText('No verified E-series event habitat is mapped to this resident. '
+                                  'For a habitat-only experiment, enable manual selection. '
+                                  'This does not unlock a time-limited event or create an NPC.')
+                    return
             if is_test:
                 # The experimental event record is NOT a special-encounter generator.
                 # Only the two save types inspected offline are eligible.
@@ -721,27 +828,24 @@ def add_dialog(page, selected_index=None):
                                   'Mew, Suicune and other special Pokémon will not appear through this mode. '
                                   'Use resident registration without a habitat, or assign a home to an existing resident.')
                     return
-            if special and not is_test and method != 'event':
-                # Any home is acceptable for a *previously recruited* special Pokémon.
-                # This must not be confused with an encounter or a new unlock.
-                matched = all_recipes
-            elif manual_hab.isChecked() and not is_test and method in ('new','existing'):
-                # Explicit opt-in: when an online reference is unavailable or incomplete,
-                # users can choose a home themselves, without mislabeling it as a spawn match.
-                matched = all_recipes
-            if matched is None:
-                _, status = habitat_map()
+            if matched is None and not manual_hab.isChecked() and not special:
                 hab.setEnabled(False)
-                hinfo.setText('No verified habitat data is available for '+name+'. '
-                              'Unverified habitat matches are intentionally hidden. '
-                              'Source: '+status+'.')
+                hinfo.setText('No verified resident-ID-to-habitat relation is available for '+name+'. '
+                              'Enable manual selection to build or assign a habitat without '
+                              'claiming it triggers a Pokémon encounter.')
                 return
-            if not matched:
+            if special and method in ('new', 'existing'):
+                # Home assignment for a special Pokémon is allowed, not claimed to
+                # trigger its unique first encounter.
+                matched = all_recipes
+            candidate_recipes = permitted_habitats_for_action(
+                all_recipes, matched, method, manual_hab.isChecked() and not is_test)
+            if not candidate_recipes:
                 hab.setEnabled(False)
-                hinfo.setText(name+': no normal spawn habitat was found. '
-                              'A special encounter may be required.')
+                hinfo.setText(name+': no compatible, buildable habitat recipe is available. '
+                              'Try manual selection for a home-only experiment; no spawn is guaranteed.')
                 return
-            permitted_types = {int(r['type']) for r in matched}
+            permitted_types = {int(r['type']) for r in candidate_recipes}
             if method == 'existing':
                 known_habs = read_habitats(app, area)
                 taken = {c.get_villager(i)['home_uid'] for i in c.villagers()
@@ -752,13 +856,13 @@ def add_dialog(page, selected_index=None):
                     tag = '  [occupied]' if h['uid'] in taken else '  [available]'
                     hab.addItem(f'{h["name"]}  ·  UID {h["uid"]}' + tag, h['uid'])
             else:
-                for recipe in matched:
+                for recipe in candidate_recipes:
                     hab.addItem(f'{recipe["name"]}  ·  #{recipe["dex"]}', str(recipe['dex']))
             if not hab.count():
                 hab.setEnabled(False)
                 hinfo.setText('No matching '+ ('existing' if method == 'existing' else 'buildable') +
                               ' habitat for '+name+' found. '+
-                              ('Try building a complete habitat on the map.'
+                              ('Switch to \"Build habitat + register resident\" to create this habitat.'
                                if method == 'existing' else 'Special recruitment may be required.'))
                 return
             hab.setEnabled(True)
@@ -779,23 +883,25 @@ def add_dialog(page, selected_index=None):
                 hinfo.setText(f'Type {h["type"]} | UID {h["uid"]} | X Y Z: {h["home"]}. '
                               'The existing habitat record will not be changed.\n'
                               + species_spawn_notice(choose.currentData()))
-        elif method in ('new', 'spawn', 'event') and key is not None:
+        elif method in ('new', 'spawn', 'event', 'event_items') and key is not None:
             r = next((r for r in all_recipes or [] if str(r['dex']) == key), None)
             if r:
                 needs = ', '.join(f'{p["count"]}× {p["label"]}' for p in r['parts'] if p['kind'] != 'note')
                 notes = '; '.join(p.get('note','') for p in r['parts'] if p['kind'] == 'note')
                 if mode.currentData() == 'event':
-                    tail = ('EVENT ITEM PREPARATION: Required items are placed in the bag '
-                            '(existing items are taken into account). Catalog discovery '
-                            'will be marked. Quest completion and visible spawns are not guaranteed.')
+                    tail = ('EVENT HABITAT: Click a valid location on the Island Map after this dialog. '
+                            'No event flags, time-limited triggers or NPC spawning are modified.')
+                elif mode.currentData() == 'event_items':
+                    tail = ('EVENT MATERIALS: Missing items will be placed in the bag. '
+                            'This does not build a habitat, complete quests or spawn NPCs.')
                 elif mode.currentData() == 'spawn':
                     tail = ('EXPERIMENT ID−4: An encounter record is written for testing only. '
                             'Its effect is not validated on all supported island layouts. '
                             'This mode is disabled for special Pokémon.')
                 else:
                     tail = species_spawn_notice(choose.currentData(), r)
-                prefix = ('Prepare items: ' if method == 'event' else 'Automatically builds: ')
-                how = ('. You may then build the event habitat normally.\n' if method == 'event'
+                prefix = ('Prepare items: ' if method == 'event_items' else 'Automatically builds: ')
+                how = ('. You may then build the event habitat normally.\n' if method == 'event_items'
                        else '. Then choose a position on Island Map; press R to rotate.\n')
                 hinfo.setText(prefix + needs + ('. Conditions: ' + notes if notes else '') + how + tail)
 
@@ -837,17 +943,22 @@ def add_dialog(page, selected_index=None):
     when = met.dateTime().toPython()
     score = friend.value()
     register = dex.isChecked() and bool(dex_slots(idx))
-    name = ps.name_of(ps.VILLAGER_NAMES, idx, 'Resident')
-    valid = matching_recipes(name, all_recipes or recipes())
+    name = display_species_name(idx)
+    valid = matching_recipes(name, all_recipes or recipes(), idx)
     special = is_special_pokemon(name, valid)
-    manually_selected = manual_hab.isChecked() and method in ('new','existing')
-    valid_types = {int(r['type']) for r in
-                   (all_recipes if (special or manually_selected) and method != 'spawn' else (valid or []))}
-    if method in ('new', 'spawn', 'event'):
+    manually_selected = manual_hab.isChecked() and method in ('new','existing','event','event_items')
+    available_for_action = permitted_habitats_for_action(
+        all_recipes or recipes(),
+        all_recipes if (special and method in ('new', 'existing')) else valid,
+        method, manually_selected)
+    valid_types = {int(r['type']) for r in available_for_action}
+    if method in ('new', 'spawn', 'event', 'event_items'):
         chosen_recipe = next((r for r in all_recipes or [] if str(r['dex']) == str(choice)), None)
-        if not chosen_recipe or int(chosen_recipe['type']) not in valid_types:
+        if not chosen_recipe or int(chosen_recipe['type']) not in valid_types or \
+                (method in ('event', 'event_items') and not is_event_recipe(chosen_recipe)):
             return QMessageBox.warning(page, 'Habitat unavailable',
-                                       'The selected habitat is not supported by this mode.')
+                                       'This habitat is not supported for the selected action. '
+                                       'Event modes require an E-series recipe. No changes were made.')
     if method == 'spawn':
         if idx <= 4:
             return QMessageBox.warning(page, 'Invalid test ID',
@@ -876,14 +987,17 @@ def add_dialog(page, selected_index=None):
         if occupiers:
             detail += '\nWarning: this habitat is already occupied.'
     elif method == 'event':
-        detail = ('Prepare event items and mark catalog entries discovered. '
-                  'Does NOT complete event quests or spawn visible NPCs.')
+        detail = ('Build the selected E-series event habitat directly on the map. '
+                  'This does NOT enable event schedules, complete quests, or force Pokémon spawns.')
         if event_resident.isChecked():
-            detail += ' A resident record will also be created; no visible NPC is guaranteed.'
+            detail += ' Also write a resident entry, which does not guarantee a visible NPC.'
+    elif method == 'event_items':
+        detail = ('Add missing event habitat materials to the bag and mark their catalog entries. '
+                  'No habitat is built; no quest flags are changed.')
     elif method in ('new', 'spawn'):
         detail = ('New habitat and experimental ID−4 encounter record; NO resident registration.'
                   if method == 'spawn' else
-                  'Build a new habitat on the map and assign it to the resident.')
+                  'Build a habitat on the map and assign it as a home. This does not force a first encounter.')
     else:
         detail = 'Resident record only, NO spawn. Special recruitment may require additional game flags.'
     if manually_selected:
@@ -901,22 +1015,23 @@ def add_dialog(page, selected_index=None):
         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
     if resp != QMessageBox.Yes:
         return
-    if method == 'event':
+    if method == 'event_items':
         try:
             backup = backup_common_save(app.save)
         except Exception as exc:
             return QMessageBox.critical(page, 'Backup failed', str(exc))
         result = {}
-        if app.do(f'{name}: prepare event items', lambda: result.update(
+        if app.do(f'{name}: prepare event materials', lambda: result.update(
                 event_content_bypass(c, idx, chosen_recipe, when, score,
-                                     add_resident=event_resident.isChecked(), register_dex=register))):
+                                     add_resident=False, register_dex=False,
+                                     allow_unverified=manually_selected))):
             page.fill()
-            QMessageBox.information(page, 'Event items prepared',
-                f'Required items for {chosen_recipe["name"]} prepared and marked in the catalog.\n'
+            QMessageBox.information(page, 'Event materials prepared',
+                f'Missing materials for {chosen_recipe["name"]} have been placed in the bag.\n'
                 'No event or quest completion flags were changed.\n'
-                'Press Ctrl+S to save; build the habitat to attempt normal discovery.\n\nBackup: ' + backup)
+                'Press Ctrl+S to save; use Build event habitat to place its items.\n\nBackup: ' + backup)
         return
-    if method in ('new', 'spawn'):
+    if method in ('new', 'spawn', 'event'):
         mp = app.pages.get('Island Map')
         if not mp:
             return app.toast('Island Map unavailable', 'err')
@@ -927,7 +1042,9 @@ def add_dialog(page, selected_index=None):
             return QMessageBox.critical(page, 'Backup failed',
                                         'No changes were made: ' + str(exc))
         pending = dict(index=idx, area=area, recipe=str(choice),
-                       when=when, friendship=score, dex=register, activated=False)
+                       when=when, friendship=score, dex=register, activated=False,
+                       event_mode=(method == 'event'),
+                       add_resident=(method != 'event' or event_resident.isChecked()))
         if method == 'spawn':
             mp.spawn_pending = pending
             mp.resident_pending = None
@@ -1211,7 +1328,7 @@ def patch_all():
             return old_stamp_here(self, wx, wz)
         recipe = self.recipe
         if not recipe or str(recipe['dex']) != pending['recipe']:
-            return self.app.toast('The selected habitat does not match the requested recipe.', 'err')
+            return self.app.toast('The selected habitat does not match the requested recipe. Re-select the habitat in the RSH dialog.', 'err')
         isl = self.isl()
         if not any(struct.unpack_from('<I', isl.d, pi.HABITATS+j*pi.HABITAT_SIZE+18)[0] == 0
                    for j in range(pi.HABITAT_CAP)):
@@ -1263,7 +1380,16 @@ def patch_all():
             return result
         try:
             c = self.app.save.common
-            res_name = ps.name_of(ps.VILLAGER_NAMES, pending['index'], 'Resident')
+            res_name = display_species_name(pending['index'])
+            if pending.get('event_mode') and not pending.get('add_resident'):
+                self.resident_pending = None
+                try: self.set_tool('select')
+                except Exception: pass
+                if self.habitats_item:
+                    self.habitats_item.update()
+                self.app.toast(f'{res_name}: event habitat built (UID {uid}). '
+                               'No quest flag or NPC encounter changed. Save with Ctrl+S.', 'ok')
+                return result
             success = self.app.do(f'{res_name}: register + habitat {uid}',
                 lambda: edit_resident(c, pending['index'], pending['friendship'],
                                       pending['when'], pending['dex'],

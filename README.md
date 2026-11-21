@@ -43,10 +43,20 @@ encounter tools. The upstream Git history, original author notices and
 | Home assignment | Link residents to existing habitats or remove a home assignment | Preview |
 | Habitat placement | Build available habitat recipes and associate them with residents on supported islands | Preview |
 | Multiple islands | Choose among supported islands found in the loaded save; island names are read from the save | Preview |
-| Habitat matching | Additional offline species-to-habitat mappings and optional manual selection | Preview |
+| Habitat matching | Resident-ID-based offline catalog, form-specific recipes and explicit manual override | Preview |
 | Encounter records | Optional experimental habitat-linked encounter records using an unverified ID mapping | Experimental |
-| Event habitat items | Prepare supported event items and catalog entries without playing the original distribution event | Preview |
+| Event habitat building | Build E-series event habitats on the map or prepare event materials separately; does not complete event quests | Experimental |
 | Lichii integration | Recognize Lichii processes and search standard and nearby portable Lichii save locations | Preview |
+
+<!-- RSH-EVENT-CATALOG-START -->
+### RSH habitat matching and event workflow update
+
+The bundled catalog was audited against 402 named resident records and 252 built-in recipes: **350** records match a buildable habitat, **17** have no buildable normal habitat, and **35** cannot be mapped reliably. Form-specific residents use their own IDs. No unrelated habitat is silently substituted.
+
+**Build habitat + register resident** is the default. The **Build event habitat on the map** mode places a supported E-series recipe at a chosen position. **Prepare event materials in bag only** is a separate inventory operation. The manual event override offers only E-series recipes and clearly marks the choice as unverified. Neither operation completes event quests, bypasses time-limited triggers or guarantees visible NPC spawns.
+
+See [RSH changelog](CHANGELOG_FORK.md) and [feature limitations](docs/FORK_FEATURES.md).
+<!-- RSH-EVENT-CATALOG-END -->
 
 > [!IMPORTANT]
 > **This is a development preview, not a stable release.** A resident record or

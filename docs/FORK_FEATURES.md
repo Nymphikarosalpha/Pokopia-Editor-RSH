@@ -1,42 +1,39 @@
-# Fork features and limitations
+# RSH features and current limitations
 
-This fork extends [cycalo/Pokopia-Editor](https://github.com/cycalo/Pokopia-Editor), retaining its existing save editor and user interface.
+Pokopia Editor RSH builds on [cycalo/Pokopia-Editor](https://github.com/cycalo/Pokopia-Editor). Original features and licensing are retained.
 
-## Added controls
+## Resident and habitat tools
 
-- Resident creation and updates based on known save structures.
-- Resident removal from the common save's resident registry and associated home assignment. Independent world NPC objects are **not** removed by this operation.
-- Resident home linking and unlinking, with a selectable island and recorded habitat.
-- Habitat placement and an **experimental** 32-byte encounter record for compatible island save layouts. The experimental ID offset is **not** a universal species selection guarantee.
-- Event item preparation for certain known event habitats, including Milotic's event items, without asserting event-story completion.
-- Offline habitat fallback mappings and manual habitat selection where appropriate.
+- Add/update resident registry entries, friendship and home assignments.
+- Remove a resident registry entry (experimental; independent world NPC objects may remain).
+- Assign existing habitats or place a new habitat using the Island Map.
+- Select available islands from the loaded save; names are read from the save.
+- Use a bundled resident-ID-to-habitat catalog, including form-specific mappings, without requiring an online lookup.
+- Explicitly use a manual habitat override when no verified mapping exists. This does not establish a spawn.
 
-## What is not established
+## Verified mapping coverage (catalog audit)
 
-- Spawning arbitrary legendary or special Pokémon as visible, persistent NPCs without their story encounter.
-- Marking all limited-time event quests completed or reliably bypassing all event gates.
-- Guaranteed species selection via the experimental encounter record.
-- Removing all persisted NPC world objects when a resident registry entry is cleared.
+The current editor data has 402 named resident records. Of these, 350 map to buildable Habitat Dex recipes, 17 have an explicit empty mapping, and 35 cannot be mapped reliably with the available source. The original editor includes 252 habitat recipes. Numbers describe resident records, not unique Pokémon.
 
-## Emulator support, including Lichii
+Some cases cannot be mapped automatically: the original editor lacks a recipe for the referenced Jellicent Marine teatime habitat; special or internal NPC entries are deliberately not guessed.
 
-- Standard Lichii installations: look for user data in the usual Windows AppData roots, in addition to the upstream Yuzu-family emulators.
-- Common portable Lichii installations: check nearby `user/nand` directories, including Lichii-named folders on the Desktop and in Downloads.
-- Custom Lichii installations: use **Open → Browse for a folder** and select the game save directory (or an enclosing folder).
-- While the app is open, a running `lichii.exe` is included in the emulator-process warning.
+## Event habitat workflow
 
-The Lichii detection paths have been added to the source; a full Windows/Lichii end-to-end test is still required before marking this integration stable.
+- **Build event habitat on the map (no quest completion)**: choose an E-series habitat, optionally enable the unverified manual E-series override, confirm, click a valid location on the Island Map, and save.
+- **Prepare event materials in bag only**: add missing materials for a supported E-series habitat, without building, spawning or changing event progression.
+- Optional resident registration creates/updates save data but is not the same as spawning a visible NPC.
+- An explicit unverified event-recipe choice means only "build this habitat". It is not a claim that the chosen species can be obtained from it.
 
-## Safety and compatibility
+**Not supported:** reliably marking limited-time events completed, bypassing game encounter gates, or forcibly spawning legendary/story/event NPCs. These mechanisms have not been established and are not advertised as working.
 
-- Close the emulator before editing saves; keep external backups of each save.
-- Experimental stage editing has strict structural checks and is restricted to save layouts examined during development. It can reject unsupported saves.
-- Do not assume a saved resident record is sufficient to create a visible world NPC.
-- Emulator support and game-version compatibility should be tested before publishing a stable release.
-- No game files, keys, save dumps or ROM assets are distributed in this repository.
+## Experimental encounter tool
 
-## Current status
+The separate ID-minus-four experiment writes an unverified stage encounter field on checked layouts. Its mapping is a hypothesis, not proof that a particular Pokémon will appear. Avoid using it on valuable saves.
 
-Development preview. Save-editing actions were exercised on sample saves, and selected in-game encounter behavior was reported during testing. A complete regression suite across supported emulators and game versions has **not** been completed.
+## Lichii and other emulators
 
-This project is an independent community modification and is not affiliated with Nintendo, The Pokémon Company or Koei Tecmo.
+Lichii is included in running-process detection and in standard/nearby portable save discovery. Use **Open → Browse for a folder** for custom locations. End-to-end testing under every Lichii build is not complete.
+
+## Safety
+
+Close the emulator, make a backup, and review the affected island before saving. Habitat placement is experimental. No game keys, ROMs, save dumps or copyrighted game assets are distributed by this fork beyond materials already present in the upstream open-source project.
