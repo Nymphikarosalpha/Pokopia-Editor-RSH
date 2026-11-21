@@ -1,5 +1,20 @@
 # RSH fork changelog
 
+## v0.2.1 — Special encounter experiment and settings guidance (2026-11-21)
+
+### Changed in the editor
+- Recognizes Mew, Mewtwo, Suicune, Raikou, Entei and other known special Pokémon, with a dedicated experimental ID−4 path.
+- The experimental path lists existing island habitat records as **position anchors**. No fabricated Mew/Mewtwo habitat, no new habitat construction, and no resident/home or story flag modifications are performed by this path.
+- Fixes the disabled habitat/action controls for special Pokémon when the stage is supported and has a usable anchor. If no anchor exists or the stage layout is unsupported, the editor explicitly explains why the action is disabled.
+- Adds Pokémon-category-specific recommended settings and a complete in-dialog mode guide.
+- Creates a ZIP backup of the opened save before the experimental change, validates the stage layout and free encounter slot, and uses the normal Undo/Ctrl+S journal.
+
+### Experimental limitations
+- **No in-game Mew or Mewtwo spawn has been verified.** ID−4 is only a hypothesis about an encounter reference field; the game may ignore it, choose another Pokémon, or require story/event flags.
+- Only previously examined stage-file layouts are eligible for ID−4. Other islands remain available to ordinary habitat editing; do not assume that equal file sizes prove the same event record semantics.
+- The single-file Windows EXE is created by the repository's existing Windows PyInstaller build on GitHub Actions. No runtime source-file or Python dependency is required for the end user.
+
+
 This changelog covers changes to [Pokopia Editor RSH](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH), a GPL-3.0 fork of [cycalo/Pokopia-Editor](https://github.com/cycalo/Pokopia-Editor). The upstream history and license remain intact.
 
 ## Unreleased — Multi-island habitat backup fix (2026-11-21)

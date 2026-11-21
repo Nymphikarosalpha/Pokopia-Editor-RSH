@@ -575,7 +575,7 @@ def permitted_habitats_for_action(all_recipes, matches, method, manual=False):
 
 _SPECIAL_POKEMON = frozenset({
     'mew', 'mewtwo', 'suicune', 'raikou', 'entei', 'lugia', 'hooh',
-    'articuno', 'zapdos', 'moltres', 'kyogre', 'volcanion'
+    'articuno', 'zapdos', 'moltres', 'kyogre', 'volcanion', 'jirachi'
 })
 
 
@@ -636,17 +636,84 @@ def matching_recipes(pokemon_name, all_recipes, resident_index=None):
     return [r for r in all_recipes if habitat_key(r.get('name')) in wanted]
 
 
-def add_dialog(page, selected_index=None):
+def species_mode_recommendation(idx, all_recipes, area, eligible_areas):
+    """Read-only guide. Never infer a species' encounter from a habitat anchor."""
+    if idx is None:
+        return 'Select a Pokémon to see the recommended action.'
+    name = display_species_name(idx)
+    key = habitat_key(name)
+    matched = matching_recipes(name, all_recipes, idx)
+    event_matches = [r for r in (matched or []) if is_event_recipe(r)]
+    if is_special_pokemon(name):
+        kind = ('SPECIAL / EVENT (unique encounter)' if key in _EVENT_POKEMON
+                else 'LEGENDARY / MYTHICAL (unique encounter)')
+        test = ('ID−4 is available for a disposable test save only if an existing '
+                'anchor is on this island.' if area in eligible_areas else
+                'ID−4 is disabled on this island layout; select an eligible STGDAT01 island.')
+        event_note = (' A known E-series habitat may be built in Event habitat mode, '
+                      'but that does not complete the event.' if event_matches else
+                      ' No verified event habitat is assigned to this Pokémon.')
+        return (f'{kind} — {name}. Recommended for real encounter: original story/event '
+                'conditions, not a guessed habitat. For save editing: '
+                'Register resident without habitat = registry ONLY. '
+                + test + ' No spawn or event completion is confirmed.' + event_note)
+    if key in _EVENT_POKEMON:
+        if event_matches:
+            return (f'EVENT POKÉMON — {name}. Recommended: Build event habitat on the map '
+                    '(E-series recipe). "Prepare event materials in bag only" adds materials, '
+                    'but does not build or unlock the event. The game may still require '
+                    'separate event conditions. ID−4 is not validated here.')
+        return (f'EVENT POKÉMON — {name}. No verified E-series habitat mapping is '
+                'available. Do not select a random event recipe for spawning. '
+                'Register without a habitat for registry-only testing, or use a manual '
+                'habitat override with no encounter guarantee.')
+    if matched:
+        return (f'NORMAL / HABITAT-BASED — {name}. Recommended: "Build habitat + '
+                'register resident" to place a mapped habitat, or "Assign an existing '
+                'habitat" if one already exists on the island. Neither guarantees an '
+                'immediate visible encounter. ID−4 is an unverified alternative test.')
+    if matched == []:
+        return (f'NO BUILDABLE HABITAT MAPPED — {name}. Recommended: Register resident '
+                'without a habitat for registry-only experiments. Do not assume any '
+                'manual habitat will create this species.')
+    return (f'UNKNOWN HABITAT MAPPING — {name}. Recommended: verify the resident ID '
+            'and habitat data first. Manual habitat selection is an unverified '
+            'housing/building experiment, not a proven spawn. Registration without '
+            'a habitat only updates the save registry.')
+
+
+def species_settings_reference():
+    """Full workflow legend shown by the dialog's Help button."""
+    return ('NORMAL (mapped habitat): Build habitat + register resident; '
+            'or assign an existing compatible habitat. Not an instant spawn.\n\n'
+            'EVENT (E-series recipe): Build event habitat on the map. '
+            'Prepare event materials is inventory-only; neither completes quests.\n\n'
+            'LEGENDARY / MYTHICAL (Mew, Suicune, Mewtwo, etc.): '
+            'Do not invent an event habitat. Real encounters may require story '
+            'or unique conditions. Register without habitat is registry-only. '
+            'ID−4 is a separate unverified encounter experiment: existing habitat '
+            'is a position anchor, not a Pokémon-specific spawn recipe.\n\n'
+            'UNKNOWN / NO MAPPING: Avoid random habitat IDs. Manual choices are '
+            'explicitly unverified.\n\n'
+            'IMPORTANT: Fire/Water/Grass/etc. elemental types do NOT determine '
+            'the editor mode. The category is based on the encounter mechanism '
+            'and resident-ID-to-habitat mapping.\n\n'
+            'ID−4 limitations: supported STGDAT01 stage layout, free compatible '
+            '32-byte event slot, and a pre-existing anchor for specials. '
+            'No successful in-game special spawn has been verified. Use a '
+            'disposable save, close the emulator, and keep the ZIP backup.')
+
+
     from PySide6.QtCore import Qt, QDateTime
     from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QComboBox,
-                                  QSpinBox, QDateTimeEdit, QCheckBox, QLabel, QMessageBox, QVBoxLayout)
+                                  QSpinBox, QDateTimeEdit, QCheckBox, QLabel, QMessageBox, QVBoxLayout, QPushButton)
     app = page.app
     if not app.save:
         return app.toast('Open a save before editing residents.', 'err')
     c = app.save.common
     dlg = QDialog(page)
     dlg.setWindowTitle('Resident + Habitat Studio  |  Experimental')
-    dlg.resize(630, 480)
+    dlg.resize(730, 590)
     form = QFormLayout(dlg)
     query = QLineEdit()
     query.setPlaceholderText('Pokémon name or resident ID (e.g. Milotic)')
@@ -667,7 +734,7 @@ def add_dialog(page, selected_index=None):
     mode = QComboBox()
     mode.addItem('Assign an existing habitat', 'existing')
     mode.addItem('Build habitat + register resident (does not force spawn)', 'new')
-    mode.addItem('Experimental encounter record (ID−4)', 'spawn')
+    mode.addItem('Experimental encounter (ID−4; automatic special detection)', 'spawn')
     mode.addItem('Register resident without a habitat (no spawn)', 'none')
     mode.addItem('Remove an existing home assignment', 'unlink')
     mode.addItem('Remove resident from save registry (experimental)', 'remove')
@@ -697,6 +764,10 @@ def add_dialog(page, selected_index=None):
     info.setWordWrap(True)
     hinfo = QLabel('')
     hinfo.setWordWrap(True)
+    recommend = QLabel('Select a Pokémon for recommendations.')
+    recommend.setWordWrap(True)
+    recommend.setStyleSheet('padding: 8px; border: 1px solid #777; border-radius: 5px;')
+    help_modes = QPushButton('Which settings for which Pokémon?')
     caution = QLabel('Building and assigning a habitat does not force an encounter or finish event quests. '
                      'Mew, Suicune and other special Pokémon may require story or Dream Island encounters. '
                      'They may be registered as residents or assigned homes; '
@@ -714,6 +785,8 @@ def add_dialog(page, selected_index=None):
     form.addRow('', dex)
     form.addRow('', event_resident)
     form.addRow('Status:', info)
+    form.addRow('Recommended settings:', recommend)
+    form.addRow('', help_modes)
     form.addRow('Habitat details:', hinfo)
     form.addRow(caution)
     buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -761,6 +834,12 @@ def add_dialog(page, selected_index=None):
 
     def populate_habs(*_):
         nonlocal all_recipes, known_habs, loading_error
+        try:
+            recommend.setText(species_mode_recommendation(
+                choose.currentData(), all_recipes if all_recipes is not None else recipes(),
+                area_box.currentData(), _sp_supported_stages(app)))
+        except Exception as ex:
+            recommend.setText('Recommendation unavailable: ' + str(ex))
         hab.blockSignals(True)
         hab.clear()
         hab.blockSignals(False)
@@ -816,17 +895,38 @@ def add_dialog(page, selected_index=None):
                     hinfo.setText('The ID−4 encounter experiment is only supported for G00 and B00. '
                                   'You can still build a normal habitat on this island.')
                     return
-                if habitat_key(name) in _EVENT_POKEMON:
+                if habitat_key(name) in _EVENT_POKEMON and not special:
                     hab.setEnabled(False)
                     hinfo.setText(name+': an event habitat can be built, but the ID−4 '
                                   'encounter experiment is not validated for event Pokémon. '
                                   'Use the habitat-building and resident-registration mode.')
                     return
-                if special or matched == [] or idx <= 4:
+                if special:
+                    # Do NOT invent a Mew habitat. Use an existing habitat entry
+                    # solely as a position/UID anchor for the unverified ID−4 row.
+                    known_habs = read_habitats(app, area)
+                    for anchor in known_habs:
+                        if (101 <= int(anchor['uid']) <= 1024 and
+                                0 < int(anchor['type']) < 4096 and
+                                len(anchor['home']) == 3):
+                            hab.addItem(
+                                f"Anchor: {anchor['name']}  ·  UID {anchor['uid']} (existing)",
+                                ('special-anchor', int(anchor['uid'])))
+                    hab.setEnabled(bool(hab.count()))
+                    ok_button.setEnabled(bool(hab.count()))
+                    hinfo.setText(
+                        name + ': special/event Pokémon automatically detected. '
+                        'ID−4 uses an existing habitat as a POSITION ANCHOR only. '
+                        'No habitat is built, assigned, or advertised as the species habitat. '
+                        'A 32-byte encounter hypothesis is staged for this island, '
+                        'NOT a verified NPC spawn. ' +
+                        ('Select an existing anchor and continue.' if hab.count() else
+                         'This island has no usable existing habitat anchor.'))
+                    return
+                if matched == [] or idx <= 4:
                     hab.setEnabled(False)
-                    hinfo.setText(name+': has no confirmed normal habitat spawn. '
-                                  'Mew, Suicune and other special Pokémon will not appear through this mode. '
-                                  'Use resident registration without a habitat, or assign a home to an existing resident.')
+                    hinfo.setText(name+': no verified normal habitat and no supported ID−4 test. '
+                                  'The editor will not guess a spawn recipe.')
                     return
             if matched is None and not manual_hab.isChecked() and not special:
                 hab.setEnabled(False)
@@ -877,6 +977,16 @@ def add_dialog(page, selected_index=None):
     def update_hinfo(*_):
         method = mode.currentData()
         key = hab.currentData()
+        if method == 'spawn' and isinstance(key, tuple) and key[0] == 'special-anchor':
+            anchor = next((h for h in known_habs if h['uid'] == key[1]), None)
+            if anchor:
+                hinfo.setText(
+                    f"EXPERIMENT ONLY: {display_species_name(choose.currentData())} "
+                    f"will use {anchor['name']} (UID {anchor['uid']}, type {anchor['type']}) "
+                    'as a position anchor. The ID−4 species reference is an unverified '
+                    'hypothesis. The original habitat and resident registry stay unchanged. '
+                    'This may produce no Pokémon, a different Pokémon, or be ignored.')
+            return
         if method == 'existing' and key is not None:
             h = next((h for h in known_habs if h['uid'] == key), None)
             if h:
@@ -912,6 +1022,9 @@ def add_dialog(page, selected_index=None):
     hab.currentIndexChanged.connect(update_hinfo)
     manual_hab.toggled.connect(populate_habs)
     event_resident.toggled.connect(populate_habs)
+    help_modes.clicked.connect(lambda: QMessageBox.information(
+        dlg, 'Recommended editor settings by Pokémon category',
+        species_settings_reference()))
     populate()
     selected = page.selected()
     if selected_index is not None or len(selected) == 1:
@@ -952,7 +1065,7 @@ def add_dialog(page, selected_index=None):
         all_recipes if (special and method in ('new', 'existing')) else valid,
         method, manually_selected)
     valid_types = {int(r['type']) for r in available_for_action}
-    if method in ('new', 'spawn', 'event', 'event_items'):
+    if method in ('new', 'spawn', 'event', 'event_items') and not (method == 'spawn' and special):
         chosen_recipe = next((r for r in all_recipes or [] if str(r['dex']) == str(choice)), None)
         if not chosen_recipe or int(chosen_recipe['type']) not in valid_types or \
                 (method in ('event', 'event_items') and not is_event_recipe(chosen_recipe)):
@@ -963,14 +1076,20 @@ def add_dialog(page, selected_index=None):
         if idx <= 4:
             return QMessageBox.warning(page, 'Invalid test ID',
                                        'The ID−4 hypothesis is not applicable to this resident ID.')
-        if habitat_key(name) in _EVENT_POKEMON:
+        if habitat_key(name) in _EVENT_POKEMON and not special:
             return QMessageBox.warning(page, 'Event Pokémon',
                                        'The ID−4 hypothesis has not been validated for event Pokémon. '
                                        'Use the normal habitat-building mode.')
         if special:
-            return QMessageBox.warning(page, 'Special encounter',
-                                       'Mew, Suicune and other special Pokémon do not appear '
-                                       'through a standard habitat experiment.')
+            if not (isinstance(choice, tuple) and len(choice) == 2 and
+                    choice[0] == 'special-anchor'):
+                return QMessageBox.warning(page, 'Missing test anchor',
+                                           'Select an existing habitat position anchor.')
+            anchor = next((h for h in read_habitats(app, area)
+                           if h['uid'] == choice[1]), None)
+            if anchor is None:
+                return QMessageBox.warning(page, 'Anchor missing',
+                                           'Selected existing habitat no longer exists.')
         if area not in _sp_supported_stages(app):
             return QMessageBox.warning(page, 'Stage layout not verified',
                                        'The ID−4 experiment is only available for G00/B00.')
@@ -994,6 +1113,11 @@ def add_dialog(page, selected_index=None):
     elif method == 'event_items':
         detail = ('Add missing event habitat materials to the bag and mark their catalog entries. '
                   'No habitat is built; no quest flags are changed.')
+    elif method == 'spawn' and special:
+        detail = ('SPECIAL TEST / ID−4: Write one hypothetical encounter entry using '
+                  f"existing habitat UID {anchor['uid']} as position anchor. "
+                  'Do not build any habitat, create a world NPC, or modify quest flags. '
+                  'Actual species appearance is NOT confirmed.')
     elif method in ('new', 'spawn'):
         detail = ('New habitat and experimental ID−4 encounter record; NO resident registration.'
                   if method == 'spawn' else
@@ -1030,6 +1154,21 @@ def add_dialog(page, selected_index=None):
                 f'Missing materials for {chosen_recipe["name"]} have been placed in the bag.\n'
                 'No event or quest completion flags were changed.\n'
                 'Press Ctrl+S to save; use Build event habitat to place its items.\n\nBackup: ' + backup)
+        return
+    if method == 'spawn' and special:
+        mp = app.pages.get('Island Map')
+        if not mp:
+            return app.toast('Island Map unavailable.', 'err')
+        try:
+            backup = _sp_backup(app.save, app.save.stage_files().get(area))
+        except Exception as exc:
+            return QMessageBox.critical(page, 'Backup failed', 'No changes: ' + str(exc))
+        mp.special_test_pending = dict(
+            area=area, index=idx, uid=int(anchor['uid']),
+            habitat_type=int(anchor['type']), backup=backup)
+        app.show_page('Island Map')
+        mp.choose(area)
+        _sp_run_special_pending(mp)  # Also supports an already cached island.
         return
     if method in ('new', 'spawn', 'event'):
         mp = app.pages.get('Island Map')
@@ -1235,6 +1374,41 @@ def _sp_event(isl, resident_id, uid, habitat_type):
     raise ValueError('All supported encounter slots are occupied. Nothing was overwritten.')
 
 
+def _sp_run_special_pending(mp):
+    """Experimental ID−4 on an existing island habitat; zero recipe/home changes.
+
+    Called when the selected map is available. Never write if the island or
+    layout is unsupported; the hypothesis must not be extrapolated blindly.
+    The normal MapPage.commit journal enables Undo and Ctrl+S.
+    """
+    pending = getattr(mp, 'special_test_pending', None)
+    if not pending or mp.area != pending['area']:
+        return
+    isl = mp.isl()
+    if isl is None:
+        return  # async map load will call this again
+    mp.special_test_pending = None
+    try:
+        if pending['area'] not in _sp_supported_stages(mp.app):
+            raise ValueError('Stage layout is not eligible for the ID−4 experiment.')
+        if not _sp_has_free_event(isl):
+            raise ValueError('No free compatible 32-byte encounter slot. Nothing was changed.')
+        slot, ref, pos = _sp_event(
+            isl, int(pending['index']), int(pending['uid']),
+            int(pending['habitat_type']))
+        mp.commit('EXPERIMENT ID−4 special: ' +
+                  display_species_name(pending['index']))
+    except Exception as exc:
+        isl.rollback()
+        mp.app.toast('Special encounter NOT applied: ' + str(exc), 'err')
+        return
+    mp.app.toast(
+        f'Experimental entry staged: event slot {slot}, reference {ref}, '
+        f'anchor UID {pending["uid"]}. Nothing is proven to spawn. '
+        'Press Ctrl+S only on a disposable test save; you can Undo first. '
+        'Original ZIP backup: ' + pending['backup'], 'info')
+
+
 def _sp_backup(save, stage_path):
     """Back up the selected island and the entire opened save before editing.
 
@@ -1330,6 +1504,9 @@ def patch_all():
     old_show_island = MapPage.show_island
     def patch_show_island(self, view):
         old_show_island(self, view)
+        if getattr(self, 'special_test_pending', None):
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, lambda: _sp_run_special_pending(self))
         if getattr(self, 'resident_pending', None) or getattr(self, 'spawn_pending', None):
             # Defer tool changes until after the map has completed its normal setup.
             from PySide6.QtCore import QTimer

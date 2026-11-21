@@ -1,5 +1,14 @@
 # RSH features and current limitations
 
+## Special Pokémon experimental encounter (v0.2.1)
+
+The editor automatically identifies known special/legendary Pokémon (for example **Mew and Mewtwo**) from its resident IDs and species names. The action selector offers **Experimental encounter (ID−4; automatic special detection)**. For these species it lists an **existing** habitat as a technical UID/position anchor instead of inventing a species habitat. A matched anchor does **not** mean that the game accepts that habitat as Mew's or Mewtwo's real habitat.
+
+Recommended settings are visible in the Resident + Habitat Studio for normal Pokémon, E-series event Pokémon, legendary/mythical encounters, and Pokémon with no reliable recipe mapping. The **Which settings for which Pokémon?** help button describes the options.
+
+The editor refuses to write when there is no usable anchor, no free compatible encounter row, or an unsupported stage layout. It creates and verifies a ZIP backup first and stages the write in the undoable island journal. Only press Ctrl+S on a disposable testing save. **There is no verified direct spawn/unlock for Mew, Mewtwo or any other legendary Pokémon.**
+
+
 Pokopia Editor RSH builds on [cycalo/Pokopia-Editor](https://github.com/cycalo/Pokopia-Editor). Original features and licensing are retained.
 
 ## Resident and habitat tools

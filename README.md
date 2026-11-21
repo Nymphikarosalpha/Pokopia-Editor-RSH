@@ -1,3 +1,34 @@
+## Which spawn settings should I use? (RSH v0.2.1)
+
+Choose by **encounter mechanism**, not by elemental type (Fire, Water, Psychic,
+etc.). A Pokémon's elemental typing does not establish its spawn logic.
+The editor displays **Recommended settings** when you select a resident.
+
+| Pokémon category and examples | Recommended editor action | What this actually does |
+| --- | --- | --- |
+| **Normal Pokémon with a verified habitat mapping** (e.g., Oddish or Bulbasaur) | **Build habitat + register resident**, or **Assign an existing habitat** when a matching one is already built | Builds/assigns the known habitat and edits the resident registry; an immediate visible encounter is not guaranteed. |
+| **Limited-time/E-series event Pokémon** (e.g., Feebas, Milotic, Hoppip, Sableye) | **Build event habitat on the map** when a verified `E-*` recipe exists. **Prepare event materials in bag only** is optional. | Places event objects, or supplies missing materials. It does **not** complete event quests, open event windows or force an NPC spawn. |
+| **Legendary/mythical or story-dependent Pokémon** (e.g., **Mew, Mewtwo, Suicune, Raikou, Entei, Lugia, Ho-Oh, Articuno, Zapdos, Moltres, Kyogre, Volcanion**) | For a real first encounter, use the game's **story/event encounter**. For save research only, **Experimental encounter (ID−4)** on a supported stage with a pre-existing habitat **position anchor**. | Attempts one hypothetical 32-byte encounter record. **Not a verified spawn.** The anchor belongs to a different habitat and does not become an authentic Mew/Mewtwo habitat. |
+| **Special Pokémon with a known event habitat**, e.g. Jirachi | **Build event habitat** for the documented event recipe; use **ID−4** only for controlled, disposable-save research if the stage is supported | A real story/event gate may still be required. Recipe creation is not the same as spawning or completing an event. |
+| **No buildable habitat or unknown recipe mapping** | **Register resident without a habitat** (registry only); or investigate the species/ID before attempting a manual housing experiment | Does not create a visible world Pokémon. Do not assign a random habitat as a supposed species spawn. |
+
+**ID−4 research limits:** only stages whose path ends in `G00/STGDAT01.BIN`
+or `B00/STGDAT01.BIN` are candidates, and only when the record-layout
+validation finds a free compatible event slot. For special Pokémon the island
+must already contain a valid habitat record to act as an unchanged UID/position
+anchor. Other islands may still support normal habitat building. The editor
+creates a full ZIP backup, uses its Undo journal and requires **Ctrl+S** for
+writing. Close the emulator before save editing, and test **only on a copy**.
+
+**Why are the controls grey?** Either the selected action has no valid habitat
+mapping, the island layout is unsupported for ID−4, the island lacks a usable
+existing anchor, or an experimental record cannot be safely written. Switch
+to an appropriate mode; do not force a write or invent an event-habitat ID.
+
+**Important:** The ID−4-to-species relationship is a **hypothesis**. No successful
+Mew or Mewtwo spawn is confirmed. Pokémon-Dex registration and home assignment
+are separate from a visible NPC and from story/event unlocks.
+
 <div align="center">
 
 <img src="data/app.png" width="128" alt="Pokopia Editor icon">
