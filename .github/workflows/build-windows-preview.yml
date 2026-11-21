@@ -1,20 +1,46 @@
-name: Build Windows Preview
+name: Build and Publish Versioned Windows Releases
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
-      - rsh-development
+    paths-ignore:
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'CHANGELOG_FORK.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: rsh-versioned-releases-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: windows-latest
-    permissions:
-      contents: write
+  restore-release-history:
+    name: Restore historical versioned releases
+    runs-on: ubuntu-latest
     steps:
-      - name: Check out source
+      - name: Check out fork source
         uses: actions/checkout@v4
+      - name: Create releases for original successful builds (skip existing)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: python tools/rsh_release_history.py
+
+  build-and-release:
+    name: Build and release a new version
+    needs: restore-release-history
+    runs-on: windows-latest
+    steps:
+      - name: Check out full source history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -27,31 +53,38 @@ jobs:
         run: python -m unittest discover -s tests -p "test_rsh_*.py" -v
       - name: Build Windows executable
         run: python tools/build_fork.py
-      - name: Upload build artifact
+      - name: Upload build artifact for this run
         uses: actions/upload-artifact@v4
         with:
-          name: Pokopia-Editor-RSH-Windows-Preview
+          name: Pokopia-Editor-RSH-Windows-${{ github.run_number }}
           path: dist/PokopiaEditor_RSH.exe
           if-no-files-found: error
-      - name: Publish RSH preview executable in Releases
-        if: github.ref == 'refs/heads/main'
+      - name: Generate release notes for this version
+        env:
+          RSH_RELEASE_TAG: v0.1.${{ github.run_number }}
+        run: python tools/rsh_release_notes.py
+      - name: Preserve an existing release on reruns
+        id: release-check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RSH_RELEASE_TAG: v0.1.${{ github.run_number }}
+        run: |
+          if gh release view "$RSH_RELEASE_TAG" --json tagName >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "$RSH_RELEASE_TAG already exists; leaving its EXE and notes unchanged."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish EXE with unique version tag and release notes
+        if: steps.release-check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: rsh-preview
-          name: Pokopia Editor RSH - Windows Preview
+          tag_name: v0.1.${{ github.run_number }}
+          name: Pokopia Editor RSH v0.1.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
           prerelease: true
           make_latest: false
-          overwrite_files: true
           fail_on_unmatched_files: true
+          body_path: dist/rsh-release-notes.md
           files: dist/PokopiaEditor_RSH.exe
-          body: |
-            Windows preview build of Pokopia Editor RSH (Resident, Spawn, Habitat).
-
-            This fork extends cycalo/Pokopia-Editor. Resident editing,
-            habitat placement, encounter records, event items and Lichii
-            detection contain preview and experimental features.
-            Back up your save and close the emulator before editing.
-            Legendary and special NPC spawning is not yet verified.
-
-            Source code: see the main branch of this repository.
-            Licensed under GPL-3.0 with upstream notices preserved.
