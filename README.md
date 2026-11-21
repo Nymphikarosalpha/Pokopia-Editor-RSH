@@ -2,7 +2,7 @@
 
 <img src="data/app.png" width="128" alt="Pokopia Editor icon">
 
-# Pokopia Editor
+# Pokopia Editor RSH
 
 **Edit your Pokopia save: bag, residents, moves, emotes, wardrobe, collection and your islands. Install game mods.**
 
