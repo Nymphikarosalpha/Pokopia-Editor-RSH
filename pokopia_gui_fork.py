@@ -671,7 +671,10 @@ def species_mode_recommendation(idx, all_recipes, area, eligible_areas):
         return (f'NORMAL / HABITAT-BASED — {name}. Recommended: "Build habitat + '
                 'register resident" to place a mapped habitat, or "Assign an existing '
                 'habitat" if one already exists on the island. Neither guarantees an '
-                'immediate visible encounter. ID−4 is an unverified experimental option.')
+                'immediate visible encounter. ID−4 with an existing habitat UID '
+                'anchor can be attempted on G00 stages; new ID−4 habitat '
+                'construction is restricted to the examined STGDAT01 stage. '
+                'Neither is a confirmed Pokémon spawn.')
     if matched == []:
         return (f'NO BUILDABLE HABITAT MAPPED — {name}. Recommended: Register resident '
                 'without a habitat for registry-only experiments. Do not assume any '
@@ -698,7 +701,8 @@ def species_settings_reference():
             'IMPORTANT: Fire/Water/Grass/etc. elemental types do NOT determine '
             'the editor mode. The category is based on the encounter mechanism '
             'and resident-ID-to-habitat mapping.\n\n'
-            'ID−4 limitations: supported STGDAT01 stage layout, free compatible '
+            'ID−4 limitations: existing habitat position anchors on G00 stages; '
+            'new ID−4 habitat building only on the examined STGDAT01 layout; free compatible '
             '32-byte event slot, and a pre-existing anchor for specials. '
             'No successful in-game special spawn has been verified. Use a '
             'disposable save, close the emulator, and keep the ZIP backup.')
@@ -901,50 +905,58 @@ def add_dialog(page, selected_index=None):
                                   'This does not unlock a time-limited event or create an NPC.')
                     return
             if is_test:
-                # The experimental event record is NOT a special-encounter generator.
-                # Only the two save types inspected offline are eligible.
-                supported = (_sp_special_candidate_stages(app) if special
-                             else _sp_supported_stages(app))
+                # ID−4 supports existing, saved habitat UID anchors on any G00 stage.
+                # It does NOT make the semantics of the encounter row verified.
+                supported = _sp_special_candidate_stages(app)
                 if area not in supported:
                     hab.setEnabled(False)
-                    hinfo.setText('This island file is not eligible for the ID−4 research. '
-                                  'Ordinary habitat building remains available.')
+                    hinfo.setText('This island has no recognized G00/STGDAT##.BIN stage file. '
+                                  'No encounter record was changed.')
+                    return
+                if idx <= 4:
+                    hab.setEnabled(False)
+                    hinfo.setText('The ID−4 hypothesis is not applicable to this resident ID.')
                     return
                 if habitat_key(name) in _EVENT_POKEMON and not special:
                     hab.setEnabled(False)
-                    hinfo.setText(name+': an event habitat can be built, but the ID−4 '
-                                  'encounter experiment is not validated for event Pokémon. '
-                                  'Use the habitat-building and resident-registration mode.')
+                    hinfo.setText('Use the supported event habitat workflow for this event Pokémon. '
+                                  'The ID−4 encounter method is not validated for this event.')
                     return
-                if special:
-                    # Do NOT invent a Mew habitat. Use an existing habitat entry
-                    # solely as a position/UID anchor for the unverified ID−4 row.
-                    known_habs = read_habitats(app, area)
-                    for anchor in known_habs:
-                        if (101 <= int(anchor['uid']) <= 1024 and
-                                0 < int(anchor['type']) < 4096 and
-                                len(anchor['home']) == 3):
-                            hab.addItem(
-                                f"Anchor: {anchor['name']}  ·  UID {anchor['uid']} (existing)",
-                                ('special-anchor', int(anchor['uid'])))
-                    hab.setEnabled(bool(hab.count()))
-                    ok_button.setEnabled(bool(hab.count()))
+                # The same existing-anchor workflow is now available for normal
+                # and special residents. Never invent an ID or attach a fake home.
+                known_habs = read_habitats(app, area)
+                for anchor in known_habs:
+                    if (101 <= int(anchor['uid']) <= 1024 and
+                            0 < int(anchor['type']) < 4096 and
+                            len(anchor['home']) == 3):
+                        hab.addItem(
+                            f"Existing: {anchor['name']}  ·  UID {anchor['uid']}",
+                            ('special-anchor', int(anchor['uid'])))
+                # Preserve the original ID−4 new-habitat recipe pathway only on
+                # its historically examined STGDAT01 stage. Other stages use
+                # existing anchors exclusively; ordinary building remains separate.
+                if not special and matched and area in _sp_supported_stages(app):
+                    for recipe in matched:
+                        hab.addItem(f"Build new: {recipe['name']}  ·  #{recipe['dex']}",
+                                    str(recipe['dex']))
+                hab.setEnabled(bool(hab.count()))
+                ok_button.setEnabled(bool(hab.count()))
+                if not hab.count():
                     hinfo.setText(
-                        name + ': special/event Pokémon automatically detected. '
-                        'ID−4 uses an existing habitat as a POSITION ANCHOR only. '
-                        'No habitat is built, assigned, or advertised as the species habitat. '
-                        'A 32-byte encounter hypothesis is staged for this island, '
-                        'NOT a verified NPC spawn. ' +
-                        ('Select an existing anchor. This STGDAT stage has unverified encounter semantics.'
-                         if hab.count() and area not in _sp_supported_stages(app) else
-                         'Select an existing anchor and continue.' if hab.count() else
-                         'This island has no usable existing habitat anchor.'))
-                    return
-                if matched == [] or idx <= 4:
-                    hab.setEnabled(False)
-                    hinfo.setText(name+': no verified normal habitat and no supported ID−4 encounter option. '
-                                  'The editor will not guess a spawn recipe.')
-                    return
+                        'No usable registered habitat on the chosen island. '
+                        'Build a compatible habitat with the normal builder first, '
+                        'then reopen ID−4 and choose an existing UID. '
+                        'No encounter data was changed.')
+                else:
+                    hinfo.setText(
+                        'Choose an existing habitat as a position anchor. '
+                        'The UID/position is used for one unverified ID−4 '
+                        'encounter row; no home or habitat is reassigned. '
+                        'Only STGDAT01 additionally offers building a mapped '
+                        'new habitat in the same experiment. This is not a '
+                        'confirmed Pokémon spawn.')
+                    update_hinfo()
+                return
             if matched is None and not manual_hab.isChecked() and not special:
                 hab.setEnabled(False)
                 hinfo.setText('No verified resident-ID-to-habitat relation is available for '+name+'. '
@@ -1082,7 +1094,9 @@ def add_dialog(page, selected_index=None):
         all_recipes if (special and method in ('new', 'existing')) else valid,
         method, manually_selected)
     valid_types = {int(r['type']) for r in available_for_action}
-    if method in ('new', 'spawn', 'event', 'event_items') and not (method == 'spawn' and special):
+    is_anchor = (method == 'spawn' and isinstance(choice, tuple) and
+                 len(choice) == 2 and choice[0] == 'special-anchor')
+    if method in ('new', 'spawn', 'event', 'event_items') and not is_anchor:
         chosen_recipe = next((r for r in all_recipes or [] if str(r['dex']) == str(choice)), None)
         if not chosen_recipe or int(chosen_recipe['type']) not in valid_types or \
                 (method in ('event', 'event_items') and not is_event_recipe(chosen_recipe)):
@@ -1097,17 +1111,19 @@ def add_dialog(page, selected_index=None):
             return QMessageBox.warning(page, 'Event Pokémon',
                                        'The ID−4 hypothesis has not been validated for event Pokémon. '
                                        'Use the normal habitat-building mode.')
-        if special:
-            if not (isinstance(choice, tuple) and len(choice) == 2 and
-                    choice[0] == 'special-anchor'):
-                return QMessageBox.warning(page, 'Missing position anchor',
-                                           'Select an existing habitat position anchor.')
+        if special and not is_anchor:
+            return QMessageBox.warning(page, 'Missing position anchor',
+                                       'Select an existing habitat position anchor.')
+        if is_anchor:
             anchor = next((h for h in read_habitats(app, area)
                            if h['uid'] == choice[1]), None)
             if anchor is None:
                 return QMessageBox.warning(page, 'Anchor missing',
                                            'Selected existing habitat no longer exists.')
-        candidates = (_sp_special_candidate_stages(app) if special
+            if not (101 <= int(anchor['uid']) <= 1024 and 0 < int(anchor['type']) < 4096):
+                return QMessageBox.warning(page, 'Invalid anchor',
+                                           'The existing habitat is not usable.')
+        candidates = (_sp_special_candidate_stages(app) if is_anchor
                       else _sp_supported_stages(app))
         if area not in candidates:
             return QMessageBox.warning(page, 'Stage layout not verified',
@@ -1132,7 +1148,7 @@ def add_dialog(page, selected_index=None):
     elif method == 'event_items':
         detail = ('Add missing event habitat materials to the bag and mark their catalog entries. '
                   'No habitat is built; no quest flags are changed.')
-    elif method == 'spawn' and special:
+    elif is_anchor:
         stage_is_previously_examined = area in _sp_supported_stages(app)
         stage_note = ('' if stage_is_previously_examined else
                       'IMPORTANT: this stage (including Palette Town/STGDAT00) was '
@@ -1181,7 +1197,7 @@ def add_dialog(page, selected_index=None):
                 'No event or quest completion flags were changed.\n'
                 'Press Ctrl+S to save; use Build event habitat to place its items.\n\nBackup: ' + backup)
         return
-    if method == 'spawn' and special:
+    if is_anchor:
         mp = app.pages.get('Island Map')
         if not mp:
             return app.toast('Island Map unavailable.', 'err')
@@ -1324,7 +1340,7 @@ _SP_EVENT_SLOTS = 20
 
 
 def _sp_special_candidate_stages(app):
-    """Candidate islands for the unverified special encounter experiment.
+    """Candidate G00 islands for the unverified ID−4 existing-anchor experiment.
 
     STGDAT00 (Palette Town) was excluded only by a STGDAT01 filename gate.
     This function identifies STGDAT00..99, not a confirmed game spawn schema.
@@ -1421,7 +1437,8 @@ def _sp_event(isl, resident_id, uid, habitat_type):
 def _sp_run_special_pending(mp):
     """Experimental ID−4 on an existing island habitat; zero recipe/home changes.
 
-    Called when the selected map is available. Never write if the island or
+    Called for normal and special Pokémon when the selected map is available.
+    Never write if the island or
     layout is unsupported; the hypothesis must not be extrapolated blindly.
     The normal MapPage.commit journal enables Undo and Ctrl+S.
     """
