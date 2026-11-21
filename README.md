@@ -120,6 +120,12 @@ The catalog covers **402 named resident records**: **350** mapped to buildable r
 <a id="which-spawn-settings"></a>
 ## 🌱 Which settings should I use for each Pokémon?
 
+### ID−4 on all G00 islands (v0.2.4)
+
+**Existing habitat anchors:** Both ordinary and special Pokémon may now select an **existing, registered habitat UID** on any recognized `G00/STGDAT##.BIN` island. On stages other than `STGDAT01`, the ID−4 experiment does **not** build a new habitat. If the island has no existing habitat registry entries, first use the regular habitat builder, then reopen ID−4. An anchor is just a technical location and **not proof of a species-specific habitat or an actual spawn**.
+
+**New habitat + ID−4:** The original one-step research option to build a matched habitat remains restricted to the previously examined `STGDAT01` stage. Before any experimental write, the editor checks the stage format and empty compatible encounter rows, and makes a backup. Different islands may have different game semantics: no visible species spawn is verified.
+
 > [!NOTE]
 > **Palette Town / STGDAT00:** The ID−4 special-encounter UI can now list existing
 > habitats as position anchors on G00 stages. Non-STGDAT01 stages are **new,
