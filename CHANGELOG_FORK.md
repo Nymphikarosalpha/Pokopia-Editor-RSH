@@ -2,6 +2,19 @@
 
 This changelog covers changes to [Pokopia Editor RSH](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH), a GPL-3.0 fork of [cycalo/Pokopia-Editor](https://github.com/cycalo/Pokopia-Editor). The upstream history and license remain intact.
 
+## Unreleased — Multi-island habitat backup fix (2026-11-21)
+
+### Fixed
+- Fixed **Build habitat + register resident** failing at the backup step on islands using `STGDAT00.BIN`, `STGDAT02.BIN`, or other valid stage filenames. Previously the RSH pre-edit backup incorrectly required `STGDAT01.BIN` for every island.
+- Validates the selected stage against the opened save's `G00/STGDAT##.BIN` list, preserving protection against wrong-save paths and missing files.
+- Validates each whole-save ZIP backup before allowing island editing to continue, and removes incomplete archives on failure.
+- Adds offline regression checks for multiple islands, including negative path-validation tests.
+
+### Limits
+- This fixes a failed pre-edit backup check. It does **not** establish that every habitat or Pokémon encounter will behave identically on every island.
+- The experimental **ID−4 encounter record** remains restricted to its previously examined stage layout. Other islands can use normal habitat building and resident home assignment, not that unverified encounter method.
+
+
 ## Unreleased – Resident habitat catalog and event workflow fixes (preview)
 
 ### Fixed
