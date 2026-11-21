@@ -1,183 +1,175 @@
-## Which spawn settings should I use? (RSH v0.2.1)
-
-Choose by **encounter mechanism**, not by elemental type (Fire, Water, Psychic,
-etc.). A Pokémon's elemental typing does not establish its spawn logic.
-The editor displays **Recommended settings** when you select a resident.
-
-| Pokémon category and examples | Recommended editor action | What this actually does |
-| --- | --- | --- |
-| **Normal Pokémon with a verified habitat mapping** (e.g., Oddish or Bulbasaur) | **Build habitat + register resident**, or **Assign an existing habitat** when a matching one is already built | Builds/assigns the known habitat and edits the resident registry; an immediate visible encounter is not guaranteed. |
-| **Limited-time/E-series event Pokémon** (e.g., Feebas, Milotic, Hoppip, Sableye) | **Build event habitat on the map** when a verified `E-*` recipe exists. **Prepare event materials in bag only** is optional. | Places event objects, or supplies missing materials. It does **not** complete event quests, open event windows or force an NPC spawn. |
-| **Legendary/mythical or story-dependent Pokémon** (e.g., **Mew, Mewtwo, Suicune, Raikou, Entei, Lugia, Ho-Oh, Articuno, Zapdos, Moltres, Kyogre, Volcanion**) | For a real first encounter, use the game's **story/event encounter**. For save research only, **Experimental encounter (ID−4)** on a supported stage with a pre-existing habitat **position anchor**. | Attempts one hypothetical 32-byte encounter record. **Not a verified spawn.** The anchor belongs to a different habitat and does not become an authentic Mew/Mewtwo habitat. |
-| **Special Pokémon with a known event habitat**, e.g. Jirachi | **Build event habitat** for the documented event recipe; use **ID−4** only for controlled, disposable-save research if the stage is supported | A real story/event gate may still be required. Recipe creation is not the same as spawning or completing an event. |
-| **No buildable habitat or unknown recipe mapping** | **Register resident without a habitat** (registry only); or investigate the species/ID before attempting a manual housing experiment | Does not create a visible world Pokémon. Do not assign a random habitat as a supposed species spawn. |
-
-**ID−4 research limits:** only stages whose path ends in `G00/STGDAT01.BIN`
-or `B00/STGDAT01.BIN` are candidates, and only when the record-layout
-validation finds a free compatible event slot. For special Pokémon the island
-must already contain a valid habitat record to act as an unchanged UID/position
-anchor. Other islands may still support normal habitat building. The editor
-creates a full ZIP backup, uses its Undo journal and requires **Ctrl+S** for
-writing. Close the emulator before save editing, and test **only on a copy**.
-
-**Why are the controls grey?** Either the selected action has no valid habitat
-mapping, the island layout is unsupported for ID−4, the island lacks a usable
-existing anchor, or an experimental record cannot be safely written. Switch
-to an appropriate mode; do not force a write or invent an event-habitat ID.
-
-**Important:** The ID−4-to-species relationship is a **hypothesis**. No successful
-Mew or Mewtwo spawn is confirmed. Pokémon-Dex registration and home assignment
-are separate from a visible NPC and from story/event unlocks.
-
 <div align="center">
 
-<img src="data/app.png" width="128" alt="Pokopia Editor icon">
+<img src="data/app.png" width="112" alt="Pokopia Editor RSH app icon">
 
-# Pokopia Editor RSH
+# 🌿 Pokopia Editor RSH
 
-**Edit your Pokopia save: bag, residents, moves, emotes, wardrobe, collection and your islands. Install game mods.**
+**Build your island · Welcome new Pokémon · Make your Pokopia world your own**
 
-<!-- RSH download button -->
-<a href="https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases" title="View Pokopia Editor RSH releases and download">
-  <img src="docs/rsh-download.svg" alt="View Pokopia Editor RSH releases and download a Windows build" width="660">
+A single-file Windows save editor with additional **Resident · Spawn · Habitat** tools.
+
+<a href="https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases" title="Download Pokopia Editor RSH for Windows">
+  <img src="docs/rsh-download.svg" width="660" alt="View Pokopia Editor RSH releases and download the Windows EXE">
 </a>
 
-[**All releases and downloads**](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases) · **Windows 10 / 11** · *Development preview*
-<!-- RSH changelog quick link -->
-[![Changelog](https://img.shields.io/badge/CHANGELOG-View%20Updates-FFD34E?style=for-the-badge&labelColor=22417D)](CHANGELOG.md)
-<!-- /RSH changelog quick link -->
-<!-- /RSH download button -->
+[![Releases](https://img.shields.io/badge/WINDOWS_EXE-RELEASES-6CCB9A?style=for-the-badge&labelColor=245E64)](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases)
+[![Changelog](https://img.shields.io/badge/RSH-CHANGELOG-F9D56E?style=for-the-badge&labelColor=245E64)](CHANGELOG_FORK.md)
+[![License](https://img.shields.io/badge/LICENSE-GPL--3.0-88C9F2?style=for-the-badge&labelColor=245E64)](LICENSE)
 
+**Windows 10 / 11** · **Pokopia 2.0.x save format** · **Development preview**
 
-![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)
-![Pokopia](https://img.shields.io/badge/Pokopia-2.0.x-e74c3c?style=for-the-badge)
+[🏡 Getting started](#getting-started) · [🎒 Features](#what-you-can-do) · [🌱 Spawn guide](#which-spawn-settings) · [🧩 Mods](#mods) · [🛡️ Save safety](#save-safety)
 
-<img src="docs/screenshots/island-map.png" width="49%" alt="The Island Map editor">
-<img src="docs/charizard_fly.gif" width="49%" alt="Play as Pokemon: flying around town as Charizard">
+<img src="docs/screenshots/island-map.png" width="49%" alt="Pokopia island map editor">
+<img src="docs/charizard_fly.gif" width="49%" alt="Play as Pokémon mod with Charizard flying">
 
 </div>
 
 ---
 
-<!-- RSH fork overview -->
-## About Pokopia Editor RSH
+<a id="about-rsh"></a>
+## 🌱 About Pokopia Editor RSH
 
-**Pokopia Editor RSH (Resident · Spawn · Habitat)** is a community fork of
-[cycalo/Pokopia-Editor](https://github.com/cycalo/Pokopia-Editor).
-It retains the original save editor and adds resident, habitat and experimental
-encounter tools. The upstream Git history, original author notices and
-[GNU GPL-3.0 license](LICENSE) are preserved.
+**Pokopia Editor RSH** is a community fork of [cycalo/Pokopia-Editor](https://github.com/cycalo/Pokopia-Editor). It keeps the original save-editing pages, mods and credits while adding resident, habitat and *experimental* encounter controls.
 
-### RSH additions
+> 🌼 **RSH = Resident · Spawn · Habitat.** The aim is to make editing your world easier while making experimental encounter behavior explicit — not to promise a Pokémon spawn that has not been verified.
 
-| Feature | Description | Status |
-| --- | --- | --- |
-| Resident management | Add or update resident registry entries, friendship values and meeting dates | Preview |
-| Resident removal | Remove a resident's save registry entry and home assignment while retaining the Pokédex entry | Experimental |
-| Home assignment | Link residents to existing habitats or remove a home assignment | Preview |
-| Habitat placement | Build available habitat recipes and associate them with residents on supported islands | Preview |
-| Multiple islands | Choose among supported islands found in the loaded save; island names are read from the save | Preview |
-| Habitat matching | Resident-ID-based offline catalog, form-specific recipes and explicit manual override | Preview |
-| Encounter records | Optional experimental habitat-linked encounter records using an unverified ID mapping | Experimental |
-| Event habitat building | Build E-series event habitats on the map or prepare event materials separately; does not complete event quests | Experimental |
-| Lichii integration | Recognize Lichii processes and search standard and nearby portable Lichii save locations | Preview |
+### 🌿 What the RSH fork adds
 
-<!-- RSH-EVENT-CATALOG-START -->
-### RSH habitat matching and event workflow update
+| | RSH feature | What it does |
+|:--:|---|---|
+| 🏡 | **Resident Studio** | Add/update resident entries, friendship, first meeting and Pokédex registration |
+| 💛 | **Home management** | Assign or unlink a habitat; experimentally remove a resident registry entry |
+| 🌳 | **Habitat builder** | Select an island, place a supported recipe, or link an existing habitat |
+| 📗 | **Offline habitat matching** | Resident-ID-based catalog with form-aware mappings and explicit manual overrides |
+| 🎉 | **Event habitat tools** | Build supported E-series habitats or prepare event materials without claiming quest completion |
+| ✨ | **Special encounter research** | Recognize Mew, Mewtwo and other special Pokémon; try ID−4 with an *existing* habitat as position anchor on supported stages |
+| 🧭 | **In-editor recommendations** | See which mode fits the selected Pokémon and why a control may be unavailable |
+| 🖥️ | **Lichii support** | Recognize Lichii and look for standard or nearby portable save folders |
 
-The bundled catalog was audited against 402 named resident records and 252 built-in recipes: **350** records match a buildable habitat, **17** have no buildable normal habitat, and **35** cannot be mapped reliably. Form-specific residents use their own IDs. No unrelated habitat is silently substituted.
+The catalog covers **402 named resident records**: **350** mapped to buildable recipes, **17** explicitly without a buildable normal habitat and **35** without a reliable mapping. The bundled editor has **252** habitat recipes. These figures describe resident records, not unique Pokémon species.
 
-**Build habitat + register resident** is the default. The **Build event habitat on the map** mode places a supported E-series recipe at a chosen position. **Prepare event materials in bag only** is a separate inventory operation. The manual event override offers only E-series recipes and clearly marks the choice as unverified. Neither operation completes event quests, bypasses time-limited triggers or guarantees visible NPC spawns.
+> [!CAUTION]
+> **Experimental means unverified in game.** Creating a resident, assigning a home, building a habitat or writing an ID−4 record does **not** guarantee a visible Pokémon. Mew/Mewtwo spawning and event/story unlocks have **not** been confirmed with these methods. Back up your save and close your emulator before editing.
 
-See [RSH changelog](CHANGELOG.md) and [feature limitations](docs/FORK_FEATURES.md).
-<!-- RSH-EVENT-CATALOG-END -->
-
-> [!IMPORTANT]
-> **This is a development preview, not a stable release.** A resident record or
-> habitat assignment does not guarantee that a Pokémon appears as a visible NPC.
-> Resident removal may leave separately stored world NPCs. Event item preparation
-> does **not** mark story quests or limited-time events completed. Direct spawning
-> of legendary and special Pokémon is not yet implemented or verified.
-> Always close the emulator and back up your save before using experimental tools.
-
-**Compatibility:** The editor can browse manually selected saves and looks for
-Lichii saves in standard Windows user-data directories, as well as common nearby
-portable `user/nand` layouts. Portable installations in other locations can be
-opened using **Open → Browse for a folder**. The full RSH feature set has not
-been validated on every emulator and game version.
-
-**Windows download:** Download the latest available RSH preview from
-[the project Releases page](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases)
-when the release build has completed. GitHub Actions also retains a ZIP artifact
-for each successful workflow run. The original project's releases are upstream
-builds and do **not** include RSH additions.
-
-**Details:** [Feature guide and limitations](docs/FORK_FEATURES.md) ·
-[Changes](CHANGELOG.md) · [Build guide](docs/BUILD_WINDOWS.md).
+**More details:** [RSH features & limitations](docs/FORK_FEATURES.md) · [RSH changelog](CHANGELOG_FORK.md) · [Windows build guide](docs/BUILD_WINDOWS.md).
 
 ---
 
-## 🚀 Getting started
+<a id="getting-started"></a>
+## 🏡 Getting started
 
-1. **[Download Pokopia Editor RSH from Releases](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases)**. Choose the Windows EXE from the release assets.
-2. **Close your emulator.**
-3. **Double-click the exe.** It finds your save on its own.
+1. **[Download `PokopiaEditor_RSH.exe` from Releases](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases)** — one Windows EXE; no source files need to be copied beside it.
+2. **Close the emulator** before opening or editing the save.
+3. **Start the EXE** and select your save if it is not found automatically.
+4. Open **Residents → Pokémon + Habitat / Spawn Test** for the RSH tools, or use the original editor pages as usual.
 
-Supported emulators: **Eden · Yuzu · Suyu · Sudachi · Citron · Torzu · Ryujinx**.
-If your save isn't found, click **Open → Browse for a folder**.
-[Recompia](https://github.com/Dittobyte/Recompia) saves are found automatically too; choose which one opens at start on the Overview page.
+**Emulator discovery:** Eden, Yuzu, Suyu, Sudachi, Citron, Torzu, Ryujinx and Lichii (including some portable layouts). Manual folder selection is available under **Open → Browse for a folder**. [Recompia](https://github.com/Dittobyte/Recompia) saves are supported by the upstream editor. Compatibility is not guaranteed across every emulator version.
 
 > [!NOTE]
-> If Windows shows *"Windows protected your PC"*, click **More info → Run anyway**.
-> The warning appears because the app is new and unsigned.
+> Windows SmartScreen may display “Windows protected your PC” because this community build is unsigned. Only run an EXE that you downloaded from a release you trust.
 
 ---
 
-## ✨ What you can do
+<a id="what-you-can-do"></a>
+## 🎒 What you can do
 
-| | Page | |
-|:-:|---|---|
-| 🏠 | **Overview** | Rename your player, see your stats, and use one-click actions: max friendship, learn every emote, unlock the wardrobe |
-| 🎒 | **Bag** | Drag items into your bag, swap slots, copy with Ctrl, set amounts |
-| 📖 | **Item Catalog** | Browse and search every item by category, then double-click to add it. Expansion Pass and event items are tagged and can be filtered |
-| 💛 | **Residents** | Set friendship, see when you met each resident, and find their home on the map |
-| ✨ | **Moves & Emotes** | Learn or unlearn with a click, then set up your move and emote wheels |
-| 👕 | **Wardrobe** | Unlock any outfit or hairstyle, or all of them at once, including the Expansion Pass ones |
-| ⭐ | **Collection** | Complete the Pokédex, Habitat Dex, recipes, item list, Human Records, Ancient Artifacts, Highlight Reel, and photo frames and filters, one at a time or all at once. Turn on upgrades and set your Life Coins |
-| 🗺️ | **Island Map** | Edit your islands: move, place and delete objects, paint paths, raise or flatten the ground, and build any of 252 habitats in one click. Export as PNG |
-| 📷 | **Photos** | Browse your in-game album and export full-size photos |
-| 🛟 | **Backups** | Make, compare, restore and delete backups |
-| 🧩 | **Mods** | Install game mods: Play as Pokemon, Unlimited Crafting Storage Range |
+### 🧰 Explore, collect & build — original editor tools
+
+| | Page | What you can do |
+|:--:|---|---|
+| 🏠 | **Overview** | Rename your player, view statistics, maximize friendship, learn emotes and unlock the wardrobe |
+| 🎒 | **Bag** | Add, move and copy items, reorder slots and adjust amounts |
+| 📖 | **Item Catalog** | Search by category and add items, including tagged event and Expansion Pass content |
+| 💛 | **Residents** | View friendship, meeting history and home location |
+| ✨ | **Moves & Emotes** | Learn/unlearn abilities and emotes; edit the corresponding wheels |
+| 👕 | **Wardrobe** | Unlock outfits and hairstyles, including supported Expansion Pass entries |
+| ⭐ | **Collection** | Manage Pokédex, Habitat Dex, recipes, records, artifacts, photo collections, upgrades and Life Coins |
+| 🗺️ | **Island Map** | Place/move/delete objects, paint blocks, change terrain height and place built-in habitats; export PNG maps |
+| 📷 | **Photos** | Browse and export original-resolution in-game photographs |
+| 🛟 | **Backups** | Create, compare, restore and delete backups |
+| 🧩 | **Mods** | Install and configure Play as Pokemon and Unlimited Crafting Storage Range |
+
+### 🌟 More things you can do with RSH
+
+| | Feature | How to use it |
+|:--:|---|---|
+| 🐾 | **Add / update Pokémon residents** | **Residents → Pokémon + Habitat / Spawn Test**; choose a Pokémon, friendship and first-met time |
+| 🌿 | **Build or assign habitats** | Choose an island and a mapped recipe, or attach a registered resident to an existing habitat |
+| 🏠 | **Change or remove a home** | Assign a different habitat or unlink the current home without deleting the habitat objects |
+| 🧹 | **Remove a resident entry** | Experimental registry removal; independent world NPCs may remain |
+| 🎊 | **Build event habitats** | Use an E-series event recipe and place the objects on the Island Map; story flags are unchanged |
+| 🎒 | **Prepare event items** | Fill missing recipe materials into the bag instead of building immediately |
+| 🔎 | **Choose habitats by Pokémon ID** | Use the offline catalog with distinct mappings for known forms; manual choices are marked unverified |
+| 🧪 | **Test special encounter records** | For Mew/Mewtwo and other special Pokémon, use ID−4 on supported stages with a previously existing habitat position anchor |
+| 💡 | **See recommended settings** | The Studio displays an automatic recommendation and the **Which settings for which Pokémon?** help guide |
+
+### 📸 A look inside the editor
 
 <table>
-  <tr>
-    <td><img src="docs/screenshots/island-map.png" alt="Island Map"></td>
-    <td><img src="docs/screenshots/wardrobe.png" alt="Wardrobe"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Island Map</b></td>
-    <td align="center"><b>Wardrobe</b></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/residents.png" alt="Residents"></td>
-    <td><img src="docs/screenshots/moves.png" alt="Moves & Emotes"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Residents</b></td>
-    <td align="center"><b>Moves & Emotes</b></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/catalog.png" alt="Item Catalog"></td>
-    <td><img src="docs/screenshots/collection.png" alt="Collection"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Item Catalog</b></td>
-    <td align="center"><b>Collection</b></td>
-  </tr>
+  <tr><td><img src="docs/screenshots/island-map.png" alt="Island Map"></td><td><img src="docs/screenshots/wardrobe.png" alt="Wardrobe"></td></tr>
+  <tr><td align="center"><b>🌳 Island Map</b></td><td align="center"><b>👕 Wardrobe</b></td></tr>
+  <tr><td><img src="docs/screenshots/residents.png" alt="Residents"></td><td><img src="docs/screenshots/moves.png" alt="Moves and Emotes"></td></tr>
+  <tr><td align="center"><b>💛 Residents</b></td><td align="center"><b>✨ Moves & Emotes</b></td></tr>
+  <tr><td><img src="docs/screenshots/catalog.png" alt="Item Catalog"></td><td><img src="docs/screenshots/collection.png" alt="Collection"></td></tr>
+  <tr><td align="center"><b>📖 Item Catalog</b></td><td align="center"><b>⭐ Collection</b></td></tr>
 </table>
 
 ---
 
+<a id="which-spawn-settings"></a>
+## 🌱 Which settings should I use for each Pokémon?
+
+**Choose by how the Pokémon is encountered — not by its elemental type** (Grass, Water, Psychic, etc.). The Resident + Habitat Studio shows **Recommended settings** after you select a Pokémon.
+
+| Pokémon group | Examples | Recommended mode | What to expect |
+|:--|:--|:--|:--|
+| 🌿 **Normal habitat Pokémon** | Oddish, Bulbasaur | **Build habitat + register resident** or **Assign an existing habitat** | Builds/assigns a known habitat and edits resident data. A visible encounter is not guaranteed. |
+| 🎈 **Event / E-series Pokémon** | Feebas, Milotic, Hoppip, Sableye | **Build event habitat on the map** with its mapped `E-*` recipe; optionally **Prepare event materials in bag only** | Objects/materials can be prepared, but event windows, quest completion and NPC appearance are not unlocked. |
+| ✨ **Legendary / mythical / story encounters** | **Mew, Mewtwo**, Suicune, Raikou, Entei, Lugia, Ho-Oh, Articuno, Zapdos, Moltres, Kyogre, Volcanion | **In-game story/event encounter** for normal gameplay; **Experimental encounter (ID−4)** *only* for research | On supported islands, a **pre-existing** habitat supplies UID/position data. The species field is only a hypothesis; **no confirmed special spawn**. |
+| 🌠 **Special event-recipe Pokémon** | Jirachi | **Build event habitat** when a matching event recipe exists | A mapped recipe does not bypass the game's special encounter requirements. |
+| ❔ **Unknown / no normal habitat** | Unmapped forms or internal entries | **Register resident without a habitat** for registry-only testing, or investigate the mapping | No automatic NPC spawn. Do not treat an unrelated habitat as verified. |
+
+<details>
+<summary><b>🧪 How the ID−4 special encounter test works</b></summary>
+
+1. Create a **separate test copy** of your save and close the emulator.
+2. In **Residents → Pokémon + Habitat / Spawn Test**, select Mew, Mewtwo or another identified special Pokémon.
+3. Select **Experimental encounter (ID−4; automatic special detection)** and an eligible island.
+4. Select an **already existing habitat** as a technical **UID/position anchor**. You do **not** need to build a fictitious Mew/Mewtwo habitat.
+5. Confirm the verified ZIP backup, stage the change and press **Ctrl+S** to write the test save.
+6. Reload the game and check the result. It may produce no encounter or a different outcome — **the ID−4 reference has not been validated as a species-spawn field**.
+
+**Layout restriction:** only checked `G00/STGDAT01.BIN` or `B00/STGDAT01.BIN` stage layouts are candidates, and only when a compatible free 32-byte event slot exists. The island stage must pass the editor's validation. Ordinary habitat editing can still work on other islands.
+
+</details>
+
+<details>
+<summary><b>🌳 When to use each regular habitat or event option</b></summary>
+
+- **Assign an existing habitat** — link a resident to a compatible habitat already in the save.
+- **Build habitat + register resident** — place objects for a mapped normal habitat and register the resident/home; this is the default.
+- **Register resident without a habitat** — change the CommonSave registry without creating a world NPC.
+- **Build event habitat on the map** — use a supported E-series recipe; event progress is not marked complete.
+- **Prepare event materials in bag only** — add missing ingredients for an event recipe; no world objects are built.
+- **Manually select an unverified habitat** — only when investigating uncertain mappings. Manual event overrides remain limited to E-series recipes.
+- **Remove an existing home assignment** and **Remove resident from save registry** — maintenance tools, **not** spawn modes.
+
+</details>
+
+<details>
+<summary><b>🔒 Why is the habitat selector or Apply button greyed out?</b></summary>
+
+Possible reasons include an unsupported island layout for ID−4, no suitable existing anchor, no free validated event record, no mapped recipe for the selected method, or a Pokémon whose first encounter requires a different mechanism. **Disabled controls protect the save against unsupported writes.** Check the recommendation text and choose another applicable mode; do not invent a habitat ID.
+
+</details>
+
+> [!IMPORTANT]
+> **Registration ≠ habitat ≠ encounter.** A Pokédex entry or resident/home assignment does not create a visible Pokémon. An ID−4 record is an **unconfirmed experiment**, especially for Mew and Mewtwo. Use only disposable saves and keep backups.
+
+---
+
+<a id="mods"></a>
 ## 🧩 Mods
 
 <img src="docs/transform_demo.gif" width="600" alt="Turning into Mewtwo, Lugia, Heracross and Flareon, then back into the player">
@@ -229,11 +221,13 @@ More details: [mods/unlimited-crafting-storage-range](mods/unlimited-crafting-st
 
 ---
 
+<a id="save-safety"></a>
 ## 🛡️ Your save is safe
 
-- 💾 **Automatic backup** before every save, in `Documents\Pokopia_Save_Backups`
+- 💾 **Automatic save backups** from the original editor in `Documents\Pokopia_Save_Backups`
+- 📦 **RSH experiment ZIP backups** under `PokopiaEditor_Backups` in your user home folder, created before eligible resident/event experiments
 - 👀 **See every change** before it's written
-- ↩️ **Undo / redo** everything, or restore any backup from the Backups page
+- ↩️ **Undo / redo** edits, or restore any backup from the Backups page
 - ⚠️ **Emulator check**: you get a warning if the emulator is still running
 - 🔄 If the game saves while the editor is open, press **F5** to reload
 
@@ -253,22 +247,20 @@ More details: [mods/unlimited-crafting-storage-range](mods/unlimited-crafting-st
 <details>
 <summary><b>🛠️ Running from source</b></summary>
 
-<br>
-
 Requires Python 3.
 
 ```bash
 py -m pip install PySide6-Essentials pillow
-py pokopia_gui.py
+py pokopia_gui_fork.py
 ```
 
 Command line tool: `py pokopia_cli.py --help`
 
-Build the exe:
+Build the Windows RSH EXE on Windows:
 
 ```bash
 py -m pip install pyinstaller
-py -m PyInstaller PokopiaEditor.spec --noconfirm
+py tools/build_fork.py
 ```
 
 The exe stores its settings in `%APPDATA%\Pokopia Editor`.
@@ -276,8 +268,7 @@ The exe stores its settings in `%APPDATA%\Pokopia Editor`.
 </details>
 
 <div align="center">
-<sub>Save edditor built with data from <a href="https://github.com/berichan/PokoHex">PokoHex</a>
-</div>
-<div align="center">
+<sub>Save editor built with data from <a href="https://github.com/berichan/PokoHex">PokoHex</a>.</sub>
+
 <sub>Released under the <a href="LICENSE">GNU General Public License v3.0</a>. Pokémon names, icons and other game assets belong to Nintendo, Game Freak and The Pokémon Company. Fan-made tool, not affiliated with them.</sub>
 </div>
