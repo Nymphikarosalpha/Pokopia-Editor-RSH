@@ -46,3 +46,9 @@ Lichii is included in running-process detection and in standard/nearby portable 
 ## Safety
 
 Close the emulator, make a backup, and review the affected island before saving. Habitat placement is experimental. No game keys, ROMs, save dumps or copyrighted game assets are distributed by this fork beyond materials already present in the upstream open-source project.
+
+### Palette Town / STGDAT00 (experimental candidate)
+
+Earlier versions restricted ID−4 to STGDAT01 by filename. The special-Pokémon path now lists existing anchors for G00/STGDAT00..99 stage files, including Palette Town, but an eligible file name **does not prove that the 32-byte bytes represent a spawn event**. The island must pass existing header/version/decompressed-data checks; the event area must have an unused compatible record; the selected habitat entry must match the recorded UID/type and bounds. No unknown occupied rows are overwritten. Use a disposable save only.
+
+The dropdown no longer repeats **Remove resident** or **Remove home assignment**, which remain available in the Residents panel.
