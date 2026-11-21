@@ -649,7 +649,7 @@ def species_mode_recommendation(idx, all_recipes, area, eligible_areas):
                 else 'LEGENDARY / MYTHICAL (unique encounter)')
         test = ('ID−4 is available for a separate save copy only if an existing '
                 'anchor is on this island.' if area in eligible_areas else
-                'ID−4 is disabled on this island layout; select an eligible STGDAT01 island.')
+                'ID−4 cannot use this island file; choose an available G00 stage.')
         event_note = (' A known E-series habitat may be built in Event habitat mode, '
                       'but that does not complete the event.' if event_matches else
                       ' No verified event habitat is assigned to this Pokémon.')
@@ -737,8 +737,7 @@ def add_dialog(page, selected_index=None):
     mode.addItem('Build habitat + register resident (does not force spawn)', 'new')
     mode.addItem('Experimental encounter (ID−4; automatic special detection)', 'spawn')
     mode.addItem('Register resident without a habitat (no spawn)', 'none')
-    mode.addItem('Remove an existing home assignment', 'unlink')
-    mode.addItem('Remove resident from save registry (experimental)', 'remove')
+    # Home unlink and resident removal are already available in the Residents detail panel.
     mode.addItem('Build event habitat on the map (no quest completion)', 'event')
     mode.addItem('Prepare event materials in bag only', 'event_items')
     # Building is the common RSH workflow. Existing-habitat mode requires a
@@ -824,10 +823,17 @@ def add_dialog(page, selected_index=None):
         current = choose.currentData()
         choose.blockSignals(True)
         choose.clear()
-        for i, name in available:
-            if not q or q in name.casefold() or str(i) == q:
-                choose.addItem(f'{name}  ·  {i}' + ('  ✓' if c.villager_present(i) else ''), i)
-        target = choose.findData(current)
+        matches = [(i, name) for i, name in available
+                   if not q or q in name.casefold() or str(i) == q]
+        if q:
+            matches.sort(key=lambda pair: (
+                0 if pair[1].casefold() == q or str(pair[0]) == q else
+                1 if pair[1].casefold().startswith(q) else 2, pair[1].casefold()))
+        for i, name in matches:
+            choose.addItem(f'{name}  ·  {i}' + ('  ✓' if c.villager_present(i) else ''), i)
+        exact = next((i for i, name in matches
+                      if name.casefold() == q or str(i) == q), None) if q else None
+        target = choose.findData(exact if exact is not None else current)
         choose.setCurrentIndex(target if target >= 0 else 0)
         choose.blockSignals(False)
         update_info()
@@ -838,7 +844,7 @@ def add_dialog(page, selected_index=None):
         try:
             recommend.setText(species_mode_recommendation(
                 choose.currentData(), all_recipes if all_recipes is not None else recipes(),
-                area_box.currentData(), _sp_supported_stages(app)))
+                area_box.currentData(), _sp_special_candidate_stages(app)))
         except Exception as ex:
             recommend.setText('Recommendation unavailable: ' + str(ex))
         hab.blockSignals(True)
@@ -850,6 +856,13 @@ def add_dialog(page, selected_index=None):
         is_test = method == 'spawn'
         manual_hab.setEnabled(method in ('existing', 'new', 'event', 'event_items'))
         event_resident.setEnabled(method == 'event')
+        if hasattr(form, 'setRowVisible'):
+            form.setRowVisible(hab, method not in ('none', 'unlink', 'remove'))
+            form.setRowVisible(manual_hab, method in ('new', 'existing', 'event', 'event_items'))
+            form.setRowVisible(friend, method not in ('spawn', 'event_items'))
+            form.setRowVisible(met, method not in ('spawn', 'event_items'))
+            form.setRowVisible(dex, method not in ('spawn', 'event_items'))
+            form.setRowVisible(event_resident, method == 'event')
         friend.setEnabled(method not in ('spawn', 'remove', 'unlink', 'event_items') and
                            (method != 'event' or event_resident.isChecked()))
         met.setEnabled(method not in ('spawn', 'remove', 'unlink', 'event_items') and
@@ -890,11 +903,12 @@ def add_dialog(page, selected_index=None):
             if is_test:
                 # The experimental event record is NOT a special-encounter generator.
                 # Only the two save types inspected offline are eligible.
-                supported = _sp_supported_stages(app)
+                supported = (_sp_special_candidate_stages(app) if special
+                             else _sp_supported_stages(app))
                 if area not in supported:
                     hab.setEnabled(False)
-                    hinfo.setText('The ID−4 encounter experiment is only supported for G00 and B00. '
-                                  'You can still build a normal habitat on this island.')
+                    hinfo.setText('This island file is not eligible for the ID−4 research. '
+                                  'Ordinary habitat building remains available.')
                     return
                 if habitat_key(name) in _EVENT_POKEMON and not special:
                     hab.setEnabled(False)
@@ -921,7 +935,9 @@ def add_dialog(page, selected_index=None):
                         'No habitat is built, assigned, or advertised as the species habitat. '
                         'A 32-byte encounter hypothesis is staged for this island, '
                         'NOT a verified NPC spawn. ' +
-                        ('Select an existing anchor and continue.' if hab.count() else
+                        ('Select an existing anchor. This STGDAT stage has unverified encounter semantics.'
+                         if hab.count() and area not in _sp_supported_stages(app) else
+                         'Select an existing anchor and continue.' if hab.count() else
                          'This island has no usable existing habitat anchor.'))
                     return
                 if matched == [] or idx <= 4:
@@ -1091,9 +1107,11 @@ def add_dialog(page, selected_index=None):
             if anchor is None:
                 return QMessageBox.warning(page, 'Anchor missing',
                                            'Selected existing habitat no longer exists.')
-        if area not in _sp_supported_stages(app):
+        candidates = (_sp_special_candidate_stages(app) if special
+                      else _sp_supported_stages(app))
+        if area not in candidates:
             return QMessageBox.warning(page, 'Stage layout not verified',
-                                       'The ID−4 experiment is only available for G00/B00.')
+                                       'The selected stage is not eligible for this experiment.')
     if method == 'existing':
         selected_h = next((h for h in known_habs if h['uid'] == choice), None)
         if not selected_h or int(selected_h['type']) not in valid_types:
@@ -1115,9 +1133,16 @@ def add_dialog(page, selected_index=None):
         detail = ('Add missing event habitat materials to the bag and mark their catalog entries. '
                   'No habitat is built; no quest flags are changed.')
     elif method == 'spawn' and special:
+        stage_is_previously_examined = area in _sp_supported_stages(app)
+        stage_note = ('' if stage_is_previously_examined else
+                      'IMPORTANT: this stage (including Palette Town/STGDAT00) was '
+                      'not previously examined for the ID−4 event field. Runtime '
+                      'checks the binary container and empty row but cannot prove '
+                      'what the event field means. Use a disposable copy ONLY. ')
         detail = ('EXPERIMENTAL ENCOUNTER / ID−4: Write one hypothetical encounter entry using '
                   f"existing habitat UID {anchor['uid']} as position anchor. "
-                  'Do not build any habitat, create a world NPC, or modify quest flags. '
+                  + stage_note +
+                  'No habitat, world NPC, or story flag is created directly. '
                   'Actual species appearance is NOT confirmed.')
     elif method in ('new', 'spawn'):
         detail = ('New habitat and experimental ID−4 encounter record; NO resident registration.'
@@ -1298,6 +1323,24 @@ _SP_EVENT_STRIDE = 32
 _SP_EVENT_SLOTS = 20
 
 
+def _sp_special_candidate_stages(app):
+    """Candidate islands for the unverified special encounter experiment.
+
+    STGDAT00 (Palette Town) was excluded only by a STGDAT01 filename gate.
+    This function identifies STGDAT00..99, not a confirmed game spawn schema.
+    Island() must validate game version and decompressed format, and
+    _sp_has_free_event() must validate the 32-byte region before any write.
+    """
+    result = {}
+    if not app.save:
+        return result
+    for area, path in app.save.stage_files().items():
+        normal = os.path.normpath(str(path)).replace('\\', '/').upper()
+        if re.search(r'/G00/STGDAT[0-9]{2}\.BIN$', normal):
+            result[area] = path
+    return result
+
+
 def _sp_supported_stages(app):
     """Restrict binary 32-byte event experiment to G00 and B00 stage schema.
 
@@ -1390,8 +1433,8 @@ def _sp_run_special_pending(mp):
         return  # async map load will call this again
     mp.special_test_pending = None
     try:
-        if pending['area'] not in _sp_supported_stages(mp.app):
-            raise ValueError('Stage layout is not eligible for the ID−4 experiment.')
+        if pending['area'] not in _sp_special_candidate_stages(mp.app):
+            raise ValueError('Stage file is not an eligible G00 stage.')
         if not _sp_has_free_event(isl):
             raise ValueError('No free compatible 32-byte encounter slot. Nothing was changed.')
         slot, ref, pos = _sp_event(
