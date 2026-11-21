@@ -1236,32 +1236,51 @@ def _sp_event(isl, resident_id, uid, habitat_type):
 
 
 def _sp_backup(save, stage_path):
-    """Backup all existing files in the selected save folder, outside that folder."""
+    """Back up the selected island and the entire opened save before editing.
+
+    Ordinary habitat editing supports all G00/STGDAT##.BIN island files.
+    The separate experimental encounter operation remains restricted by
+    _sp_supported_stages(); backing up a file does not validate its event layout.
+    """
     from pathlib import Path
     import zipfile
     if stage_path is None:
-        raise ValueError('No stage data file was found for this island.')
+        raise ValueError('No stage data file was found for the selected island.')
+    root = Path(save.folder).resolve()
     stage = Path(stage_path).resolve()
-    if stage.name.upper() != 'STGDAT01.BIN' or not re.fullmatch(r'[A-Z][0-9]{2}', stage.parent.name.upper()):
-        raise ValueError('Stage data must be inside an area folder (e.g. G00/B00).')
-    save_root = stage.parent.parent
-    if not save_root.is_dir() or not stage.is_file():
-        raise ValueError('Save folder does not exist.')
-    candidates = sorted(p for p in save_root.rglob('*') if p.is_file())
-    if not candidates or len(candidates) > 80 or sum(p.stat().st_size for p in candidates) > 500*1024*1024:
+    if not re.fullmatch(r'STGDAT[0-9]{2}\.BIN', stage.name, re.IGNORECASE):
+        raise ValueError('The selected island does not have a valid STGDAT##.BIN file.')
+    if stage.parent.parent != root or stage.parent.name.upper() != 'G00':
+        raise ValueError('The selected island stage is outside the opened save folder (G00).')
+    if not (root / 'G00' / 'CMNDAT.BIN').is_file():
+        raise ValueError('The opened save is missing G00/CMNDAT.BIN.')
+    if not stage.is_file():
+        raise ValueError('The selected island stage file does not exist.')
+    # Only accept a stage that the save loader itself detected. This also blocks
+    # stray paths and incorrectly selected folders without guessing island IDs.
+    known = {Path(path).resolve() for path in save.stage_files().values()}
+    if stage not in known:
+        raise ValueError('The selected island stage is not listed in this save.')
+    candidates = sorted(p for p in root.rglob('*') if p.is_file())
+    if not candidates or len(candidates) > 80 or sum(p.stat().st_size for p in candidates) > 500 * 1024 * 1024:
         raise ValueError('Unexpected save size or file count; create a manual backup first.')
+    if any(not p.resolve().is_relative_to(root) for p in candidates):
+        raise ValueError('The save contains a file pointing outside its directory.')
     target = Path.home() / 'PokopiaEditor_Backups'
     target.mkdir(parents=True, exist_ok=True)
     stamp = _dt.datetime.now().strftime('%Y%m%d_%H%M%S_%f')
-    out = target / ('Pokopia_before_spawn_preview_' + stamp + '.zip')
-    with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED, compresslevel=1) as z:
-        for item in candidates:
-            z.write(item, item.relative_to(save_root))
-    with zipfile.ZipFile(out) as z:
-        if z.testzip() is not None:
-            raise ValueError('Backup verification failed.')
+    out = target / ('Pokopia_before_island_edit_' + stamp + '.zip')
+    try:
+        with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED, compresslevel=1) as z:
+            for item in candidates:
+                z.write(item, item.relative_to(root))
+        with zipfile.ZipFile(out) as z:
+            if z.testzip() is not None:
+                raise ValueError('Backup archive verification failed.')
+    except Exception:
+        out.unlink(missing_ok=True)
+        raise
     return str(out)
-
 
 
 def patch_all():
