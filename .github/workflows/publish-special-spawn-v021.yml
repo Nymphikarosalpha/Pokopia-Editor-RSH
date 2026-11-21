@@ -1,0 +1,118 @@
+name: Publish RSH v0.2.1 - Special Encounter Test
+
+# This ONE-TIME release workflow is intentionally manual.
+# It patches the audited source, validates/tests, builds a single Windows EXE,
+# then commits the real source changes to main before publishing the matching tag.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rsh-editor-release
+  cancel-in-progress: false
+
+jobs:
+  release-v021:
+    name: Validate, compile EXE and publish v0.2.1
+    runs-on: windows-latest
+    steps:
+      - name: Checkout main including previous release tags
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Refuse to replace an existing release or tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view v0.2.1 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Release v0.2.1 already exists. No overwrite permitted."
+            exit 1
+          fi
+          if git rev-parse -q --verify refs/tags/v0.2.1 >/dev/null; then
+            echo "::error::Tag v0.2.1 already exists. No overwrite permitted."
+            exit 1
+          fi
+
+      - name: Apply audited experimental special-encounter patch
+        run: python tools/prepare_special_spawn_release.py
+
+      - name: Validate source, PyInstaller entry point, and license
+        run: python tools/prepare_fork.py --check-only
+
+      - name: Install the same build dependencies as regular RSH releases
+        run: python -m pip install --upgrade pip PySide6-Essentials pillow pyinstaller
+
+      - name: Run all RSH regressions including Mew and Mewtwo
+        run: python -m unittest discover -s tests -p "test_rsh_*.py" -v
+
+      - name: Smoke-check GUI imports and patch registration
+        shell: bash
+        run: |
+          python -c "import pokopia_gui_fork as f; assert f._PATCH_ERROR is None, f._PATCH_ERROR"
+
+      - name: Build the same single EXE used by existing RSH releases
+        run: python tools/build_fork.py
+
+      - name: Commit editor source and category-specific README guidance
+        id: pushed
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pokopia_gui_fork.py CHANGELOG_FORK.md docs/FORK_FEATURES.md README.md
+          if git diff --cached --quiet; then
+            # A previous run may have pushed the source then failed when publishing.
+            # Permit a rerun ONLY if the current source differs from last release.
+            if ! git diff --name-only v0.2.0 HEAD -- pokopia_gui_fork.py | grep -q '^pokopia_gui_fork.py$'; then
+              echo '::error::No actual editor changes since v0.2.0. Refusing to publish.'
+              exit 1
+            fi
+          else
+            git commit -m 'feat(editor): experimental Mew/Mewtwo encounter anchors and settings guide'
+            git push origin HEAD:main
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Run the existing editor-only release policy and create release notes
+        shell: bash
+        env:
+          RSH_VERSION: v0.2.1
+          RSH_EDITOR_CHANGES: |
+            - Added automatic special encounter identification and an experimental ID-4 position-anchor test for Mew, Mewtwo and other special Pokemon.
+            - Fixed disabled habitat/Apply controls for eligible special-Pokemon tests using existing habitats instead of fictional event recipes.
+            - Added per-Pokemon recommended editor settings, a complete guidance dialog, and a README category-to-setting table.
+            - Kept required save ZIP backups, supported-stage checks, free-slot validation and undoable save editing.
+            - Kept normal habitat placement and event material workflows separate from experimental encounters; no story flags are changed.
+        run: python tools/rsh_editor_release_policy.py
+
+      - name: Keep the build as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PokopiaEditor_RSH-v0.2.1-Windows
+          path: dist/PokopiaEditor_RSH.exe
+          if-no-files-found: error
+
+      - name: Publish exactly one Windows EXE on GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.2.1
+          target_commitish: ${{ steps.pushed.outputs.sha }}
+          name: Pokopia Editor RSH v0.2.1 - Experimental Special Encounters
+          prerelease: true
+          make_latest: false
+          overwrite_files: false
+          fail_on_unmatched_files: true
+          generate_release_notes: false
+          body_path: dist/rsh-editor-release-notes.md
+          files: dist/PokopiaEditor_RSH.exe
