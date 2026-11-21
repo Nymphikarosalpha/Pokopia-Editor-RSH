@@ -21,20 +21,82 @@ concurrency:
 
 jobs:
   restore-release-history:
-    name: Restore historical versioned releases
+    name: Restore historical ${{ matrix.tag }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - tag: v0.1.1
+            run_id: 44848526136
+            sha: d03597f1571e2ed66a5f3e4138d4d5786190c68d
+            title: "Initial RSH Development Preview"
+          - tag: v0.1.2
+            run_id: 44849321888
+            sha: c236081aa09d5c5b399683105f61426276be8641
+            title: "Automated Windows Preview Release"
+          - tag: v0.1.3
+            run_id: 44850060326
+            sha: 25532a9f037a041baf2df05fd06bab139f518269
+            title: "Download Button and Repository Presentation"
+          - tag: v0.1.4
+            run_id: 44882150845
+            sha: d179632cc95b2c2f5fa015c7dc13de9ae30f398d
+            title: "Resident Habitat Catalog and Event Workflow Fixes"
+          - tag: v0.1.5
+            run_id: 44883052213
+            sha: 4c5b0b5ade5c0f516f2bbc55be04e457b1be325b
+            title: "Release Navigation and Changelog"
     steps:
       - name: Check out fork source
         uses: actions/checkout@v4
-      - name: Create releases for original successful builds (skip existing)
+      - name: Check if this historical release already exists
+        id: existing
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-        run: python tools/rsh_release_history.py
+          RSH_TAG: ${{ matrix.tag }}
+        run: |
+          if gh release view "$RSH_TAG" --repo "$GITHUB_REPOSITORY" --json tagName >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "$RSH_TAG exists; preserving original release and EXE."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Download the historical Windows EXE from its original run
+        if: steps.existing.outputs.exists == 'false'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ matrix.run_id }}
+        run: |
+          mkdir -p dist
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name Pokopia-Editor-RSH-Windows-Preview --dir dist
+          test -s dist/PokopiaEditor_RSH.exe
+      - name: Write notes for this specific historical version
+        if: steps.existing.outputs.exists == 'false'
+        env:
+          RSH_TAG: ${{ matrix.tag }}
+        run: python tools/rsh_release_history.py --notes-only "$RSH_TAG" dist/rsh-historical-notes.md
+      - name: Publish separate version with its original EXE and notes
+        if: steps.existing.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ matrix.tag }}
+          target_commitish: ${{ matrix.sha }}
+          name: Pokopia Editor RSH ${{ matrix.tag }} — ${{ matrix.title }}
+          prerelease: true
+          make_latest: false
+          overwrite_files: false
+          fail_on_unmatched_files: true
+          body_path: dist/rsh-historical-notes.md
+          files: dist/PokopiaEditor_RSH.exe
 
   build-and-release:
-    name: Build and release a new version
+    name: Build new versioned Windows executable
     needs: restore-release-history
+    if: ${{ always() && !cancelled() }}
     runs-on: windows-latest
     steps:
       - name: Check out full source history
@@ -53,38 +115,49 @@ jobs:
         run: python -m unittest discover -s tests -p "test_rsh_*.py" -v
       - name: Build Windows executable
         run: python tools/build_fork.py
-      - name: Upload build artifact for this run
+      - name: Determine version tag for this workflow run
+        id: version
+        shell: pwsh
+        run: |
+          # The sixth run failed before producing a release.
+          # Workflow run #7 is the first new release after historical v0.1.1-v0.1.5.
+          $releaseNumber = [int]('${{ github.run_number }}') - 1
+          if ($releaseNumber -lt 6) { throw 'Unexpected release version number' }
+          "tag=v0.1.$releaseNumber" >> $env:GITHUB_OUTPUT
+          Write-Host "Publishing RSH v0.1.$releaseNumber"
+      - name: Save this run's EXE as an Actions artifact
         uses: actions/upload-artifact@v4
         with:
           name: Pokopia-Editor-RSH-Windows-${{ github.run_number }}
           path: dist/PokopiaEditor_RSH.exe
           if-no-files-found: error
-      - name: Generate release notes for this version
+      - name: Generate this version's release notes
         env:
-          RSH_RELEASE_TAG: v0.1.${{ github.run_number }}
+          RSH_RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: python tools/rsh_release_notes.py
-      - name: Preserve an existing release on reruns
+      - name: Check if version already exists (no overwrites on reruns)
         id: release-check
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RSH_RELEASE_TAG: v0.1.${{ github.run_number }}
+          RSH_RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
-          if gh release view "$RSH_RELEASE_TAG" --json tagName >/dev/null 2>&1; then
+          if gh release view "$RSH_RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json tagName >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "$RSH_RELEASE_TAG already exists; leaving its EXE and notes unchanged."
+            echo "$RSH_RELEASE_TAG already exists; its executable and notes remain unchanged."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Publish EXE with unique version tag and release notes
+      - name: Publish separate release for this successful build
         if: steps.release-check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.1.${{ github.run_number }}
-          name: Pokopia Editor RSH v0.1.${{ github.run_number }}
+          tag_name: ${{ steps.version.outputs.tag }}
           target_commitish: ${{ github.sha }}
+          name: Pokopia Editor RSH ${{ steps.version.outputs.tag }}
           prerelease: true
           make_latest: false
+          overwrite_files: false
           fail_on_unmatched_files: true
           body_path: dist/rsh-release-notes.md
           files: dist/PokopiaEditor_RSH.exe

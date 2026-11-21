@@ -1,9 +1,8 @@
-"""Publish immutable, versioned releases for the archived RSH preview builds.
+"""Produce immutable notes for individual historical RSH releases.
 
-Each release references the original commit and attaches the executable from
-its corresponding successful GitHub Actions build. Existing releases are left
-untouched. Requires GH_TOKEN (GitHub Actions GITHUB_TOKEN) with actions:read
-and contents:write permissions.
+The GitHub Actions workflow downloads the original build artifacts and uses
+softprops/action-gh-release to publish them. This script NEVER creates a release,
+so each version retains its own source EXE, notes and commit reference.
 """
 
 from __future__ import annotations
@@ -100,51 +99,34 @@ This was a documentation update; it did not change the editor's game-save functi
 ]
 
 
-def gh(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(['gh', *args], check=check, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-
-def release_exists(tag: str) -> bool:
-    p = gh('release', 'view', tag, '--repo', REPO, '--json', 'tagName', check=False)
-    if p.returncode == 0:
-        return True
-    if 'not found' in p.stderr.lower() or '404' in p.stderr:
-        return False
-    # GitHub CLI error text can vary. Fail closed on authentication problems.
-    raise RuntimeError(f'Cannot check release {tag}: {p.stderr.strip()}')
+def release_notes(tag: str) -> str:
+    item = next((r for r in HISTORY if r['tag'] == tag), None)
+    if item is None:
+        raise ValueError(f'Unknown historical RSH release tag: {tag}')
+    return (f'# Pokopia Editor RSH {tag} — {item["title"]}\n\n'
+            + item['notes'].strip() + '\n\n'
+            + '## Download\n'
+            + 'Download **PokopiaEditor_RSH.exe** from the Assets section below.\n\n'
+            + '## Provenance\n'
+            + f'- Original successful [Windows build #{item["run"]}]'
+              f'(https://github.com/{REPO}/actions/runs/{item["run"]})\n'
+            + f'- Source commit: [`{item["sha"][:12]}`]'
+              f'(https://github.com/{REPO}/commit/{item["sha"]})\n\n'
+            + 'Historical development preview. Back up your save and close the emulator.\n'
+            + 'GPL-3.0 fork of [cycalo/Pokopia-Editor]'
+              '(https://github.com/cycalo/Pokopia-Editor).\n')
 
 
 def main() -> int:
-    if not os.environ.get('GH_TOKEN'):
-        print('GH_TOKEN is required', file=sys.stderr)
-        return 2
-    for item in HISTORY:
-        tag = item['tag']
-        if release_exists(tag):
-            print(f'{tag}: already exists, preserving release and asset')
-            continue
-        with tempfile.TemporaryDirectory(prefix=f'rsh-{tag}-') as temp:
-            dest = pathlib.Path(temp)
-            print(f'{tag}: downloading original artifact from run {item["run"]}', flush=True)
-            gh('run', 'download', str(item['run']), '--repo', REPO,
-               '--name', ARTIFACT, '--dir', str(dest))
-            exe = dest / 'PokopiaEditor_RSH.exe'
-            if not exe.is_file() or exe.stat().st_size < 1_000_000:
-                raise RuntimeError(f'{tag}: historical build artifact is missing or incomplete')
-            notes = dest / 'notes.md'
-            notes.write_text(item['notes'] + '\n---\n\n'
-                             + f'Build: [GitHub Actions run #{item["run"]}]'
-                             + f'(https://github.com/{REPO}/actions/runs/{item["run"]})  \n'
-                             + f'Source commit: [`{item["sha"][:10]}`]'
-                             + f'(https://github.com/{REPO}/commit/{item["sha"]})\n\n'
-                             + 'This is an archived development preview. Save backups are recommended.\n',
-                             encoding='utf-8')
-            print(f'{tag}: publishing original EXE ({exe.stat().st_size:,} bytes)', flush=True)
-            gh('release', 'create', tag, str(exe), '--repo', REPO,
-               '--target', item['sha'], '--title', f'Pokopia Editor RSH {tag} — {item["title"]}',
-               '--notes-file', str(notes), '--prerelease')
-            print(f'{tag}: published successfully', flush=True)
-    print('Historical releases complete; original rsh-preview left unchanged.')
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--notes-only', action='store_true', required=True)
+    parser.add_argument('tag', choices=[r['tag'] for r in HISTORY])
+    parser.add_argument('output', type=pathlib.Path)
+    args = parser.parse_args()
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(release_notes(args.tag), encoding='utf-8')
+    print(f'Prepared release notes for {args.tag}: {args.output}', flush=True)
     return 0
 
 

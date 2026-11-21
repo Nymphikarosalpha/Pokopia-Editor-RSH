@@ -32,7 +32,10 @@ def build_notes(tag: str) -> str:
         candidates = [(int(v.split('.')[-1]), v) for v in known
                       if re.fullmatch(r'v0\.1\.\d+', v) and int(v.split('.')[-1]) < current]
         previous = max(candidates)[1] if candidates else None
-        commit_range = f'{previous}..HEAD' if previous else 'HEAD'
+        # The original five builds precede versioned tags; limit the first
+        # new release notes to changes after that known historical commit.
+        historical_base = '4c5b0b5ade5c0f516f2bbc55be04e457b1be325b'
+        commit_range = f'{previous}..HEAD' if previous else f'{historical_base}..HEAD'
         # Git commit subjects are the source of truth for the current release's
         # changes. Preserve all commits since the previous version, not just HEAD.
         subjects = git('log', '--reverse', '--pretty=format:%s', commit_range).splitlines()
