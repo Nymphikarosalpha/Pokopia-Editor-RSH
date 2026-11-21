@@ -62,7 +62,7 @@ The catalog covers **402 named resident records**: **350** mapped to buildable r
 1. **[Download `PokopiaEditor_RSH.exe` from Releases](https://github.com/Nymphikarosalpha/Pokopia-Editor-RSH/releases)** — one Windows EXE; no source files need to be copied beside it.
 2. **Close the emulator** before opening or editing the save.
 3. **Start the EXE** and select your save if it is not found automatically.
-4. Open **Residents → Pokémon + Habitat / Spawn Test** for the RSH tools, or use the original editor pages as usual.
+4. Open **Residents → Pokémon · Habitat · Spawn** for the RSH tools, or use the original editor pages as usual.
 
 **Emulator discovery:** Eden, Yuzu, Suyu, Sudachi, Citron, Torzu, Ryujinx and Lichii (including some portable layouts). Manual folder selection is available under **Open → Browse for a folder**. [Recompia](https://github.com/Dittobyte/Recompia) saves are supported by the upstream editor. Compatibility is not guaranteed across every emulator version.
 
@@ -94,14 +94,14 @@ The catalog covers **402 named resident records**: **350** mapped to buildable r
 
 | | Feature | How to use it |
 |:--:|---|---|
-| 🐾 | **Add / update Pokémon residents** | **Residents → Pokémon + Habitat / Spawn Test**; choose a Pokémon, friendship and first-met time |
+| 🐾 | **Add / update Pokémon residents** | **Residents → Pokémon · Habitat · Spawn**; choose a Pokémon, friendship and first-met time |
 | 🌿 | **Build or assign habitats** | Choose an island and a mapped recipe, or attach a registered resident to an existing habitat |
 | 🏠 | **Change or remove a home** | Assign a different habitat or unlink the current home without deleting the habitat objects |
 | 🧹 | **Remove a resident entry** | Experimental registry removal; independent world NPCs may remain |
 | 🎊 | **Build event habitats** | Use an E-series event recipe and place the objects on the Island Map; story flags are unchanged |
 | 🎒 | **Prepare event items** | Fill missing recipe materials into the bag instead of building immediately |
 | 🔎 | **Choose habitats by Pokémon ID** | Use the offline catalog with distinct mappings for known forms; manual choices are marked unverified |
-| 🧪 | **Test special encounter records** | For Mew/Mewtwo and other special Pokémon, use ID−4 on supported stages with a previously existing habitat position anchor |
+| 🧪 | **Explore experimental encounter records** | For Mew/Mewtwo and other special Pokémon, use ID−4 on supported stages with a previously existing habitat position anchor |
 | 💡 | **See recommended settings** | The Studio displays an automatic recommendation and the **Which settings for which Pokémon?** help guide |
 
 ### 📸 A look inside the editor
@@ -134,7 +134,7 @@ The catalog covers **402 named resident records**: **350** mapped to buildable r
 <summary><b>🧪 How the ID−4 special encounter test works</b></summary>
 
 1. Create a **separate test copy** of your save and close the emulator.
-2. In **Residents → Pokémon + Habitat / Spawn Test**, select Mew, Mewtwo or another identified special Pokémon.
+2. In **Residents → Pokémon · Habitat · Spawn**, select Mew, Mewtwo or another identified special Pokémon.
 3. Select **Experimental encounter (ID−4; automatic special detection)** and an eligible island.
 4. Select an **already existing habitat** as a technical **UID/position anchor**. You do **not** need to build a fictitious Mew/Mewtwo habitat.
 5. Confirm the verified ZIP backup, stage the change and press **Ctrl+S** to write the test save.
