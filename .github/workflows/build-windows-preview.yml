@@ -79,10 +79,22 @@ jobs:
         env:
           RSH_TAG: ${{ matrix.tag }}
         run: python tools/rsh_release_history.py --notes-only "$RSH_TAG" dist/rsh-historical-notes.md
+      - name: Check historical release token
+        if: steps.existing.outputs.exists == 'false'
+        shell: bash
+        env:
+          RSH_RELEASE_TOKEN: ${{ secrets.RSH_RELEASE_TOKEN }}
+        run: |
+          if [ -z "$RSH_RELEASE_TOKEN" ]; then
+            echo "::error::Missing RSH_RELEASE_TOKEN. In repository Settings > Secrets and variables > Actions, add a secret with Contents: write and Workflows: write permissions for this repository."
+            exit 1
+          fi
+          echo "Historical release authorization configured."
       - name: Publish separate version with its original EXE and notes
         if: steps.existing.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.RSH_RELEASE_TOKEN }}
           tag_name: ${{ matrix.tag }}
           target_commitish: ${{ matrix.sha }}
           name: Pokopia Editor RSH ${{ matrix.tag }} — ${{ matrix.title }}
@@ -96,7 +108,7 @@ jobs:
   build-and-release:
     name: Build new versioned Windows executable
     needs: restore-release-history
-    if: ${{ always() && !cancelled() }}
+    if: ${{ always() && !cancelled() && needs.restore-release-history.result == 'success' }}
     runs-on: windows-latest
     steps:
       - name: Check out full source history
